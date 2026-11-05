@@ -1,0 +1,355 @@
+<%- include('partials/header') %>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = { darkMode: "class", theme: { extend: { colors: { "primary": "#b8000b", "surface": "#f8f9fa", "surface-container-lowest": "#ffffff", "on-surface": "#111827", "on-surface-variant": "#4b5563", "outline-variant": "#e5e7eb" } } } }
+</script>
+
+<main class="bg-surface min-h-screen py-10 font-['Be_Vietnam_Pro']">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <a href="/phim/<%= phim._id %>" class="inline-flex items-center gap-2 text-sm font-bold text-on-surface-variant hover:text-primary transition-colors mb-6">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại
+        </a>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-8 space-y-6">
+                
+                <div class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm border border-outline-variant/20">
+                    <h2 class="text-lg font-extrabold text-on-surface mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">location_on</span> 1. Chọn rạp chiếu
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <button type="button" onclick="selectCinema('Starlight Quy Nhơn', this)" class="cinema-btn px-4 py-3 rounded-xl border-2 border-outline-variant/20 text-on-surface-variant font-bold text-sm hover:border-primary transition-all">Starlight Quy Nhơn</button>
+                        <button type="button" onclick="selectCinema('CGV Quy Nhơn', this)" class="cinema-btn px-4 py-3 rounded-xl border-2 border-outline-variant/20 text-on-surface-variant font-bold text-sm hover:border-primary transition-all">CGV Quy Nhơn</button>
+                        <button type="button" onclick="selectCinema('Dcine Quy Nhơn', this)" class="cinema-btn px-4 py-3 rounded-xl border-2 border-outline-variant/20 text-on-surface-variant font-bold text-sm hover:border-primary transition-all">Dcine Quy Nhơn</button>
+                    </div>
+                </div>
+
+                <div id="step-datetime" class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm border border-outline-variant/20 opacity-50 pointer-events-none transition-opacity duration-300">
+                    <h2 class="text-lg font-extrabold text-on-surface mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">calendar_month</span> 2. Chọn ngày chiếu
+                    </h2>
+                    
+                    <div class="flex gap-3 overflow-x-auto pb-2 mb-6" id="date-slots">
+                        <p class="text-sm text-on-surface-variant italic">Vui lòng chọn rạp chiếu để xem ngày</p>
+                    </div>
+
+                    <h3 class="text-xs font-bold text-on-surface-variant uppercase mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[16px]">schedule</span> 3. Chọn giờ chiếu
+                    </h3>
+                    <div class="flex flex-wrap gap-3" id="time-slots">
+                        <p class="text-sm text-on-surface-variant italic">Vui lòng chọn ngày để xem suất chiếu</p>
+                    </div>
+                </div>
+
+                <div id="step-seats" class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm border border-outline-variant/20 opacity-50 pointer-events-none transition-opacity duration-300">
+                    <h2 class="text-lg font-extrabold text-on-surface mb-6 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">weekend</span> 4. Chọn ghế ngồi
+                    </h2>
+                    <div class="flex flex-col items-center gap-4 overflow-x-auto pb-6">
+                        <div class="w-full max-w-md bg-slate-300 h-1.5 rounded-full mb-8 relative">
+                            <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Màn hình</span>
+                        </div>
+                        <% ['A','B','C','D','E'].forEach(row => { %>
+                            <div class="flex items-center gap-3">
+                                <span class="w-6 text-xs font-black text-slate-400 text-center"><%= row %></span>
+                                <div class="flex gap-2">
+                                    <% for(let i=1; i<=10; i++) { %>
+                                        <button type="button" data-seat="<%= row + i %>" class="seat-btn w-8 h-8 md:w-9 md:h-9 rounded-t-lg border-2 border-[#10b981] text-[#10b981] font-bold text-[10px] hover:bg-[#10b981] hover:text-white transition-all"><%= i %></button>
+                                    <% } %>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+
+                <div class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm border border-outline-variant/20">
+                    <h2 class="text-lg font-extrabold text-on-surface mb-6 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">fastfood</span> 5. Chọn Bắp & Nước (Không bắt buộc)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex justify-between items-center p-4 border border-outline-variant/20 rounded-2xl">
+                            <div><h3 class="font-bold text-sm">Combo Solo</h3><p class="text-primary text-xs font-bold mt-1">75.000 đ</p></div>
+                            <div class="flex items-center gap-3">
+                                <button type="button" onclick="updateCombo('solo', -1)" class="w-8 h-8 rounded bg-slate-100 font-bold">-</button>
+                                <span id="qty-solo" class="font-black text-sm w-4 text-center">0</span>
+                                <button type="button" onclick="updateCombo('solo', 1)" class="w-8 h-8 rounded bg-primary/10 text-primary font-bold">+</button>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-4 border border-outline-variant/20 rounded-2xl">
+                            <div><h3 class="font-bold text-sm">Combo Couple</h3><p class="text-primary text-xs font-bold mt-1">105.000 đ</p></div>
+                            <div class="flex items-center gap-3">
+                                <button type="button" onclick="updateCombo('couple', -1)" class="w-8 h-8 rounded bg-slate-100 font-bold">-</button>
+                                <span id="qty-couple" class="font-black text-sm w-4 text-center">0</span>
+                                <button type="button" onclick="updateCombo('couple', 1)" class="w-8 h-8 rounded bg-primary/10 text-primary font-bold">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-4">
+                <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/20 overflow-hidden sticky top-28">
+                    <div class="relative h-32 bg-black flex items-end p-4">
+                        <img src="<%= phim.posterUrl %>" class="absolute inset-0 w-full h-full object-cover opacity-50">
+                        <h3 class="relative text-white font-black text-lg line-clamp-1"><%= phim.title %></h3>
+                    </div>
+
+                    <div class="p-6 space-y-4">
+                        <div class="flex justify-between items-center border-b border-outline-variant/10 pb-2">
+                            <span class="text-sm font-bold text-on-surface-variant">Rạp</span>
+                            <span id="display-cinema" class="text-sm font-extrabold text-primary">Chưa chọn</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-bold text-on-surface-variant">Suất chiếu</span>
+                            <span id="display-datetime" class="text-sm font-extrabold text-on-surface">Chưa chọn</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-bold text-on-surface-variant">Ghế ngồi</span>
+                            <span id="display-seats" class="text-sm font-extrabold text-on-surface">Chưa chọn</span>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-outline-variant/10 pt-2">
+                            <span class="text-sm font-bold text-on-surface-variant">Bắp nước</span>
+                            <span id="display-combo" class="text-sm font-extrabold text-on-surface text-right">Không</span>
+                        </div>
+
+                        <div class="flex justify-between items-center pt-4 border-t border-outline-variant/20">
+                            <span class="text-base font-extrabold text-on-surface uppercase">Tổng tiền</span>
+                            <span id="display-total" class="text-2xl font-black text-primary">0 đ</span>
+                        </div>
+
+                        <form action="/thanh-toan" method="POST" class="pt-2">
+                            <input type="hidden" name="movieId" value="<%= phim._id %>">
+                            <input type="hidden" name="cinema" id="input-cinema">
+                            <input type="hidden" name="showDate" id="input-date">
+                            <input type="hidden" name="showTime" id="input-time">
+                            <input type="hidden" name="seats" id="input-seats">
+                            <input type="hidden" name="comboDetails" id="input-combo-details">
+                            <input type="hidden" name="comboTotal" id="input-combo-total" value="0">
+                            <input type="hidden" name="total" id="input-total" value="0">
+                            
+                            <button type="submit" id="btn-submit" disabled class="w-full py-4 bg-outline-variant text-white font-black rounded-xl shadow-lg transition-all text-sm uppercase">
+                                Tới trang thanh toán
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<input type="hidden" id="raw-showtimes" value='<%= JSON.stringify(phim.showtimes || []) %>'>
+
+<script>
+    const showtimesData = JSON.parse(document.getElementById('raw-showtimes').value);
+    let selCinema = "", selDate = "", selTime = "", selSeats = [];
+    const SEAT_PRICE = 95000;
+    const mySessionId = Math.random().toString(36).substring(2); 
+
+    let combos = { solo: { qty: 0, price: 75000, name: 'Solo' }, couple: { qty: 0, price: 105000, name: 'Couple' } };
+
+    // HÀM TÍNH TOÁN VÀ KIỂM TRA ĐIỀU KIỆN SUBMIT
+    function calcAll() {
+        let seatTotal = selSeats.length * SEAT_PRICE;
+        let comboStr = []; let comboTotal = 0;
+        
+        if(combos.solo.qty > 0) { comboStr.push(`${combos.solo.qty}x Solo`); comboTotal += combos.solo.qty * combos.solo.price; }
+        if(combos.couple.qty > 0) { comboStr.push(`${combos.couple.qty}x Couple`); comboTotal += combos.couple.qty * combos.couple.price; }
+        
+        document.getElementById('display-seats').innerText = selSeats.length ? selSeats.join(', ') : 'Chưa chọn';
+        document.getElementById('display-combo').innerText = comboStr.length ? comboStr.join(', ') : "Không";
+        
+        let finalTotal = seatTotal + comboTotal;
+        document.getElementById('display-total').innerText = finalTotal.toLocaleString('vi-VN') + ' đ';
+        
+        document.getElementById('input-seats').value = selSeats.join(',');
+        document.getElementById('input-combo-details').value = comboStr.join(', ');
+        document.getElementById('input-combo-total').value = comboTotal;
+        document.getElementById('input-total').value = finalTotal;
+
+        const btn = document.getElementById('btn-submit');
+        if(selCinema && selDate && selTime && selSeats.length > 0) {
+            btn.disabled = false;
+            btn.classList.replace('bg-outline-variant', 'bg-primary');
+            btn.classList.add('hover:scale-[1.02]');
+        } else {
+            btn.disabled = true;
+            btn.classList.replace('bg-primary', 'bg-outline-variant');
+            btn.classList.remove('hover:scale-[1.02]');
+        }
+    }
+
+    // 1. CHỌN RẠP
+    window.selectCinema = (name, el) => {
+        document.querySelectorAll('.cinema-btn').forEach(b => {
+            b.classList.remove('bg-primary', 'text-white', 'border-primary');
+            b.classList.add('text-on-surface-variant', 'border-outline-variant/20');
+        });
+        // Xóa class chữ đen trước khi bật đỏ
+        el.classList.remove('text-on-surface-variant', 'border-outline-variant/20');
+        el.classList.add('bg-primary', 'text-white', 'border-primary');
+        
+        selCinema = name;
+        document.getElementById('input-cinema').value = name;
+        document.getElementById('display-cinema').innerText = name;
+
+        const dateContainer = document.getElementById('date-slots');
+        dateContainer.innerHTML = ""; 
+
+        const matchedDates = showtimesData.filter(st => st.cinema === name);
+
+        if (matchedDates.length > 0) {
+            matchedDates.forEach((st, idx) => {
+                const parts = st.date.split('-');
+                const month = parts[1];
+                const day = parts[2];
+                
+                const btn = document.createElement('button');
+                btn.type = "button";
+                btn.className = "date-btn shrink-0 w-20 py-3 rounded-xl border-2 border-outline-variant/20 flex flex-col items-center justify-center transition-all text-on-surface-variant hover:border-primary";
+                btn.onclick = function() { window.selectDate(idx, this, st.date); };
+                btn.innerHTML = `
+                    <span class="text-[10px] font-black opacity-50 uppercase">Tháng ${month}</span>
+                    <span class="text-lg font-black">${day}</span>
+                `;
+                dateContainer.appendChild(btn);
+            });
+        } else {
+            dateContainer.innerHTML = '<p class="text-sm text-red-500 font-bold mt-2">Rạp này hiện chưa có lịch chiếu!</p>';
+        }
+
+        document.getElementById('step-datetime').classList.remove('opacity-50', 'pointer-events-none');
+        
+        selDate = ""; selTime = ""; resetSeats();
+        document.getElementById('time-slots').innerHTML = '<p class="text-sm text-on-surface-variant italic">Vui lòng chọn ngày để xem suất chiếu</p>';
+        document.getElementById('display-datetime').innerText = "Chưa chọn";
+        document.getElementById('step-seats').classList.add('opacity-50', 'pointer-events-none');
+        calcAll();
+    }
+
+    // 2. CHỌN NGÀY VÀ GIỜ
+    window.selectDate = (idx, el, dateStr) => {
+        document.querySelectorAll('.date-btn').forEach(b => {
+            b.classList.remove('bg-primary', 'text-white', 'border-primary');
+            b.classList.add('text-on-surface-variant', 'border-outline-variant/20');
+        });
+        // Xóa chữ đen của ô Ngày
+        el.classList.remove('text-on-surface-variant', 'border-outline-variant/20');
+        el.classList.add('bg-primary', 'text-white', 'border-primary');
+
+        selDate = dateStr;
+        document.getElementById('input-date').value = dateStr;
+        
+        selTime = "";
+        resetSeats();
+        document.getElementById('step-seats').classList.add('opacity-50', 'pointer-events-none');
+        document.getElementById('display-datetime').innerText = "Chọn giờ chiếu";
+        
+        const timeContainer = document.getElementById('time-slots');
+        timeContainer.innerHTML = "";
+
+        const matchedSt = showtimesData.find(st => st.date === dateStr && st.cinema === selCinema);
+        
+        const availTimes = matchedSt ? matchedSt.times : [];
+        availTimes.forEach(t => {
+            const btn = document.createElement('button');
+            btn.type = "button";
+            btn.className = "time-btn px-6 py-2.5 rounded-xl border-2 border-outline-variant/20 text-on-surface-variant font-bold text-sm hover:border-primary transition-all";
+            btn.innerText = t;
+            btn.onclick = function() {
+                document.querySelectorAll('.time-btn').forEach(b => {
+                    b.classList.remove('bg-primary', 'text-white', 'border-primary');
+                    b.classList.add('text-on-surface-variant', 'border-outline-variant/20');
+                });
+                // Xóa chữ đen của ô Giờ
+                this.classList.remove('text-on-surface-variant', 'border-outline-variant/20');
+                this.classList.add('bg-primary', 'text-white', 'border-primary');
+                
+                selTime = t;
+                document.getElementById('input-time').value = t;
+                document.getElementById('display-datetime').innerText = `${t} | ${selDate}`;
+                
+                document.getElementById('step-seats').classList.remove('opacity-50', 'pointer-events-none');
+                resetSeats();
+                syncSeats();
+                calcAll();
+            };
+            timeContainer.appendChild(btn);
+        });
+        calcAll();
+    }
+
+    // RESET GHẾ
+    function resetSeats() {
+        selSeats.forEach(id => {
+            fetch('/api/mo-khoa-ghe', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ movieId: '<%= phim._id %>', showDate: selDate, showTime: selTime, seatId: id, userId: mySessionId }) });
+        });
+        selSeats = [];
+        document.querySelectorAll('.seat-btn').forEach(btn => {
+            btn.classList.remove('bg-[#10b981]', 'text-white', 'bg-slate-200', 'text-slate-400', 'cursor-not-allowed', 'opacity-50');
+            btn.classList.add('text-[#10b981]', 'border-[#10b981]');
+            btn.disabled = false;
+        });
+    }
+
+    // 3. CHỌN GHẾ
+    document.querySelectorAll('.seat-btn').forEach(btn => {
+        btn.onclick = async () => {
+            const id = btn.getAttribute('data-seat');
+            if(selSeats.includes(id)) {
+                selSeats = selSeats.filter(s => s !== id);
+                btn.classList.remove('bg-[#10b981]', 'text-white');
+                // Trả lại class chữ xanh khi hủy chọn
+                btn.classList.add('text-[#10b981]'); 
+                fetch('/api/mo-khoa-ghe', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ movieId: '<%= phim._id %>', showDate: selDate, showTime: selTime, seatId: id, userId: mySessionId }) });
+            } else {
+                const res = await fetch('/api/khoa-ghe', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ movieId: '<%= phim._id %>', showDate: selDate, showTime: selTime, seatId: id, userId: mySessionId }) });
+                const data = await res.json();
+                if(!data.success) { alert(data.message); syncSeats(); return; }
+                
+                selSeats.push(id);
+                // Xóa class chữ xanh trước khi thêm nền xanh chữ trắng
+                btn.classList.remove('text-[#10b981]'); 
+                btn.classList.add('bg-[#10b981]', 'text-white');
+            }
+            calcAll();
+        };
+    });
+
+    // 4. BẮP NƯỚC
+    window.updateCombo = function(type, change) {
+        let newQty = combos[type].qty + change;
+        if(newQty >= 0 && newQty <= 10) {
+            combos[type].qty = newQty;
+            document.getElementById(`qty-${type}`).innerText = newQty;
+            calcAll();
+        }
+    }
+
+    // 5. ĐỒNG BỘ GHẾ TRỰC TUYẾN
+    async function syncSeats() {
+        if (!selCinema || !selDate || !selTime) return;
+        try {
+            const res = await fetch(`/api/ghe-da-dat?movieId=<%= phim._id %>&cinema=${encodeURIComponent(selCinema)}&showDate=${selDate}&showTime=${selTime}&userId=${mySessionId}`);
+            const data = await res.json();
+            const locked = [...data.bookedSeats, ...data.tempLocked];
+
+            document.querySelectorAll('.seat-btn').forEach(btn => {
+                const id = btn.getAttribute('data-seat');
+                if (locked.includes(id) && !selSeats.includes(id)) {
+                    btn.disabled = true;
+                    btn.classList.add('bg-slate-200', 'text-slate-400', 'cursor-not-allowed', 'opacity-50');
+                    btn.classList.remove('border-[#10b981]', 'text-[#10b981]', 'hover:bg-[#10b981]');
+                } else {
+                    btn.disabled = false;
+                    btn.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed', 'opacity-50');
+                    if (!selSeats.includes(id)) btn.classList.add('border-[#10b981]', 'text-[#10b981]');
+                }
+            });
+        } catch (e) { console.error(e); }
+    }
+    setInterval(syncSeats, 3000);
+</script>
+
+<%- include('partials/footer') %>

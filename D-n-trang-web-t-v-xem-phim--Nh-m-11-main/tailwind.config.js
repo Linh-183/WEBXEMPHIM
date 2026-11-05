@@ -1,0 +1,70 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  // Báo cho Tailwind biết hãy quét tất cả các file có đuôi .ejs trong thư mục views
+  content: ["./views/**/*.ejs"],
+  
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "on-primary-fixed-variant": "#930007",
+        "primary-container": "#e50914",
+        "secondary": "#b02f00",
+        "primary": "#b8000b",
+        "on-primary-fixed": "#410001",
+        "on-secondary": "#ffffff",
+        "on-secondary-container": "#541100",
+        "outline-variant": "#e9bcb6",
+        "secondary-fixed-dim": "#ffb5a0",
+        "tertiary-fixed-dim": "#a7c8ff",
+        "surface-container-low": "#f3f3f3",
+        "on-tertiary-fixed-variant": "#004689",
+        "secondary-fixed": "#ffdbd1",
+        "primary-fixed": "#ffdad5",
+        "on-error": "#ffffff",
+        "on-surface-variant": "#5e3f3b",
+        "on-primary-container": "#fff7f6",
+        "surface-dim": "#dadada",
+        "surface-tint": "#c0000c",
+        "error-container": "#ffdad6",
+        "tertiary-fixed": "#d5e3ff",
+        "surface-container-lowest": "#ffffff",
+        "outline": "#936e69",
+        "error": "#ba1a1a",
+        "surface-container-high": "#e8e8e8",
+        "tertiary": "#005aab",
+        "surface-bright": "#f9f9f9",
+        "background": "#f9f9f9",
+        "surface-variant": "#e2e2e2",
+        "inverse-on-surface": "#f1f1f1",
+        "on-secondary-fixed-variant": "#862200",
+        "on-tertiary-container": "#f8f9ff",
+        "inverse-surface": "#2f3131",
+        "on-background": "#1a1c1c",
+        "on-secondary-fixed": "#3b0900",
+        "secondary-container": "#ff5722",
+        "on-tertiary-fixed": "#001b3c",
+        "primary-fixed-dim": "#ffb4aa",
+        "tertiary-container": "#0072d7",
+        "inverse-primary": "#ffb4aa",
+        "on-surface": "#1a1c1c",
+        "surface-container": "#eeeeee",
+        "surface": "#f9f9f9",
+        "surface-container-highest": "#e2e2e2",
+        "on-primary": "#ffffff",
+        "on-tertiary": "#ffffff",
+        "on-error-container": "#93000a"
+      },
+      fontFamily: {
+        "headline": ["Be Vietnam Pro", "sans-serif"],
+        "body": ["Be Vietnam Pro", "sans-serif"],
+        "label": ["Be Vietnam Pro", "sans-serif"]
+      },
+      borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+    },
+  },
+  plugins: [
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/container-queries')
+  ],
+}

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html class="light" lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>CineGo - Hệ Thống Rạp Chiếu Phim</title>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-surface selection:bg-primary-container selection:text-white">
+  <nav class="sticky top-0 w-full z-50 glass-nav border-b border-red-100/10 shadow-sm">
+    <div class="flex justify-between items-center px-8 py-4 max-w-[1400px] mx-auto font-['Be_Vietnam_Pro'] text-sm font-medium tracking-wide uppercase">
+      
+      <a href="/" class="text-2xl font-black tracking-tighter text-red-700 shrink-0">CineGo</a>
+    
+      <div class="hidden md:flex items-center space-x-8 whitespace-nowrap" id="main-nav-menu">
+        <a class="nav-link text-slate-600 hover:text-red-500 transition-colors" href="/">Trang chủ</a>
+        <a class="nav-link text-slate-600 hover:text-red-500 transition-colors" href="/phim">Phim</a>
+        <a class="nav-link text-slate-600 hover:text-red-500 transition-colors" href="/he-thong-rap">Rạp</a>
+        <a class="nav-link text-slate-600 hover:text-red-500 transition-colors" href="/khuyen-mai">Ưu đãi</a>
+        <a class="nav-link text-slate-600 hover:text-red-500 transition-colors" href="/tai-khoan/ve-cua-toi">Vé của tôi</a>
+      </div>
+      
+      <div class="flex items-center space-x-6">
+        <div class="relative hidden lg:flex items-center bg-slate-100 px-4 py-2 rounded-full border border-slate-200 focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-500 transition-all z-[100]">
+            <span class="material-symbols-outlined text-slate-400 text-lg mr-2">search</span>
+            <input id="searchInput" class="bg-transparent border-none focus:ring-0 text-sm w-56 text-slate-800 placeholder-slate-400 outline-none lowercase" placeholder="Tìm tên phim..." type="text" autocomplete="off" />
+            
+            <div id="searchResults" class="absolute top-[120%] right-0 w-[320px] bg-white rounded-xl shadow-2xl border border-slate-100 hidden flex-col max-h-[400px] overflow-y-auto overflow-x-hidden">
+            </div>
+        </div>
+        
+        <% if (user) { %>
+            <div class="flex items-center space-x-6 relative group cursor-pointer">
+                <a href="/tai-khoan" class="flex items-center space-x-2 text-red-600 font-bold whitespace-nowrap hover:text-red-800 transition-colors">
+                    <span class="material-symbols-outlined">account_circle</span>
+                    <span class="truncate max-w-[200px]">Chào, <%= user.hoTen %></span>
+                </a>
+                <a href="/dang-xuat" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md shrink-0">
+                    Đăng xuất
+                </a>
+            </div>
+        <% } else { %>
+            <a href="/dang-nhap" class="flex items-center space-x-2 text-slate-600 hover:text-red-600 transition-all duration-300 font-bold shrink-0 whitespace-nowrap">
+                <span class="material-symbols-outlined">login</span>
+                <span class="hidden sm:inline">Đăng nhập</span>
+            </a>
+        <% } %>
+      </div>
+    </div>
+  </nav>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const currentPath = window.location.pathname;
+        const links = document.querySelectorAll("#main-nav-menu .nav-link");
+        
+        links.forEach(link => {
+            const linkPath = link.getAttribute("href");
+            // Sửa lỗi: Luôn giữ 'border-b-2' và 'pb-1' dù là ẩn hay hiện để chiều cao link không đổi 
+            link.className = "nav-link text-slate-600 hover:text-red-500 transition-colors border-b-2 border-transparent pb-1";
+            
+            if (linkPath === currentPath || (linkPath !== "/" && linkPath !== "#" && currentPath.startsWith(linkPath))) {
+                link.className = "nav-link text-red-600 font-bold border-b-2 border-red-600 pb-1";
+            }
+        });
+
+        // TÍNH NĂNG TÌM KIẾM TRỰC TIẾP
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        let timeout = null;
+
+        searchInput.addEventListener('input', function() {
+            clearTimeout(timeout); 
+            const tuKhoa = this.value.trim();
+
+            if (tuKhoa.length === 0) {
+                searchResults.classList.add('hidden'); 
+                searchResults.classList.remove('flex');
+                return;
+            }
+
+            timeout = setTimeout(() => {
+                fetch(`/api/tim-kiem?tuKhoa=${encodeURIComponent(tuKhoa)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        searchResults.innerHTML = ''; 
+                        if (data.length > 0) {
+                            data.forEach(phim => {
+                                const item = document.createElement('a');
+                                item.href = `/chi-tiet-phim/${phim._id}`; 
+                                item.className = 'flex items-center gap-4 p-3 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 cursor-pointer';
+                                item.innerHTML = `
+                                    <img src="${phim.posterUrl}" class="w-12 h-16 object-cover rounded-md shadow-sm border border-slate-200 shrink-0">
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-sm font-bold text-slate-800 line-clamp-1 lowercase capitalize">${phim.title}</h4>
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest border border-slate-200 px-1.5 py-0.5 rounded mt-1.5 inline-block bg-slate-50">${phim.ageRating || 'P'}</span>
+                                    </div>
+                                `;
+                                searchResults.appendChild(item);
+                            });
+                        } else {
+                            searchResults.innerHTML = `
+                                <div class="p-6 text-center text-sm text-slate-500 flex flex-col items-center">
+                                    <span class="material-symbols-outlined text-3xl text-slate-300 mb-2">search_off</span>
+                                    Không tìm thấy phim nào khớp với "${tuKhoa}"
+                                </div>
+                            `;
+                        }
+                        searchResults.classList.remove('hidden');
+                        searchResults.classList.add('flex');
+                    })
+                    .catch(err => console.error(err));
+            }, 300);
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.classList.add('hidden');
+                searchResults.classList.remove('flex');
+            }
+        });
+    });
+  </script>

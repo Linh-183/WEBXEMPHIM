@@ -1,0 +1,117 @@
+<%- include('partials/header') %>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "primary": "#b8000b",
+                    "surface": "#f8f9fa",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface": "#111827",
+                    "on-surface-variant": "#4b5563",
+                    "outline-variant": "#e5e7eb"
+                }
+            }
+        }
+    }
+</script>
+
+<main class="bg-surface min-h-screen py-16 font-['Be_Vietnam_Pro']">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8">
+        
+        <div class="mb-12 text-center">
+            <h1 class="text-4xl md:text-5xl font-black text-on-surface tracking-tighter mb-4">Hệ Thống Rạp Tại Quy Nhơn</h1>
+            <p class="text-on-surface-variant max-w-2xl mx-auto opacity-80">Khám phá không gian điện ảnh đẳng cấp với trang thiết bị hiện đại bậc nhất tại thành phố biển Quy Nhơn.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            <div class="group bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm border border-outline-variant/20 hover:shadow-xl transition-all duration-500">
+                <div class="relative aspect-[16/10] overflow-hidden">
+                    <img src="https://thanhphohue.com/wp-content/uploads/2021/10/rap-phim-hue-001-1140x694.jpg" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="Starlight">
+                    <div class="absolute top-4 left-4">
+                        <span class="px-3 py-1 bg-primary text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-lg">Phổ biến nhất</span>
+                    </div>
+                </div>
+                <div class="p-8">
+                    <h2 class="text-2xl font-black text-on-surface mb-3 tracking-tight">Starlight Quy Nhơn</h2>
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-start gap-3 text-sm text-on-surface-variant">
+                            <span class="material-symbols-outlined text-primary shrink-0">location_on</span>
+                            <span>Tầng 8, TTTM An Phú Thịnh, 52A Tăng Bạt Hổ, TP. Quy Nhơn</span>
+                        </div>
+                        <div class="flex items-start gap-3 text-sm text-on-surface-variant">
+                            <span class="material-symbols-outlined text-primary shrink-0">phone</span>
+                            <span>1900 1722</span>
+                        </div>
+                        <div class="flex items-start gap-3 text-sm text-on-surface-variant">
+                            <span class="material-symbols-outlined text-primary shrink-0">info</span>
+                            <span>8 cụm rạp hiện đại, ghế ngồi êm ái, bắp nước đa dạng.</span>
+                        </div>
+                    </div>
+                    <a href="/phim" class="block w-full py-4 bg-primary text-white text-center font-black text-sm rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.03] active:scale-95 transition-all uppercase">Đặt vé ngay</a>
+                </div>
+            </div>
+
+            <div class="group bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm border border-outline-variant/20 hover:shadow-xl transition-all duration-500">
+                <div class="relative aspect-[16/10] overflow-hidden">
+                    <img src="https://img.docbao.vn/images/uploads/2019/11/10/giai-tri/rap-chieu.jpg" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="CGV">
+                    <div class="absolute top-4 left-4">
+                        <span class="px-3 py-1 bg-black text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-lg">Tiêu chuẩn quốc tế</span>
+                    </div>
+                </div>
+                <div class="p-8">
+                    <h2 class="text-2xl font-black text-on-surface mb-3 tracking-tight">CGV Quy Nhơn</h2>
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-start gap-3 text-sm text-on-surface-variant">
+                            <span class="material-symbols-outlined text-primary shrink-0">location_on</span>
+                            <span>Tầng 3, Kim Cúc Plaza, Khu đô thị Vũng Chua, TP. Quy Nhơn</span>
+                        </div>
+                        <div class="flex items-start gap-3 text-sm text-on-surface-variant">
+                            <span class="material-symbols-outlined text-primary shrink-0">phone</span>
+                            <span>1900 6017</span>
+                        </div>
+                        <div class="flex items-start gap-3 text-sm text-on-surface-variant">
+                            <span class="material-symbols-outlined text-primary shrink-0">info</span>
+                            <span>Trải nghiệm rạp Gold Class và công nghệ âm thanh Dolby Atmos.</span>
+                        </div>
+                    </div>
+                    <a href="/phim" class="block w-full py-4 bg-primary text-white text-center font-black text-sm rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.03] active:scale-95 transition-all uppercase">Đặt vé ngay</a>
+                </div>
+            </div>
+
+            <div class="group bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm border border-outline-variant/20 hover:shadow-xl transition-all duration-500">
+                <div class="relative aspect-[16/10] overflow-hidden">
+                    <img src="https://www.dcine.vn/Areas/Admin/Content/Fileuploads/images/DBL%20(1).jpg" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="Dcine">
+                    <div class="absolute top-4 left-4">
+                        <span class="px-3 py-1 bg-secondary text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-lg">Hiện đại bậc nhất</span>
+                    </div>
+                </div>
+                <div class="p-8">
+                    <h2 class="text-2xl font-black text-on-surface mb-3 tracking-tight">Dcine Quy Nhơn</h2>
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-start gap-3 text-sm text-on-surface-variant">
+                            <span class="material-symbols-outlined text-primary shrink-0">location_on</span>
+                            <span>Tầng 4, TTTM Quy Nhơn, Đường Lê Duẩn, TP. Quy Nhơn</span>
+                        </div>
+                        <div class="flex items-start gap-3 text-sm text-on-surface-variant">
+                            <span class="material-symbols-outlined text-primary shrink-0">phone</span>
+                            <span>0256 3811 811</span>
+                        </div>
+                        <div class="flex items-start gap-3 text-sm text-on-surface-variant">
+                            <span class="material-symbols-outlined text-primary shrink-0">info</span>
+                            <span>Phong cách trẻ trung, giá vé ưu đãi cho học sinh, sinh viên.</span>
+                        </div>
+                    </div>
+                    <a href="/phim" class="block w-full py-4 bg-primary text-white text-center font-black text-sm rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.03] active:scale-95 transition-all uppercase">Đặt vé ngay</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<%- include('partials/footer') %>

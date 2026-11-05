@@ -1,0 +1,105 @@
+<%- include('partials/admin-header') %>
+
+        <header class="sticky top-0 w-full z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 flex justify-between items-center px-8 py-4 shadow-sm">
+            <div class="flex items-center gap-4 bg-slate-100 px-4 py-2 rounded-full w-96 border border-slate-200">
+                <span class="material-symbols-outlined text-slate-400">search</span>
+                <input class="bg-transparent border-none focus:ring-0 text-sm w-full outline-none font-medium text-slate-700" placeholder="Tìm kiếm phim..." type="text"/>
+            </div>
+            <div class="flex items-center gap-6">
+                <button class="hover:bg-slate-100 rounded-full p-2 transition-all relative">
+                    <span class="material-symbols-outlined text-slate-500">notifications</span>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-red-600 rounded-full border border-white"></span>
+                </button>
+                <div class="h-6 w-[1px] bg-slate-300"></div>
+                <div class="flex items-center gap-3">
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-slate-900 leading-tight"><%= (typeof user !== 'undefined' && user) ? user.hoTen : 'Quản trị viên' %></p>
+                        <a href="/dang-xuat" class="text-[10px] uppercase tracking-widest text-red-600 font-bold hover:underline">Đăng xuất</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="p-8 flex-1">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+                    <div>
+                        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-1">Kho Phim</h2>
+                        <p class="text-slate-500 text-sm font-medium">Cập nhật và điều chỉnh thông tin phim của hệ thống.</p>
+                    </div>
+                    <a href="/admin/phim/them" class="bg-red-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-md shadow-red-600/20 hover:bg-red-700 active:scale-95 transition-all">
+                        <span class="material-symbols-outlined">add</span> Thêm phim mới
+                    </a>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200">
+                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500 w-16 text-center">STT</th>
+                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Phim</th>
+                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Thể loại</th>
+                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Thời lượng</th>
+                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Trạng thái</th>
+                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500 text-right">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <% if (typeof movies !== 'undefined' && movies && movies.length > 0) { %>
+                                    <% movies.forEach((phim, index) => { %>
+                                        <tr class="hover:bg-slate-50 transition-colors group">
+                                            <td class="px-6 py-4 text-sm font-bold text-slate-400 text-center"><%= index + 1 %></td>
+                                            <td class="px-6 py-4">
+                                                <div class="flex items-center gap-4">
+                                                    <div class="w-12 h-16 rounded-lg overflow-hidden bg-slate-200 shrink-0 shadow-sm border border-slate-200">
+                                                        <img alt="<%= phim.title %>" class="w-full h-full object-cover" src="<%= phim.posterUrl %>"/>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-sm font-bold text-slate-900 group-hover:text-red-600 transition-colors line-clamp-1"><%= phim.title %></p>
+                                                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1"><%= phim.ageRating %></p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4"><span class="text-[10px] px-3 py-1 rounded-md bg-slate-100 text-slate-600 font-bold uppercase tracking-widest"><%= phim.genre %></span></td>
+                                            <td class="px-6 py-4 text-sm font-bold text-slate-700"><%= phim.duration %> Phút</td>
+                                            <td class="px-6 py-4">
+                                                <% if(phim.status === 'DangChieu') { %>
+                                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-green-50 text-green-700 text-[10px] font-bold uppercase tracking-widest border border-green-200">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>Đang chiếu
+                                                    </span>
+                                                <% } else { %>
+                                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-orange-50 text-orange-700 text-[10px] font-bold uppercase tracking-widest border border-orange-200">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-orange-600"></span>Sắp chiếu
+                                                    </span>
+                                                <% } %>
+                                            </td>
+                                            <td class="px-6 py-4 text-right">
+                                                <div class="flex items-center justify-end gap-2">
+                                                    <a href="/admin/phim/sua/<%= phim._id %>" class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 border border-transparent transition-all" title="Sửa"><span class="material-symbols-outlined text-lg">edit</span></a>
+                                                    <form action="/admin/phim/xoa/<%= phim._id %>" method="POST" onsubmit="return confirm('Xác nhận xóa phim <%= phim.title %> vĩnh viễn?');" class="inline">
+                                                        <button type="submit" class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 border border-transparent transition-all cursor-pointer" title="Xóa"><span class="material-symbols-outlined text-lg">delete</span></button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="6" class="text-center py-16">
+                                            <div class="flex flex-col items-center justify-center text-slate-400">
+                                                <span class="material-symbols-outlined text-5xl mb-3 opacity-50">movie_off</span>
+                                                <p class="font-bold text-base text-slate-600">Kho phim trống</p>
+                                                <p class="text-sm mt-1">Bấm "Thêm phim mới" để đưa phim lên hệ thống.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+<%- include('partials/admin-footer') %>

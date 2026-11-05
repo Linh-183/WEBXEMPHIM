@@ -1,0 +1,48 @@
+<%- include('partials/header') %>
+
+<main class="min-h-screen flex items-center justify-center bg-surface-container-low py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-md w-full bg-surface-container-lowest p-8 rounded-3xl shadow-xl border border-outline-variant/20 relative z-10">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-black text-on-surface tracking-tight">TẠO TÀI KHOẢN</h2>
+            <p class="text-sm text-on-surface-variant mt-2 font-medium">Gia nhập cộng đồng CineGo ngay hôm nay</p>
+        </div>
+        
+        <form action="/dang-ky" method="POST" class="space-y-5">
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">Họ và tên</label>
+                <input type="text" name="hoTen" required placeholder="VD: Nguyễn Văn A" 
+                       class="w-full px-4 py-3 rounded-xl border-slate-300 focus:ring-primary focus:border-primary transition-colors bg-surface/50">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">Email</label>
+                <input type="email" name="email" required placeholder="VD: email@example.com" 
+                       class="w-full px-4 py-3 rounded-xl border-slate-300 focus:ring-primary focus:border-primary transition-colors bg-surface/50">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">Số điện thoại</label>
+                <input type="tel" name="soDienThoai" placeholder="VD: 0912345678" 
+                       class="w-full px-4 py-3 rounded-xl border-slate-300 focus:ring-primary focus:border-primary transition-colors bg-surface/50">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">Mật khẩu</label>
+                <input type="password" name="matKhau" required placeholder="Tạo mật khẩu (ít nhất 6 ký tự)" 
+                       class="w-full px-4 py-3 rounded-xl border-slate-300 focus:ring-primary focus:border-primary transition-colors bg-surface/50">
+            </div>
+            
+            <button type="submit" class="w-full py-4 mt-2 bg-gradient-to-r from-primary to-primary-container text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                ĐĂNG KÝ
+            </button>
+        </form>
+        
+        <p class="mt-8 text-center text-sm text-slate-600 font-medium">
+            Đã có tài khoản? <a href="/dang-nhap" class="font-bold text-primary hover:underline underline-offset-4 decoration-2">Đăng nhập</a>
+        </p>
+    </div>
+</main>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,173 @@
+<%- include('partials/admin-header') %>
+
+<header class="sticky top-0 w-full z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 flex justify-between items-center px-8 py-4 shadow-sm">
+    <div class="flex items-center gap-4">
+        <a href="/admin/phim" class="w-10 h-10 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-colors">
+            <span class="material-symbols-outlined">arrow_back</span>
+        </a>
+        <h1 class="text-2xl font-black text-slate-900">Sửa Phim: <%= phim.title %></h1>
+    </div>
+</header>
+
+<main class="p-8 flex-1 bg-[#f8f9fa]">
+    <form action="/admin/phim/sua/<%= phim._id %>" method="POST" class="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white p-8 rounded-[1.5rem] shadow-sm border border-slate-100">
+                <h2 class="text-base font-black text-slate-900 mb-8">Thông tin cơ bản</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Tên phim</label>
+                        <input name="title" value="<%= phim.title %>" required class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3.5 text-sm font-semibold" type="text"/>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Thời lượng (phút)</label>
+                        <input name="duration" value="<%= phim.duration %>" required class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3.5 text-sm font-semibold" type="number"/>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Thể loại</label>
+                        <input name="genre" value="<%= phim.genre %>" class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3.5 text-sm font-semibold" type="text"/>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Đạo diễn</label>
+                        <input name="director" value="<%= phim.director %>" class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3.5 text-sm font-semibold" type="text"/>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Ngày khởi chiếu</label>
+                        <input name="releaseDate" value="<%= phim.releaseDate ? phim.releaseDate.toISOString().split('T')[0] : '' %>" class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3.5 text-sm font-semibold uppercase" type="date"/>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Độ tuổi</label>
+                        <select name="ageRating" class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3.5 text-sm font-semibold">
+                            <option value="P" <%= phim.ageRating === 'P' ? 'selected' : '' %>>P - Mọi lứa tuổi</option>
+                            <option value="T13" <%= phim.ageRating === 'T13' ? 'selected' : '' %>>T13 - 13 tuổi trở lên</option>
+                            <option value="T16" <%= phim.ageRating === 'T16' ? 'selected' : '' %>>T16 - 16 tuổi trở lên</option>
+                            <option value="T18" <%= phim.ageRating === 'T18' ? 'selected' : '' %>>T18 - 18 tuổi trở lên</option>
+                        </select>
+                    </div>
+
+                    <div class="md:col-span-2 pt-6 border-t border-slate-100">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h2 class="text-base font-black text-slate-900">Quản lý Lịch Chiếu</h2>
+                                <p class="text-xs text-slate-500 font-medium">Thiết lập rạp, phòng và giờ chiếu chi tiết</p>
+                            </div>
+                            <button type="button" onclick="addST()" class="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-100 flex items-center gap-1 transition-all">
+                                <span class="material-symbols-outlined text-[16px]">add</span> THÊM LỊCH
+                            </button>
+                        </div>
+                        
+                        <div id="st-wrapper" class="space-y-4">
+                            <% if (phim.showtimes && phim.showtimes.length > 0) { %>
+                                <% phim.showtimes.forEach((st) => { %>
+                                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col gap-3 relative group">
+                                        <button type="button" onclick="this.parentElement.remove()" class="absolute -top-3 -right-3 w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">X</button>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <select name="cinema[]" required class="bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:ring-red-500 focus:border-red-500">
+                                                <option value="Starlight Quy Nhơn" <%= st.cinema === 'Starlight Quy Nhơn' ? 'selected' : '' %>>Starlight Quy Nhơn</option>
+                                                <option value="CGV Quy Nhơn" <%= st.cinema === 'CGV Quy Nhơn' ? 'selected' : '' %>>CGV Quy Nhơn</option>
+                                                <option value="Dcine Quy Nhơn" <%= st.cinema === 'Dcine Quy Nhơn' ? 'selected' : '' %>>Dcine Quy Nhơn</option>
+                                            </select>
+                                            <select name="room[]" required class="bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:ring-red-500 focus:border-red-500">
+                                                <option value="Phòng 01 (Thường)" <%= st.room === 'Phòng 01 (Thường)' ? 'selected' : '' %>>Phòng 01 (Tiêu chuẩn)</option>
+                                                <option value="Phòng 02 (Thường)" <%= st.room === 'Phòng 02 (Thường)' ? 'selected' : '' %>>Phòng 02 (Tiêu chuẩn)</option>
+                                                <option value="Phòng 03 (VIP)" <%= st.room === 'Phòng 03 (VIP)' ? 'selected' : '' %>>Phòng 03 (Ghế VIP)</option>
+                                                <option value="Phòng 04 (Couple)" <%= st.room === 'Phòng 04 (Couple)' ? 'selected' : '' %>>Phòng 04 (Ghế Couple)</option>
+                                                <option value="Phòng 05 (IMAX)" <%= st.room === 'Phòng 05 (IMAX)' ? 'selected' : '' %>>Phòng 05 (Màn hình IMAX)</option>
+                                            </select>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-3">
+                                            <input type="date" name="show_date[]" value="<%= st.date %>" required class="col-span-1 bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold uppercase focus:ring-red-500 focus:border-red-500"/>
+                                            <input type="text" name="show_times[]" value="<%= st.times.join(', ') %>" placeholder="Giờ chiếu (VD: 19:00, 20:30)" required class="col-span-2 bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:ring-red-500 focus:border-red-500"/>
+                                        </div>
+                                    </div>
+                                <% }) %>
+                            <% } else { %>
+                                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col gap-3 relative group">
+                                    <button type="button" onclick="this.parentElement.remove()" class="absolute -top-3 -right-3 w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">X</button>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <select name="cinema[]" required class="bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:ring-red-500 focus:border-red-500">
+                                            <option value="Starlight Quy Nhơn">Starlight Quy Nhơn</option>
+                                            <option value="CGV Quy Nhơn">CGV Quy Nhơn</option>
+                                            <option value="Dcine Quy Nhơn">Dcine Quy Nhơn</option>
+                                        </select>
+                                        <select name="room[]" required class="bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:ring-red-500 focus:border-red-500">
+                                            <option value="Phòng 01 (Thường)">Phòng 01 (Tiêu chuẩn)</option>
+                                            <option value="Phòng 02 (Thường)">Phòng 02 (Tiêu chuẩn)</option>
+                                            <option value="Phòng 03 (VIP)">Phòng 03 (Ghế VIP)</option>
+                                            <option value="Phòng 04 (Couple)">Phòng 04 (Ghế Couple)</option>
+                                            <option value="Phòng 05 (IMAX)">Phòng 05 (Màn hình IMAX)</option>
+                                        </select>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-3">
+                                        <input type="date" name="show_date[]" required class="col-span-1 bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold uppercase focus:ring-red-500 focus:border-red-500"/>
+                                        <input type="text" name="show_times[]" placeholder="Giờ chiếu (VD: 19:00, 20:30)" required class="col-span-2 bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:ring-red-500 focus:border-red-500"/>
+                                    </div>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-8 rounded-[1.5rem] shadow-sm border border-slate-100">
+                <h2 class="text-base font-black text-slate-900 mb-4">Mô tả phim</h2>
+                <textarea name="description" rows="5" class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3.5 text-sm font-semibold" placeholder="Nội dung phim..."><%= phim.description %></textarea>
+            </div>
+        </div>
+
+        <div class="lg:col-span-1 space-y-6">
+            <div class="bg-white p-6 rounded-[1.5rem] shadow-sm border border-slate-100 text-center">
+                <h2 class="text-sm font-black text-slate-900 mb-4 uppercase text-left">Poster Hiện Tại</h2>
+                <img src="<%= phim.posterUrl %>" class="w-full h-64 object-cover rounded-xl mb-4 border shadow-sm">
+                <input name="posterUrl" value="<%= phim.posterUrl %>" type="url" required class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-xs font-semibold" placeholder="Dán link ảnh poster mới..."/>
+            </div>
+            <div class="bg-white p-6 rounded-[1.5rem] shadow-sm border border-slate-100">
+                <h2 class="text-sm font-black text-slate-900 mb-4 uppercase">Trạng thái</h2>
+                <div class="space-y-3">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="radio" name="status" value="DangChieu" <%= phim.status === 'DangChieu' ? 'checked' : '' %>/>
+                        <span class="text-sm font-bold">Đang chiếu</span>
+                    </label>
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="radio" name="status" value="SapChieu" <%= phim.status === 'SapChieu' ? 'checked' : '' %>/>
+                        <span class="text-sm font-bold">Sắp chiếu</span>
+                    </label>
+                </div>
+            </div>
+            <button type="submit" class="w-full py-4 bg-[#dc2626] text-white font-black rounded-xl shadow-lg hover:bg-red-700 transition-colors">
+                LƯU THAY ĐỔI
+            </button>
+        </div>
+    </form>
+</main>
+
+<script>
+    function addST() {
+        const wrapper = document.getElementById('st-wrapper');
+        const block = document.createElement('div');
+        block.className = 'bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col gap-3 relative group';
+        block.innerHTML = `
+            <button type="button" onclick="this.parentElement.remove()" class="absolute -top-3 -right-3 w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">X</button>
+            <div class="grid grid-cols-2 gap-3">
+                <select name="cinema[]" required class="bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:ring-red-500 focus:border-red-500">
+                    <option value="Starlight Quy Nhơn">Starlight Quy Nhơn</option>
+                    <option value="CGV Quy Nhơn">CGV Quy Nhơn</option>
+                    <option value="Dcine Quy Nhơn">Dcine Quy Nhơn</option>
+                </select>
+                <select name="room[]" required class="bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:ring-red-500 focus:border-red-500">
+                    <option value="Phòng 01 (Thường)">Phòng 01 (Tiêu chuẩn)</option>
+                    <option value="Phòng 02 (Thường)">Phòng 02 (Tiêu chuẩn)</option>
+                    <option value="Phòng 03 (VIP)">Phòng 03 (Ghế VIP)</option>
+                    <option value="Phòng 04 (Couple)">Phòng 04 (Ghế Couple)</option>
+                    <option value="Phòng 05 (IMAX)">Phòng 05 (Màn hình IMAX)</option>
+                </select>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+                <input type="date" name="show_date[]" required class="col-span-1 bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold uppercase focus:ring-red-500 focus:border-red-500"/>
+                <input type="text" name="show_times[]" placeholder="Giờ chiếu (VD: 19:00, 20:30)" required class="col-span-2 bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:ring-red-500 focus:border-red-500"/>
+            </div>
+        `;
+        wrapper.appendChild(block);
+    }
+</script>
+
+<%- include('partials/admin-footer') %>

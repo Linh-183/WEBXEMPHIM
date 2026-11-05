@@ -1,0 +1,58 @@
+/* Nạp 3 thành phần cốt lõi của Tailwind */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Định dạng cơ bản cho toàn trang */
+@layer base {
+  body {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    background-color: #f9f9f9;
+    color: #1a1c1c;
+  }
+}
+
+/* Các class tự viết của riêng CineGo */
+@layer components {
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+  
+  .glass-nav {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .movie-card-hover:hover {
+    box-shadow: 0 30px 60px -12px rgba(26, 28, 28, 0.04);
+    transform: translateY(-2px);
+  }
+
+  .promo-gradient { 
+    background: linear-gradient(135deg, #b8000b 0%, #e50914 100%); 
+  }
+
+  .poster-shadow {
+    box-shadow: 0 30px 60px -12px rgba(26, 28, 28, 0.12);
+  }
+
+  .seat-grid { 
+    display: grid; 
+    grid-template-columns: repeat(12, minmax(0, 1fr)); 
+    gap: 0.5rem; 
+  }
+
+  .step-active { color: #b8000b; font-weight: 700; }
+  .step-line { height: 2px; flex-grow: 1; background-color: #e2e2e2; margin: 0 1rem; }
+  .step-line-active { background-color: #b8000b; }
+
+  /* Ẩn thanh cuộn cho danh sách ngày tháng */
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

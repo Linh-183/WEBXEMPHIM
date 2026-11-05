@@ -1,0 +1,178 @@
+<%- include('partials/header') %>
+
+<main style="background-color: #f9fafb; min-height: 100vh; padding: 3rem 1.5rem; font-family: 'Be Vietnam Pro', sans-serif;">
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 2rem; align-items: flex-start;">
+        
+        <aside style="flex: 1 1 300px; max-width: 320px; display: flex; flex-direction: column; gap: 1.5rem;">
+            <div style="background: #ffffff; border-radius: 1.25rem; padding: 2rem; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                <div style="position: relative; display: inline-block; margin-bottom: 1rem;">
+                    <img src="https://ui-avatars.com/api/?name=<%= user ? user.hoTen : 'User' %>&background=e50914&color=fff&size=128" 
+                         style="width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid #f9fafb;" alt="Avatar">
+                </div>
+                <h2 style="font-size: 1.1rem; font-weight: 800; color: #111827; margin-bottom: 0.25rem;"><%= user ? user.hoTen : '' %></h2>
+                <% if (user && user.vaiTro === 'admin') { %>
+                    <p style="font-size: 0.75rem; color: #dc2626; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">Quản trị viên</p>
+                    <a href="/admin" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; padding: 0.75rem; background: #dc2626; color: white; font-weight: 700; border-radius: 0.75rem; text-decoration: none;">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">admin_panel_settings</span>
+                        Trang Quản Trị
+                    </a>
+                <% } else { %>
+                    <p style="font-size: 0.75rem; color: #6b7280; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Thành viên</p>
+                <% } %>
+            </div>
+
+            <nav style="background: #ffffff; border-radius: 1.25rem; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 0.5rem 0;">
+                <button onclick="switchTab('ho-so', this)" class="menu-tab active" style="width: 100%; display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; background: #fef2f2; border-left: 4px solid #dc2626; color: #dc2626; font-weight: 700; font-size: 0.9rem; border-top: none; border-right: none; border-bottom: none; cursor: pointer; text-align: left;">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+                    Hồ sơ cá nhân
+                </button>
+                <a href="/tai-khoan/ve-cua-toi" style="display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; color: #4b5563; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
+                    <span class="material-symbols-outlined">history</span>
+                    Lịch sử đặt vé
+                </a>
+                <button onclick="switchTab('bao-mat', this)" class="menu-tab" style="width: 100%; display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; background: transparent; border-left: 4px solid transparent; color: #4b5563; font-weight: 600; font-size: 0.9rem; border-top: none; border-right: none; border-bottom: none; cursor: pointer; text-align: left;">
+                    <span class="material-symbols-outlined">lock_reset</span>
+                    Bảo mật tài khoản
+                </button>
+                <div style="height: 1px; background: #f3f4f6; margin: 0.5rem 0;"></div>
+                <a href="/dang-xuat" style="display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; color: #ef4444; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
+                    <span class="material-symbols-outlined">logout</span>
+                    Đăng xuất
+                </a>
+            </nav>
+        </aside>
+
+        <section style="flex: 999 1 600px; display: flex; flex-direction: column; gap: 1.5rem;">
+            
+            <div id="tab-ho-so" class="content-section" style="background: #ffffff; border-radius: 1.25rem; padding: 2.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: block;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2.5rem;">
+                    <div>
+                        <h1 style="font-size: 1.75rem; font-weight: 900; color: #111827; margin-bottom: 0.25rem;">Hồ sơ cá nhân</h1>
+                        <p style="font-size: 0.85rem; color: #6b7280;">Cập nhật thông tin liên lạc và dữ liệu định danh của bạn.</p>
+                    </div>
+                    <button id="btn-edit" type="button" onclick="enableEdit()" style="background: #f3f4f6; color: #111827; border: none; border-radius: 0.5rem; padding: 0.75rem 1.25rem; font-size: 0.85rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
+                        Chỉnh sửa
+                    </button>
+                </div>
+
+                <form id="profile-form" action="/tai-khoan/cap-nhat" method="POST">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                        <div>
+                            <label style="font-size: 0.7rem; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Họ tên</label>
+                            <input name="hoTen" type="text" value="<%= user ? user.hoTen : '' %>" readonly class="editable-input" style="width: 100%; background: #f4f4f5; border: 1px solid transparent; border-radius: 0.5rem; padding: 0.875rem 1.25rem; font-size: 0.9rem; font-weight: 600; color: #111827; outline: none; box-sizing: border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.7rem; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Email (Không thể đổi)</label>
+                            <input name="email" type="email" value="<%= user ? user.email : '' %>" readonly style="width: 100%; background: #f4f4f5; border: none; border-radius: 0.5rem; padding: 0.875rem 1.25rem; font-size: 0.9rem; font-weight: 600; color: #6b7280; outline: none; opacity: 0.7; cursor: not-allowed; box-sizing: border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.7rem; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Số điện thoại</label>
+                            <%# [SUA] user.sdt -> user.soDienThoai de khop voi ten truong trong MongoDB %>
+                            <input name="sdt" type="tel" value="<%= (user && user.soDienThoai) ? user.soDienThoai : '' %>" readonly class="editable-input" style="width: 100%; background: #f4f4f5; border: 1px solid transparent; border-radius: 0.5rem; padding: 0.875rem 1.25rem; font-size: 0.9rem; font-weight: 600; color: #111827; outline: none; box-sizing: border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.7rem; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Ngày sinh</label>
+                            <%# [SUA] Format Date object sang YYYY-MM-DD de input type="date" hien thi dung %>
+                            <input name="ngaySinh" type="date" value="<%= (user && user.ngaySinh) ? user.ngaySinh.toISOString().split('T')[0] : '' %>" readonly class="editable-input" style="width: 100%; background: #f4f4f5; border: 1px solid transparent; border-radius: 0.5rem; padding: 0.875rem 1.25rem; font-size: 0.9rem; font-weight: 600; color: #111827; outline: none; box-sizing: border-box;">
+                        </div>
+                        <div style="grid-column: 1 / -1; margin-top: 0.5rem;">
+                            <label style="font-size: 0.7rem; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.75rem;">Giới tính</label>
+                            <div style="display: flex; gap: 2rem; align-items: center;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <%# [SUA] user.gender -> user.gioiTinh de khop voi ten truong trong MongoDB %>
+                                    <input name="gender" type="radio" value="Nam" <%= (user && user.gioiTinh === 'Nam') ? 'checked' : '' %> disabled class="editable-radio" style="width: 1.1rem; height: 1.1rem; accent-color: #dc2626;">
+                                    <span style="font-size: 0.9rem; font-weight: 700; color: #374151;">Nam</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input name="gender" type="radio" value="Nu" <%= (user && user.gioiTinh === 'Nu') ? 'checked' : '' %> disabled class="editable-radio" style="width: 1.1rem; height: 1.1rem; accent-color: #dc2626;">
+                                    <span style="font-size: 0.9rem; font-weight: 700; color: #374151;">Nữ</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="action-buttons" style="display: none; align-items: center; gap: 1rem; border-top: 1px solid #f3f4f6; padding-top: 1.5rem;">
+                        <button type="submit" style="background: #dc2626; color: white; border: none; border-radius: 0.5rem; padding: 0.875rem 2rem; font-size: 0.9rem; font-weight: 700; cursor: pointer;">
+                            Lưu thông tin
+                        </button>
+                        <button type="button" onclick="cancelEdit()" style="background: #f3f4f6; color: #4b5563; border: none; border-radius: 0.5rem; padding: 0.875rem 2rem; font-size: 0.9rem; font-weight: 700; cursor: pointer;">
+                            Hủy bỏ
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="tab-bao-mat" class="content-section" style="background: #ffffff; border-radius: 1.25rem; padding: 2.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: none;">
+                <h2 style="font-size: 1.5rem; font-weight: 900; color: #111827; margin-bottom: 0.25rem;">Bảo mật tài khoản</h2>
+                <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 2.5rem;">Đổi mật khẩu định kỳ giúp bảo vệ tài khoản của bạn.</p>
+                <form action="/tai-khoan/doi-mat-khau" method="POST">
+                    <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 2rem; max-width: 500px;">
+                        <div>
+                            <label style="font-size: 0.7rem; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Mật khẩu hiện tại</label>
+                            <input name="currentPassword" type="password" required placeholder="Nhập mật khẩu đang sử dụng" style="width: 100%; background: #f4f4f5; border: 1px solid transparent; border-radius: 0.5rem; padding: 0.875rem 1.25rem; font-size: 0.9rem; font-weight: 600; color: #111827; outline: none; box-sizing: border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.7rem; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Mật khẩu mới</label>
+                            <input name="newPassword" type="password" required placeholder="Mật khẩu từ 6 ký tự trở lên" style="width: 100%; background: #f4f4f5; border: 1px solid transparent; border-radius: 0.5rem; padding: 0.875rem 1.25rem; font-size: 0.9rem; font-weight: 600; color: #111827; outline: none; box-sizing: border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.7rem; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Xác nhận mật khẩu mới</label>
+                            <input name="confirmPassword" type="password" required placeholder="Nhập lại mật khẩu mới" style="width: 100%; background: #f4f4f5; border: 1px solid transparent; border-radius: 0.5rem; padding: 0.875rem 1.25rem; font-size: 0.9rem; font-weight: 600; color: #111827; outline: none; box-sizing: border-box;">
+                        </div>
+                    </div>
+                    <div style="border-top: 1px solid #f3f4f6; padding-top: 1.5rem;">
+                        <button type="submit" style="background: #111827; color: white; border: none; border-radius: 0.5rem; padding: 0.875rem 2rem; font-size: 0.9rem; font-weight: 700; cursor: pointer;">
+                            Cập nhật mật khẩu
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </section>
+    </div>
+</main>
+
+<script>
+    function switchTab(tabId, clickedBtn) {
+        document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
+        document.getElementById('tab-' + tabId).style.display = 'block';
+        document.querySelectorAll('.menu-tab').forEach(btn => {
+            btn.style.background = 'transparent';
+            btn.style.borderLeftColor = 'transparent';
+            btn.style.color = '#4b5563';
+            btn.style.fontWeight = '600';
+            btn.querySelector('.material-symbols-outlined').style.fontVariationSettings = "'FILL' 0";
+        });
+        clickedBtn.style.background = '#fef2f2';
+        clickedBtn.style.borderLeftColor = '#dc2626';
+        clickedBtn.style.color = '#dc2626';
+        clickedBtn.style.fontWeight = '700';
+        clickedBtn.querySelector('.material-symbols-outlined').style.fontVariationSettings = "'FILL' 1";
+    }
+
+    function enableEdit() {
+        document.querySelectorAll('.editable-input').forEach(input => {
+            input.removeAttribute('readonly');
+            input.style.background = '#ffffff';
+            input.style.border = '1px solid #d1d5db';
+        });
+        document.querySelectorAll('.editable-radio').forEach(r => r.removeAttribute('disabled'));
+        document.getElementById('btn-edit').style.display = 'none';
+        document.getElementById('action-buttons').style.display = 'flex';
+    }
+
+    function cancelEdit() {
+        document.getElementById('profile-form').reset();
+        document.querySelectorAll('.editable-input').forEach(input => {
+            input.setAttribute('readonly', true);
+            input.style.background = '#f4f4f5';
+            input.style.border = '1px solid transparent';
+        });
+        document.querySelectorAll('.editable-radio').forEach(r => r.setAttribute('disabled', true));
+        document.getElementById('btn-edit').style.display = 'flex';
+        document.getElementById('action-buttons').style.display = 'none';
+    }
+</script>
+
+<%- include('partials/footer') %>

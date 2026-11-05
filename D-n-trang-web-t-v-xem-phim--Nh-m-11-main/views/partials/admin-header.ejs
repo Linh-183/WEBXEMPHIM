@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CineGo Admin</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <style>
+        body { font-family: 'Be Vietnam Pro', sans-serif; background-color: #f8fafc; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+        #admin-sidebar::-webkit-scrollbar { width: 4px; }
+        #admin-sidebar::-webkit-scrollbar-track { background: transparent; }
+        #admin-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    </style>
+</head>
+<body class="text-slate-900 antialiased flex min-h-screen">
+
+    <aside class="fixed left-0 top-0 h-screen w-64 bg-[#0f172a] text-white z-50 flex flex-col shadow-2xl">
+        <div class="p-6 pb-4 border-b border-white/10">
+            <h1 class="text-3xl font-black text-[#e11d48] uppercase tracking-tighter">CineGo</h1>
+            <p class="text-[10px] text-white/50 font-bold tracking-widest uppercase mt-1">Hệ thống quản trị</p>
+        </div>
+
+        <nav class="flex-1 flex flex-col gap-2 px-4 py-6 overflow-y-auto" id="admin-sidebar">
+            <a class="nav-link flex items-center gap-3 px-4 py-3 text-white/60 hover:bg-white/10 hover:text-white rounded-xl font-bold transition-all text-sm" href="/admin">
+                <span class="material-symbols-outlined">dashboard</span> Tổng quan
+            </a>
+            <a class="nav-link flex items-center gap-3 px-4 py-3 text-white/60 hover:bg-white/10 hover:text-white rounded-xl font-bold transition-all text-sm" href="/admin/phim">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">movie</span> Quản lý phim
+            </a>
+            <a class="nav-link flex items-center gap-3 px-4 py-3 text-white/60 hover:bg-white/10 hover:text-white rounded-xl font-bold transition-all text-sm" href="/admin/nguoi-dung">
+                <span class="material-symbols-outlined">group</span> Người dùng
+            </a>
+            <a class="nav-link flex items-center gap-3 px-4 py-3 text-white/60 hover:bg-white/10 hover:text-white rounded-xl font-bold transition-all text-sm" href="/admin/quan-ly-rap">
+               <span class="material-symbols-outlined">theater_comedy</span> Quản lý rạp
+            </a>
+            <a class="nav-link flex items-center gap-3 px-4 py-3 text-white/60 hover:bg-white/10 hover:text-white rounded-xl font-bold transition-all text-sm" href="/admin/khuyen-mai">
+               <span class="material-symbols-outlined">confirmation_number</span> Quản lý khuyến mãi
+            </a>
+        </nav>
+
+        <div class="p-6 border-t border-white/10 mt-auto">
+            <a href="/" class="flex items-center justify-center gap-2 w-full py-3 mb-6 bg-white/10 hover:bg-[#e11d48] text-white rounded-xl font-bold text-sm transition-all shadow-lg group">
+                <span class="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                Về trang khách
+            </a>
+
+            <div class="flex items-center gap-3">
+                <img class="w-10 h-10 rounded-full object-cover ring-2 ring-white/20" src="https://ui-avatars.com/api/?name=<%= (typeof user !== 'undefined' && user) ? user.hoTen : 'Admin' %>&background=e11d48&color=fff&bold=true">
+                <div class="flex-1 min-w-0">
+                    <p class="font-bold text-white text-sm truncate"><%= (typeof user !=='undefined' && user) ? user.hoTen : 'Quản trị viên' %></p>
+                    <p class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>Trực tuyến
+                    </p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="ml-64 flex-1 flex flex-col min-h-screen">
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const currentPath = window.location.pathname;
+                const links = document.querySelectorAll("#admin-sidebar .nav-link");
+                links.forEach(link => {
+                    const linkPath = link.getAttribute("href");
+                    if (linkPath === currentPath || (linkPath !== "/admin" && currentPath.startsWith(linkPath))) {
+                        link.className = "nav-link flex items-center gap-3 px-4 py-3 bg-[#e11d48] text-white rounded-xl font-bold transition-all text-sm shadow-lg shadow-rose-500/30";
+                    }
+                });
+            });
+        </script>

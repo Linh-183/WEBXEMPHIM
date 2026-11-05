@@ -1,0 +1,60 @@
+<%- include('partials/admin-header') %>
+
+<header class="sticky top-0 w-full z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 flex justify-between items-center px-8 py-4">
+    <div class="flex items-center gap-4 bg-slate-100 px-4 py-2.5 rounded-xl w-96 border border-slate-200">
+        <span class="material-symbols-outlined text-slate-400">search</span>
+        <input class="bg-transparent border-none focus:ring-0 text-sm w-full outline-none font-medium text-slate-700" placeholder="Tìm người dùng..." type="text"/>
+    </div>
+    <a href="/dang-xuat" class="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-[#e11d48]">
+        <span class="material-symbols-outlined text-[20px]">logout</span> Đăng xuất
+    </a>
+</header>
+
+<main class="p-8 flex-1">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex justify-between items-end mb-8">
+            <div>
+                <h1 class="text-3xl font-black text-[#0f172a] tracking-tight mb-1">Thành viên hệ thống</h1>
+                <p class="text-slate-500 text-sm font-medium">Tổng số: <%= users.length %> tài khoản đăng ký.</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200">
+                        <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Họ tên</th>
+                        <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Tài khoản</th>
+                        <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Phân quyền</th>
+                        <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400 text-right">Khóa/Xóa</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <% users.forEach(u => { %>
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-6 py-4 text-sm font-bold text-slate-900"><%= u.hoTen %></td>
+                            <td class="px-6 py-4">
+                                <p class="text-sm font-bold text-slate-600"><%= u.email %></p>
+                                <p class="text-[11px] text-slate-400 mt-0.5"><%= u.soDienThoai %></p>
+                            </td>
+                            <td class="px-6 py-4">
+                                <% if (u.vaiTro === 'admin') { %>
+                                    <span class="px-3 py-1 bg-[#0f172a] text-white text-[10px] font-black rounded-md uppercase">Admin</span>
+                                <% } else { %>
+                                    <span class="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black rounded-md uppercase">Member</span>
+                                <% } %>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <% if (u.vaiTro !== 'admin') { %>
+                                    <form action="/admin/nguoi-dung/xoa/<%= u._id %>" method="POST" onsubmit="return confirm('Xóa vĩnh viễn user này?');" class="inline">
+                                        <button type="submit" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 border border-slate-200 hover:border-red-200 ml-auto"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+                                    </form>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>

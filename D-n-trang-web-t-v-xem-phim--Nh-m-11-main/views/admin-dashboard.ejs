@@ -1,0 +1,130 @@
+<%- include('partials/admin-header') %>
+
+<header class="sticky top-0 w-full z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 flex justify-between items-center px-8 py-4">
+    <div class="flex items-center gap-4 bg-slate-100 px-4 py-2.5 rounded-xl w-96 border border-slate-200 focus-within:border-[#e11d48] focus-within:ring-1 focus-within:ring-[#e11d48] transition-all">
+        <span class="material-symbols-outlined text-slate-400">search</span>
+        <input class="bg-transparent border-none focus:ring-0 text-sm w-full outline-none font-medium text-slate-700 placeholder-slate-400" placeholder="Tìm kiếm mã vé, tên phim..." type="text"/>
+    </div>
+    <div class="flex items-center gap-6">
+        <a href="/dang-xuat" class="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-[#e11d48] transition-colors">
+            <span class="material-symbols-outlined text-[20px]">logout</span> Đăng xuất
+        </a>
+    </div>
+</header>
+
+<main class="p-8 flex-1">
+    <div class="mb-8 flex justify-between items-end">
+        <div>
+            <h2 class="text-3xl font-black tracking-tight text-[#0f172a] mb-1">Tổng quan hệ thống</h2>
+            <p class="text-sm text-slate-500 font-medium">Báo cáo hiệu suất hoạt động của CineGo.</p>
+        </div>
+        <div class="bg-white p-1 rounded-xl flex shadow-sm border border-slate-200">
+            <a href="/admin?filter=today" class="px-5 py-2 <%= currentFilter === 'today' ? 'bg-[#0f172a] text-white' : 'text-slate-500 hover:text-[#0f172a]' %> rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">Hôm nay</a>
+            <a href="/admin?filter=month" class="px-5 py-2 <%= currentFilter === 'month' ? 'bg-[#0f172a] text-white' : 'text-slate-500 hover:text-[#0f172a]' %> rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">Tháng này</a>
+            <a href="/admin?filter=all" class="px-5 py-2 <%= currentFilter === 'all' || !currentFilter ? 'bg-[#0f172a] text-white' : 'text-slate-500 hover:text-[#0f172a]' %> rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">Tất cả</a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center text-[#e11d48]"><span class="material-symbols-outlined">movie</span></div>
+            </div>
+            <h3 class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Tổng số phim</h3>
+            <p class="text-3xl font-black text-[#0f172a]"><%= stats.totalMovies || 0 %></p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600"><span class="material-symbols-outlined">confirmation_number</span></div>
+            </div>
+            <h3 class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Vé đã bán</h3>
+            <p class="text-3xl font-black text-[#0f172a]"><%= stats.totalTickets || 0 %></p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600"><span class="material-symbols-outlined">payments</span></div>
+            </div>
+            <h3 class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Doanh thu</h3>
+            <p class="text-3xl font-black text-[#0f172a]"><%= Number(stats.revenue || 0).toLocaleString('vi-VN') %>đ</p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600"><span class="material-symbols-outlined">group_add</span></div>
+            </div>
+            <h3 class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Thành viên mới</h3>
+            <p class="text-3xl font-black text-[#0f172a]"><%= stats.newUsers || 0 %></p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-[#0f172a]">Giao dịch mới nhất</h3>
+                <a href="/admin/quan-ly-rap" class="text-xs font-bold text-[#e11d48] hover:underline">Xem tất cả</a>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-600">
+                    <thead class="text-[10px] font-black text-slate-400 uppercase bg-slate-50 border-b border-slate-100 tracking-wider">
+                        <tr>
+                            <th class="px-4 py-3 rounded-tl-lg">Khách hàng</th>
+                            <th class="px-4 py-3">Phim</th>
+                            <th class="px-4 py-3">Suất chiếu</th>
+                            <th class="px-4 py-3">Số ghế</th>
+                            <th class="px-4 py-3 text-right rounded-tr-lg">Tổng tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (typeof recentTickets !== 'undefined' && recentTickets.length > 0) { %>
+                            <% recentTickets.forEach(ticket => { %>
+                                <tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                                    <td class="px-4 py-4 font-medium text-slate-900"><%= ticket.user ? ticket.user.hoTen : 'Khách vãng lai' %></td>
+                                    <td class="px-4 py-4 font-bold text-[#0f172a]"><%= ticket.movie ? ticket.movie.title : 'Phim đã xóa' %></td>
+                                    <td class="px-4 py-4">
+                                        <div class="text-xs font-bold text-[#e11d48]"><%= ticket.showTime %></div>
+                                        <div class="text-[10px] font-medium text-slate-400 mt-0.5"><%= ticket.showDate %></div>
+                                    </td>
+                                    <td class="px-4 py-4 font-mono font-bold text-xs"><%= ticket.seats ? ticket.seats.join(', ') : '' %></td>
+                                    <td class="px-4 py-4 text-right font-black text-emerald-600"><%= Number(ticket.totalPrice || 0).toLocaleString('vi-VN') %>đ</td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="5" class="text-center py-8 text-slate-400 font-medium">Hệ thống chưa ghi nhận giao dịch nào.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <h3 class="text-lg font-bold text-[#0f172a] mb-6">Phim đang dẫn đầu</h3>
+            <div class="space-y-4">
+                <% if (typeof topMovies !== 'undefined' && topMovies.length > 0) { %>
+                    <% topMovies.forEach((phim, index) => { %>
+                        <div class="flex items-center gap-4 p-2 rounded-xl hover:bg-slate-50 transition-colors">
+                            <div class="w-12 h-16 bg-slate-200 rounded-lg shrink-0 overflow-hidden relative shadow-sm">
+                                <img src="<%= phim.posterUrl %>" class="w-full h-full object-cover">
+                                <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-black/80 to-transparent"></div>
+                                <span class="absolute bottom-1 right-1.5 text-white text-[10px] font-black">#<%= index + 1 %></span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-sm text-slate-900 line-clamp-1"><%= phim.title %></h4>
+                                <p class="text-xs text-slate-500 mt-1">Đã bán: <b class="text-[#e11d48]"><%= phim.totalSold %></b> vé</p>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="text-center py-10">
+                        <span class="material-symbols-outlined text-4xl text-slate-300 mb-2">monitoring</span>
+                        <p class="text-sm text-slate-500 font-bold">Chưa có vé nào được bán ra.</p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</main>
+
+<%- include('partials/admin-footer') %>

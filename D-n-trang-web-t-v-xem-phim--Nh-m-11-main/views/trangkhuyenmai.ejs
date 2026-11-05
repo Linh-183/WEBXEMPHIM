@@ -1,0 +1,57 @@
+<%- include('partials/header') %>
+
+<main class="min-h-screen bg-[#f8fafc] py-16">
+    <div class="max-w-7xl mx-auto px-6 mb-16 text-center">
+        <h1 class="text-5xl font-[900] text-slate-900 mb-4 tracking-tight">KHO VOUCHER <span class="text-red-600 italic">CINEGO</span></h1>
+        <p class="text-slate-500 text-lg max-w-2xl mx-auto font-medium">Đừng để lãng phí cơ hội! Thu thập ngay những mã giảm giá cực hời để tận hưởng những bộ phim bom tấn.</p>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        <% vouchers.forEach(function(voucher) { %>
+            <div class="group relative bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 flex flex-col transition-all hover:-translate-y-2">
+                <div class="h-32 bg-gradient-to-br from-red-600 to-red-800 p-6 flex flex-col justify-center relative">
+                    <div class="absolute -bottom-3 -left-3 w-6 h-6 bg-[#f8fafc] rounded-full"></div>
+                    <div class="absolute -bottom-3 -right-3 w-6 h-6 bg-[#f8fafc] rounded-full"></div>
+                    
+                    <h3 class="text-white text-3xl font-black italic tracking-tighter">
+                        <%= voucher.discountType === 'percentage' ? '-' + voucher.discountValue + '%' : '-' + (voucher.discountValue/1000) + 'K' %>
+                    </h3>
+                    <p class="text-red-100 text-[10px] font-bold uppercase tracking-widest opacity-80"><%= voucher.title %></p>
+                </div>
+
+                <div class="p-8 flex-1 flex flex-col">
+                    <p class="text-slate-500 text-sm font-medium mb-6 leading-relaxed">
+                        <%= voucher.description %>
+                    </p>
+                    
+                    <div class="mt-auto">
+                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 group-hover:border-red-200 group-hover:bg-red-50 transition-colors">
+                            <span class="font-mono font-bold text-lg text-slate-700 tracking-wider uppercase"><%= voucher.code %></span>
+                            <button onclick="copyVoucher('<%= voucher.code %>', this)" class="bg-red-600 text-white text-[10px] font-bold px-4 py-2 rounded-xl shadow-lg shadow-red-200 hover:bg-red-700 active:scale-95 transition-all">
+                                COPY MÃ
+                            </button>
+                        </div>
+                        <p class="text-[10px] text-slate-400 font-bold mt-4 text-center uppercase tracking-widest">
+                            HSD: <%= voucher.expiryDate ? new Date(voucher.expiryDate).toLocaleDateString('vi-VN') : 'Vô thời hạn' %>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+</main>
+
+<script>
+    function copyVoucher(code, btn) {
+        navigator.clipboard.writeText(code);
+        const originalText = btn.innerText;
+        btn.innerText = 'ĐÃ COPY!';
+        btn.style.background = '#059669'; // Chuyển sang xanh lá khi thành công
+        setTimeout(() => {
+            btn.innerText = originalText;
+            btn.style.background = '#dc2626';
+        }, 2000);
+    }
+</script>
+
+<%- include('partials/footer') %>

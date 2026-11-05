@@ -1,0 +1,202 @@
+<%- include('partials/header') %>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = { 
+        darkMode: "class", 
+        theme: { 
+            extend: { 
+                colors: { 
+                    "primary": "#b8000b", 
+                    "surface": "#f8f9fa", 
+                    "surface-container-lowest": "#ffffff", 
+                    "on-surface": "#111827", 
+                    "on-surface-variant": "#4b5563", 
+                    "outline-variant": "#e5e7eb" 
+                } 
+            } 
+        } 
+    }
+</script>
+
+<form action="/xac-nhan-thanh-toan" method="POST">
+    <input type="hidden" name="phimId" value="<%= phim._id %>">
+    <input type="hidden" name="cinema" value="<%= cinema %>">
+    <input type="hidden" name="showDate" value="<%= showDate %>">
+    <input type="hidden" name="showTime" value="<%= showTime %>">
+    <input type="hidden" name="seats" value="<%= seats.join(',') %>">
+    <input type="hidden" name="comboDetails" value="<%= comboDetails %>">
+    <input type="hidden" name="comboTotal" value="<%= comboTotal %>">
+    <input type="hidden" name="total" value="<%= total %>">
+    <input type="hidden" name="finalAmount" id="finalAmountInput" value="<%= total %>">
+
+    <main class="bg-surface min-h-screen py-10 font-['Be_Vietnam_Pro']">
+        <div class="max-w-7xl mx-auto px-4 sm:px-8">
+            <a href="javascript:history.back()" class="inline-flex items-center gap-2 text-sm font-bold text-on-surface-variant hover:text-primary transition-colors mb-6">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span>Quay lại
+            </a>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-8 space-y-6">
+                    <div class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm border border-outline-variant/20">
+                        <h2 class="text-lg font-extrabold text-on-surface mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">payments</span> Phương thức thanh toán
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <label class="relative flex items-center p-4 border-2 rounded-xl cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-primary">
+                                <input checked class="hidden peer" name="payment_method" type="radio" value="momo" />
+                                <img src="https://developers.momo.vn/v3/assets/images/MOMO-Logo-App-6262c3743a290ef02396a24ea2b66c35.png" class="h-6 w-6 mr-3">
+                                <span class="font-bold text-sm">MoMo</span>
+                            </label>
+                            <label class="relative flex items-center p-4 border-2 rounded-xl cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-primary">
+                                <input class="hidden peer" name="payment_method" type="radio" value="zalopay" />
+                                <img src="https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-ZaloPay-Square.png" class="h-6 w-6 mr-3">
+                                <span class="font-bold text-sm">ZaloPay</span>
+                            </label>
+                            <label class="relative flex items-center p-4 border-2 rounded-xl cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-primary">
+                                <input class="hidden peer" name="payment_method" type="radio" value="credit_card" />
+                                <span class="material-symbols-outlined mr-3 text-slate-400">credit_card</span>
+                                <span class="font-bold text-sm">Thẻ Quốc tế</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm border border-outline-variant/20">
+                        <h2 class="text-lg font-extrabold text-on-surface mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">confirmation_number</span> Voucher của bạn
+                        </h2>
+                        
+                        <div class="flex gap-3 mb-6">
+                            <input type="text" id="voucherInput" placeholder="Nhập mã ưu đãi..." class="flex-grow bg-slate-50 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 uppercase font-bold">
+                            <button type="button" id="btnApply" onclick="applyVoucher()" class="bg-primary text-white px-8 py-3 rounded-xl font-bold text-sm hover:scale-105 transition-all">ÁP DỤNG</button>
+                        </div>
+
+                        <div class="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                            <% if (typeof vouchers !== 'undefined' && vouchers.length > 0) { %>
+                                <% vouchers.forEach(v => { %>
+                                    <div onclick="selectVoucher('<%= v.code %>')" class="group flex items-center justify-between p-4 border-2 border-dashed border-slate-100 rounded-2xl hover:border-primary hover:bg-red-50 cursor-pointer transition-all">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-12 h-12 bg-red-100 text-primary rounded-xl flex items-center justify-center font-black text-xs">
+                                                <%= v.discountType === 'percentage' ? v.discountValue + '%' : (v.discountValue/1000) + 'K' %>
+                                            </div>
+                                            <div>
+                                                <p class="font-black text-slate-800 text-sm uppercase"><%= v.code %></p>
+                                                <p class="text-[11px] text-slate-500 font-medium">Đơn tối thiểu: <%= (v.minOrderValue || 0).toLocaleString('vi-VN') %>đ</p>
+                                            </div>
+                                        </div>
+                                        <span class="text-[10px] font-black text-primary group-hover:underline">CHỌN MÃ</span>
+                                    </div>
+                                <% }) %>
+                            <% } else { %>
+                                <p class="text-center text-slate-400 text-sm py-4">Bạn chưa có mã giảm giá nào.</p>
+                            <% } %>
+                        </div>
+                        <p id="msgVoucher" class="mt-4 text-xs font-bold hidden text-center"></p>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-4">
+                    <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/20 overflow-hidden sticky top-28">
+                        <div class="p-6 space-y-4">
+                            <h3 class="font-black text-slate-900 border-b pb-4"><%= phim.title %></h3>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between"><span class="text-slate-500">Rạp:</span><span class="font-bold"><%= cinema %></span></div>
+                                <div class="flex justify-between"><span class="text-slate-500">Suất chiếu:</span><span class="font-bold"><%= showTime %> | <%= showDate %></span></div>
+                                <div class="flex justify-between"><span class="text-slate-500">Ghế:</span><span class="font-bold text-primary"><%= seats.join(', ') %></span></div>
+                            </div>
+                            
+                            <hr class="border-outline-variant/20">
+
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-500">Giá vé</span>
+                                    <span class="font-bold"><%= (total - comboTotal).toLocaleString('vi-VN') %>đ</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-500">Bắp nước</span>
+                                    <span class="font-bold"><%= comboTotal.toLocaleString('vi-VN') %>đ</span>
+                                </div>
+                                <div class="flex justify-between text-sm text-green-600">
+                                    <span class="font-bold">Giảm giá</span>
+                                    <span id="discountText" class="font-black">-0đ</span>
+                                </div>
+                                <div class="flex justify-between items-center pt-4 border-t">
+                                    <span class="font-black">Tổng cộng</span>
+                                    <span id="finalTotalText" class="text-2xl font-black text-primary"><%= total.toLocaleString('vi-VN') %>đ</span>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full mt-4 py-4 bg-primary text-white font-black rounded-xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all text-sm uppercase">
+                                XÁC NHẬN THANH TOÁN
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</form>
+
+<script>
+    const baseTotal = Number('<%= total %>');
+    const msgEl = document.getElementById('msgVoucher');
+    const inputEl = document.getElementById('voucherInput');
+    const discountEl = document.getElementById('discountText');
+    const finalTotalEl = document.getElementById('finalTotalText');
+    const finalInput = document.getElementById('finalAmountInput');
+    
+    function selectVoucher(code) {
+        inputEl.value = code;
+        applyVoucher();
+    }
+
+    async function applyVoucher() {
+        const code = inputEl.value.trim();
+        if (!code) return;
+
+        try {
+            const res = await fetch('/api/kiem-tra-voucher', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, currentTotal: baseTotal })
+            });
+            const data = await res.json();
+
+            msgEl.classList.remove('hidden');
+            if (data.success) {
+                msgEl.innerText = "Áp dụng thành công: " + data.message;
+                msgEl.className = "mt-4 text-xs font-bold text-green-600 text-center";
+                
+                let discount = 0;
+                // NẾU GIẢM THEO %
+                if (data.discountType === 'percentage') {
+                    discount = (baseTotal * data.discountValue) / 100;
+                    // Kiểm tra Giới hạn giảm tối đa
+                    if (data.maxDiscountValue && data.maxDiscountValue > 0 && discount > data.maxDiscountValue) {
+                        discount = data.maxDiscountValue;
+                    }
+                } 
+                // NẾU GIẢM THEO TIỀN MẶT
+                else {
+                    discount = data.discountValue;
+                }
+
+                // Không cho giảm âm tiền (VD: vé 100k mà mã 150k thì chỉ giảm 100k)
+                if(discount > baseTotal) discount = baseTotal;
+                
+                const final = baseTotal - discount;
+                discountEl.innerText = "-" + discount.toLocaleString('vi-VN') + "đ";
+                finalTotalEl.innerText = final.toLocaleString('vi-VN') + "đ";
+                finalInput.value = final;
+            } else {
+                msgEl.innerText = data.message;
+                msgEl.className = "mt-4 text-xs font-bold text-red-600 text-center";
+                discountEl.innerText = "-0đ";
+                finalTotalEl.innerText = baseTotal.toLocaleString('vi-VN') + "đ";
+                finalInput.value = baseTotal;
+            }
+        } catch (err) { console.error(err); }
+    }
+</script>
+
+<%- include('partials/footer') %>

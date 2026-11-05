@@ -1,0 +1,74 @@
+<%- include('partials/header') %>
+
+  <main class="max-w-7xl mx-auto px-8 py-12 min-h-screen">
+    <div class="mb-12">
+      <h1 class="text-5xl font-extrabold text-on-surface-variant tracking-tight mb-4">Danh Sách Phim</h1>
+      <p class="text-on-surface-variant opacity-70 max-w-2xl text-lg">Khám phá những siêu phẩm điện ảnh mới nhất tại
+        CineGo. Trải nghiệm hình ảnh sống động và âm thanh đỉnh cao.</p>
+    </div>
+
+    <div class="flex items-center space-x-4 mb-10 border-b border-surface-variant/30 pb-4">
+      <a href="/phim?status=DangChieu" 
+         class="px-8 py-3 rounded-full font-bold transition-transform active:scale-95 inline-block <%= currentStatus === 'DangChieu' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-surface-container-lowest text-on-surface-variant border border-outline-variant/20 hover:bg-surface-container-low' %>">
+        Đang chiếu
+      </a>
+      <a href="/phim?status=SapChieu" 
+         class="px-8 py-3 rounded-full font-bold transition-transform active:scale-95 inline-block <%= currentStatus === 'SapChieu' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-surface-container-lowest text-on-surface-variant border border-outline-variant/20 hover:bg-surface-container-low' %>">
+        Sắp chiếu
+      </a>
+    </div>
+
+    <div class="w-full">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          
+          <% if (movies && movies.length > 0) { %>
+              <% movies.forEach(function(phim) { %>
+                  <div class="bg-surface-container-lowest rounded-2xl overflow-hidden movie-card-hover transition-all duration-300 flex flex-col group border border-outline-variant/10 shadow-sm relative">
+                      
+                      <a href="/phim/<%= phim._id %>" class="absolute inset-0 z-10 hidden group-hover:block bg-black/10 transition-colors"></a>
+
+                      <div class="relative aspect-[2/3] overflow-hidden">
+                          <img alt="<%= phim.title %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="<%= phim.posterUrl %>" onerror="this.src='https://via.placeholder.com/400x600?text=CineGo'"/>
+                          <div class="absolute top-4 left-4 bg-primary text-white text-[10px] font-black px-2 py-1 rounded shadow-sm z-20">
+                              <%= phim.ageRating || 'P' %>
+                          </div>
+                      </div>
+                      <div class="p-5 flex flex-col flex-1 relative z-20">
+                          <a href="/phim/<%= phim._id %>" class="text-lg font-bold text-on-surface line-clamp-2 mb-2 hover:text-primary transition-colors" title="<%= phim.title %>">
+                              <%= phim.title %>
+                          </a>
+                          <div class="flex items-center text-on-surface-variant text-xs font-medium space-x-3 mb-6">
+                              <span class="flex items-center"><span class="material-symbols-outlined text-sm mr-1">schedule</span> <%= phim.duration %> phút</span>
+                              <span class="flex items-center"><span class="material-symbols-outlined text-sm mr-1">movie</span> <span class="truncate max-w-[100px]"><%= phim.genre %></span></span>
+                          </div>
+                          <div class="mt-auto flex gap-2">
+                              <% if (currentStatus === 'DangChieu') { %>
+                                  <a href="/dat-ve/<%= phim._id %>" class="flex-1 py-3 text-center bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary-container transition-colors shadow-sm block">ĐẶT VÉ</a>
+                              <% } %>
+                              <a href="/phim/<%= phim._id %>" class="flex-1 py-3 text-center bg-surface-container-low text-on-surface-variant text-xs font-bold rounded-lg hover:bg-surface-container-high transition-colors block">CHI TIẾT</a>
+                          </div>
+                      </div>
+                  </div>
+              <% }); %>
+          <% } else { %>
+              <div class="col-span-full py-16 text-center text-on-surface-variant font-medium bg-surface-container-lowest rounded-2xl border border-outline-variant/10">
+                  <span class="material-symbols-outlined text-5xl mb-3 opacity-30">movie_off</span>
+                  <p>Chưa có phim nào trong danh mục này.</p>
+              </div>
+          <% } %>
+
+      </div>
+
+      <div class="mt-16 flex justify-center items-center space-x-2">
+        <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant/30 hover:bg-surface-container-lowest transition-all text-on-surface-variant">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-white font-bold shadow-md">1</button>
+        <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant/30 hover:bg-surface-container-lowest transition-all text-on-surface-variant">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+      </div>
+    </div>
+  </main>
+
+<%- include('partials/footer') %>
