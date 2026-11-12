@@ -1,355 +1,578 @@
 <%- include('partials/header') %>
 
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script>
-    tailwind.config = { darkMode: "class", theme: { extend: { colors: { "primary": "#b8000b", "surface": "#f8f9fa", "surface-container-lowest": "#ffffff", "on-surface": "#111827", "on-surface-variant": "#4b5563", "outline-variant": "#e5e7eb" } } } }
-</script>
-
-<main class="bg-surface min-h-screen py-10 font-['Be_Vietnam_Pro']">
-    <div class="max-w-7xl mx-auto px-4 sm:px-8">
-        <a href="/phim/<%= phim._id %>" class="inline-flex items-center gap-2 text-sm font-bold text-on-surface-variant hover:text-primary transition-colors mb-6">
-            <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại
+<main class="min-h-screen py-10 pb-44 bg-[#FAF8F5]">
+  <div class="max-w-[1440px] mx-auto px-4 sm:px-8">
+    
+    <!-- =========================================================================
+         1. BREADCRUMB & MOVIE HEADLINE
+         ========================================================================= -->
+    <div class="pb-6 border-b border-[#E5E0D5] mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div>
+        <a href="/phim/<%= phim._id %>" class="font-['JetBrains_Mono'] text-xs text-[#7A7E8B] hover:text-[#BA2D27] uppercase tracking-wider inline-flex items-center gap-1.5 mb-2 transition-colors">
+          <span>←</span> Quay Lại Chi Tiết Phim
         </a>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div class="lg:col-span-8 space-y-6">
-                
-                <div class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm border border-outline-variant/20">
-                    <h2 class="text-lg font-extrabold text-on-surface mb-4 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary">location_on</span> 1. Chọn rạp chiếu
-                    </h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <button type="button" onclick="selectCinema('Starlight Quy Nhơn', this)" class="cinema-btn px-4 py-3 rounded-xl border-2 border-outline-variant/20 text-on-surface-variant font-bold text-sm hover:border-primary transition-all">Starlight Quy Nhơn</button>
-                        <button type="button" onclick="selectCinema('CGV Quy Nhơn', this)" class="cinema-btn px-4 py-3 rounded-xl border-2 border-outline-variant/20 text-on-surface-variant font-bold text-sm hover:border-primary transition-all">CGV Quy Nhơn</button>
-                        <button type="button" onclick="selectCinema('Dcine Quy Nhơn', this)" class="cinema-btn px-4 py-3 rounded-xl border-2 border-outline-variant/20 text-on-surface-variant font-bold text-sm hover:border-primary transition-all">Dcine Quy Nhơn</button>
-                    </div>
-                </div>
-
-                <div id="step-datetime" class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm border border-outline-variant/20 opacity-50 pointer-events-none transition-opacity duration-300">
-                    <h2 class="text-lg font-extrabold text-on-surface mb-4 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary">calendar_month</span> 2. Chọn ngày chiếu
-                    </h2>
-                    
-                    <div class="flex gap-3 overflow-x-auto pb-2 mb-6" id="date-slots">
-                        <p class="text-sm text-on-surface-variant italic">Vui lòng chọn rạp chiếu để xem ngày</p>
-                    </div>
-
-                    <h3 class="text-xs font-bold text-on-surface-variant uppercase mb-3 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[16px]">schedule</span> 3. Chọn giờ chiếu
-                    </h3>
-                    <div class="flex flex-wrap gap-3" id="time-slots">
-                        <p class="text-sm text-on-surface-variant italic">Vui lòng chọn ngày để xem suất chiếu</p>
-                    </div>
-                </div>
-
-                <div id="step-seats" class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm border border-outline-variant/20 opacity-50 pointer-events-none transition-opacity duration-300">
-                    <h2 class="text-lg font-extrabold text-on-surface mb-6 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary">weekend</span> 4. Chọn ghế ngồi
-                    </h2>
-                    <div class="flex flex-col items-center gap-4 overflow-x-auto pb-6">
-                        <div class="w-full max-w-md bg-slate-300 h-1.5 rounded-full mb-8 relative">
-                            <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Màn hình</span>
-                        </div>
-                        <% ['A','B','C','D','E'].forEach(row => { %>
-                            <div class="flex items-center gap-3">
-                                <span class="w-6 text-xs font-black text-slate-400 text-center"><%= row %></span>
-                                <div class="flex gap-2">
-                                    <% for(let i=1; i<=10; i++) { %>
-                                        <button type="button" data-seat="<%= row + i %>" class="seat-btn w-8 h-8 md:w-9 md:h-9 rounded-t-lg border-2 border-[#10b981] text-[#10b981] font-bold text-[10px] hover:bg-[#10b981] hover:text-white transition-all"><%= i %></button>
-                                    <% } %>
-                                </div>
-                            </div>
-                        <% }) %>
-                    </div>
-                </div>
-
-                <div class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm border border-outline-variant/20">
-                    <h2 class="text-lg font-extrabold text-on-surface mb-6 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary">fastfood</span> 5. Chọn Bắp & Nước (Không bắt buộc)
-                    </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="flex justify-between items-center p-4 border border-outline-variant/20 rounded-2xl">
-                            <div><h3 class="font-bold text-sm">Combo Solo</h3><p class="text-primary text-xs font-bold mt-1">75.000 đ</p></div>
-                            <div class="flex items-center gap-3">
-                                <button type="button" onclick="updateCombo('solo', -1)" class="w-8 h-8 rounded bg-slate-100 font-bold">-</button>
-                                <span id="qty-solo" class="font-black text-sm w-4 text-center">0</span>
-                                <button type="button" onclick="updateCombo('solo', 1)" class="w-8 h-8 rounded bg-primary/10 text-primary font-bold">+</button>
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-center p-4 border border-outline-variant/20 rounded-2xl">
-                            <div><h3 class="font-bold text-sm">Combo Couple</h3><p class="text-primary text-xs font-bold mt-1">105.000 đ</p></div>
-                            <div class="flex items-center gap-3">
-                                <button type="button" onclick="updateCombo('couple', -1)" class="w-8 h-8 rounded bg-slate-100 font-bold">-</button>
-                                <span id="qty-couple" class="font-black text-sm w-4 text-center">0</span>
-                                <button type="button" onclick="updateCombo('couple', 1)" class="w-8 h-8 rounded bg-primary/10 text-primary font-bold">+</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="lg:col-span-4">
-                <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/20 overflow-hidden sticky top-28">
-                    <div class="relative h-32 bg-black flex items-end p-4">
-                        <img src="<%= phim.posterUrl %>" class="absolute inset-0 w-full h-full object-cover opacity-50">
-                        <h3 class="relative text-white font-black text-lg line-clamp-1"><%= phim.title %></h3>
-                    </div>
-
-                    <div class="p-6 space-y-4">
-                        <div class="flex justify-between items-center border-b border-outline-variant/10 pb-2">
-                            <span class="text-sm font-bold text-on-surface-variant">Rạp</span>
-                            <span id="display-cinema" class="text-sm font-extrabold text-primary">Chưa chọn</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm font-bold text-on-surface-variant">Suất chiếu</span>
-                            <span id="display-datetime" class="text-sm font-extrabold text-on-surface">Chưa chọn</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm font-bold text-on-surface-variant">Ghế ngồi</span>
-                            <span id="display-seats" class="text-sm font-extrabold text-on-surface">Chưa chọn</span>
-                        </div>
-                        <div class="flex justify-between items-center border-t border-outline-variant/10 pt-2">
-                            <span class="text-sm font-bold text-on-surface-variant">Bắp nước</span>
-                            <span id="display-combo" class="text-sm font-extrabold text-on-surface text-right">Không</span>
-                        </div>
-
-                        <div class="flex justify-between items-center pt-4 border-t border-outline-variant/20">
-                            <span class="text-base font-extrabold text-on-surface uppercase">Tổng tiền</span>
-                            <span id="display-total" class="text-2xl font-black text-primary">0 đ</span>
-                        </div>
-
-                        <form action="/thanh-toan" method="POST" class="pt-2">
-                            <input type="hidden" name="movieId" value="<%= phim._id %>">
-                            <input type="hidden" name="cinema" id="input-cinema">
-                            <input type="hidden" name="showDate" id="input-date">
-                            <input type="hidden" name="showTime" id="input-time">
-                            <input type="hidden" name="seats" id="input-seats">
-                            <input type="hidden" name="comboDetails" id="input-combo-details">
-                            <input type="hidden" name="comboTotal" id="input-combo-total" value="0">
-                            <input type="hidden" name="total" id="input-total" value="0">
-                            
-                            <button type="submit" id="btn-submit" disabled class="w-full py-4 bg-outline-variant text-white font-black rounded-xl shadow-lg transition-all text-sm uppercase">
-                                Tới trang thanh toán
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+        <h1 class="font-['Georgia'] text-2xl sm:text-4xl text-[#121316] font-bold leading-tight">
+          Đặt Vé: <%= phim.title %>
+        </h1>
+        <div class="flex flex-wrap items-center gap-2.5 font-['JetBrains_Mono'] text-xs text-[#7A7E8B] mt-2">
+          <span class="px-2 py-0.5 bg-[#BA2D27] text-white font-bold"><%= phim.ageRating || 'P' %></span>
+          <span>•</span>
+          <span><%= phim.duration || 120 %> Phút</span>
+          <span>•</span>
+          <span class="text-[#121316] font-semibold"><%= phim.genre || 'Điện ảnh' %></span>
         </div>
+      </div>
+
+      <!-- Step Indicator Bar -->
+      <div class="flex items-center gap-2 text-xs font-['JetBrains_Mono'] bg-white border border-[#E5E0D5] p-3">
+        <span class="px-2 py-0.5 bg-[#121316] text-white font-bold">1. Rạp & Giờ</span>
+        <span class="text-[#CDC6B8]">→</span>
+        <span class="px-2 py-0.5 bg-[#121316] text-white font-bold">2. Chọn Ghế</span>
+        <span class="text-[#CDC6B8]">→</span>
+        <span class="px-2 py-0.5 bg-[#121316] text-white font-bold">3. Bắp Nước</span>
+        <span class="text-[#CDC6B8]">→</span>
+        <span class="px-2 py-0.5 bg-[#BA2D27] text-white font-bold">4. Thanh Toán</span>
+      </div>
     </div>
+
+    <!-- =========================================================================
+         BƯỚC 1: NÚT CHỌN RẠP CHIẾU
+         ========================================================================= -->
+    <div class="bg-white border border-[#E5E0D5] p-6 mb-8">
+      <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-3 mb-5">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 bg-[#121316] text-white font-['JetBrains_Mono'] text-xs font-bold flex items-center justify-center">1</span>
+          <h2 class="font-['Georgia'] text-lg font-bold text-[#121316]">Chọn Cụm Rạp Chiếu Tại Quy Nhơn</h2>
+        </div>
+        <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]" id="activeCinemaLabel">CGV Kim Cúc Plaza</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="cinemaButtonContainer">
+        <!-- Cinema 1 -->
+        <button type="button" 
+                onclick="setBookingCinema('CGV Kim Cúc Plaza', this)" 
+                class="booking-cinema-btn p-4 border-2 border-[#121316] bg-[#F3EFE6] text-left transition-all">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-sm text-[#121316]">CGV Kim Cúc Plaza</span>
+            <span class="cinema-check text-[#BA2D27] font-bold text-xs font-['JetBrains_Mono']">✓ Đang Chọn</span>
+          </div>
+          <span class="text-[11px] text-[#7A7E8B] block mt-1">Tầng 3, Kim Cúc Plaza, P. Ghềnh Ráng</span>
+        </button>
+
+        <!-- Cinema 2 -->
+        <button type="button" 
+                onclick="setBookingCinema('Starlight Nguyễn Kim', this)" 
+                class="booking-cinema-btn p-4 border border-[#E5E0D5] bg-white hover:border-[#121316] text-left transition-all">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-sm text-[#121316]">Starlight Nguyễn Kim</span>
+            <span class="cinema-check text-[#7A7E8B] text-xs font-['JetBrains_Mono']">Chọn Rạp</span>
+          </div>
+          <span class="text-[11px] text-[#7A7E8B] block mt-1">Tầng 8 TTTM Nguyễn Kim, An Dương Vương</span>
+        </button>
+
+        <!-- Cinema 3 -->
+        <button type="button" 
+                onclick="setBookingCinema('DCine Quy Nhơn', this)" 
+                class="booking-cinema-btn p-4 border border-[#E5E0D5] bg-white hover:border-[#121316] text-left transition-all">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-sm text-[#121316]">DCine Quy Nhơn</span>
+            <span class="cinema-check text-[#7A7E8B] text-xs font-['JetBrains_Mono']">Chọn Rạp</span>
+          </div>
+          <span class="text-[11px] text-[#7A7E8B] block mt-1">Tầng 4 TT Phú Tài, Trần Hưng Đạo</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         BƯỚC 2: CHỌN THỜI GIAN (NGÀY & SUẤT CHIẾU)
+         ========================================================================= -->
+    <div class="bg-white border border-[#E5E0D5] p-6 mb-8">
+      <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-3 mb-5">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 bg-[#121316] text-white font-['JetBrains_Mono'] text-xs font-bold flex items-center justify-center">2</span>
+          <h2 class="font-['Georgia'] text-lg font-bold text-[#121316]">Chọn Thời Gian (Ngày Chiếu & Suất Chiếu)</h2>
+        </div>
+        <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]" id="activeScreeningLabel">Hôm nay • 19:30</span>
+      </div>
+
+      <!-- Date Pills -->
+      <div class="mb-5">
+        <span class="block text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B] uppercase tracking-wider mb-2">Ngày chiếu:</span>
+        <div class="flex flex-wrap items-center gap-3" id="datePickerContainer">
+          <button type="button" onclick="setBookingDate('2026-11-12', 'Hôm nay (12/11)', this)" class="date-btn px-4 py-2 bg-[#121316] text-white font-['JetBrains_Mono'] text-xs font-bold">
+            Hôm nay (12/11)
+          </button>
+          <button type="button" onclick="setBookingDate('2026-11-13', 'Ngày mai (13/11)', this)" class="date-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-['JetBrains_Mono'] text-xs">
+            Ngày mai (13/11)
+          </button>
+          <button type="button" onclick="setBookingDate('2026-11-14', 'Thứ Bảy (14/11)', this)" class="date-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-['JetBrains_Mono'] text-xs">
+            Thứ Bảy (14/11)
+          </button>
+          <button type="button" onclick="setBookingDate('2026-11-15', 'Chủ Nhật (15/11)', this)" class="date-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-['JetBrains_Mono'] text-xs">
+            Chủ Nhật (15/11)
+          </button>
+        </div>
+      </div>
+
+      <!-- Time Pills -->
+      <div>
+        <span class="block text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B] uppercase tracking-wider mb-2">Suất chiếu:</span>
+        <div class="flex flex-wrap items-center gap-3" id="timePickerContainer">
+          <button type="button" onclick="setBookingTime('10:00', this)" class="time-btn px-4 py-2.5 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-['JetBrains_Mono'] text-xs font-bold">
+            10:00 <span class="text-[10px] text-[#7A7E8B] block font-normal">2D Phụ Đề</span>
+          </button>
+          <button type="button" onclick="setBookingTime('14:30', this)" class="time-btn px-4 py-2.5 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-['JetBrains_Mono'] text-xs font-bold">
+            14:30 <span class="text-[10px] text-[#7A7E8B] block font-normal">2D Lồng Tiếng</span>
+          </button>
+          <button type="button" onclick="setBookingTime('19:30', this)" class="time-btn px-4 py-2.5 bg-[#BA2D27] text-white border border-[#BA2D27] font-['JetBrains_Mono'] text-xs font-bold">
+            19:30 <span class="text-[10px] text-white/80 block font-normal">2D Phụ Đề</span>
+          </button>
+          <button type="button" onclick="setBookingTime('20:45', this)" class="time-btn px-4 py-2.5 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-['JetBrains_Mono'] text-xs font-bold">
+            20:45 <span class="text-[10px] text-[#7A7E8B] block font-normal">2D Phụ Đề</span>
+          </button>
+          <button type="button" onclick="setBookingTime('22:15', this)" class="time-btn px-4 py-2.5 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-['JetBrains_Mono'] text-xs font-bold">
+            22:15 <span class="text-[10px] text-[#7A7E8B] block font-normal">2D Phụ Đề</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         BƯỚC 3: CHỌN GHẾ NGỒI (SEAT MAP TRỰC QUAN)
+         ========================================================================= -->
+    <div class="bg-[#0E1015] border border-white/10 p-6 sm:p-12 mb-8 overflow-x-auto shadow-2xl relative">
+      <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 bg-[#BA2D27] text-white font-['JetBrains_Mono'] text-xs font-bold flex items-center justify-center">3</span>
+          <h2 class="font-['Georgia'] text-lg font-bold text-white">Chọn Ghế Ngồi Trong Phòng Chiếu</h2>
+        </div>
+        <span class="text-xs font-['JetBrains_Mono'] text-white/60">PHÒNG CHIẾU SỐ 1 • MÀN ẢNH RỘNG</span>
+      </div>
+
+      <!-- Screen Arc -->
+      <div class="cinema-screen-arc"></div>
+      <div class="text-center font-['Plus_Jakarta_Sans'] text-xs font-bold tracking-[0.25em] text-white/60 uppercase mb-8">
+        MÀN HÌNH CHIẾU (SCREEN)
+      </div>
+
+      <!-- SEAT ROWS CONTAINER -->
+      <div class="min-w-[620px] max-w-2xl mx-auto space-y-3.5 text-center mt-6">
+        
+        <!-- Row A (Standard 75k) -->
+        <div class="flex items-center justify-center gap-2">
+          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">A</span>
+          <% for(let i=1; i<=10; i++) { %>
+            <div class="seat-unit seat-free" data-seat="A<%= i %>" data-price="75000" data-type="standard">A<%= i %></div>
+          <% } %>
+          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">A</span>
+        </div>
+
+        <!-- Row B (Standard 75k) -->
+        <div class="flex items-center justify-center gap-2">
+          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">B</span>
+          <div class="seat-unit seat-sold" data-seat="B1">✕</div>
+          <div class="seat-unit seat-sold" data-seat="B2">✕</div>
+          <% for(let i=3; i<=8; i++) { %>
+            <div class="seat-unit seat-free" data-seat="B<%= i %>" data-price="75000" data-type="standard">B<%= i %></div>
+          <% } %>
+          <div class="seat-unit seat-free" data-seat="B9" data-price="75000" data-type="standard">B9</div>
+          <div class="seat-unit seat-free" data-seat="B10" data-price="75000" data-type="standard">B10</div>
+          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">B</span>
+        </div>
+
+        <!-- Row C (Standard 75k) -->
+        <div class="flex items-center justify-center gap-2">
+          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">C</span>
+          <% for(let i=1; i<=4; i++) { %>
+            <div class="seat-unit seat-free" data-seat="C<%= i %>" data-price="75000" data-type="standard">C<%= i %></div>
+          <% } %>
+          <div class="seat-unit seat-sold" data-seat="C5">✕</div>
+          <div class="seat-unit seat-sold" data-seat="C6">✕</div>
+          <% for(let i=7; i<=10; i++) { %>
+            <div class="seat-unit seat-free" data-seat="C<%= i %>" data-price="75000" data-type="standard">C<%= i %></div>
+          <% } %>
+          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">C</span>
+        </div>
+
+        <!-- Divider VIP -->
+        <div class="py-2 font-['JetBrains_Mono'] text-[11px] font-bold uppercase tracking-[0.2em] text-[#D97706]">
+          — KHU VỰC GHẾ TRUNG TÂM VIP (95.000đ) —
+        </div>
+
+        <!-- Row D (VIP 95k) -->
+        <div class="flex items-center justify-center gap-2">
+          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-[#D97706]">D</span>
+          <% for(let i=1; i<=10; i++) { %>
+            <div class="seat-unit seat-free is-vip" data-seat="D<%= i %>" data-price="95000" data-type="vip">D<%= i %></div>
+          <% } %>
+          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-[#D97706]">D</span>
+        </div>
+
+        <!-- Row E (VIP 95k) -->
+        <div class="flex items-center justify-center gap-2">
+          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-[#D97706]">E</span>
+          <div class="seat-unit seat-sold is-vip" data-seat="E1">✕</div>
+          <div class="seat-unit seat-sold is-vip" data-seat="E2">✕</div>
+          <% for(let i=3; i<=8; i++) { %>
+            <div class="seat-unit seat-free is-vip" data-seat="E<%= i %>" data-price="95000" data-type="vip">E<%= i %></div>
+          <% } %>
+          <div class="seat-unit seat-sold is-vip" data-seat="E9">✕</div>
+          <div class="seat-unit seat-sold is-vip" data-seat="E10">✕</div>
+          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-[#D97706]">E</span>
+        </div>
+
+        <!-- Divider Sweetbox -->
+        <div class="py-2 font-['JetBrains_Mono'] text-[11px] font-bold uppercase tracking-[0.2em] text-white/50">
+          — HÀNG GHẾ ĐÔI SWEETBOX (170.000đ / 2 Người) —
+        </div>
+
+        <!-- Row F (Sweetbox Couple 170k) -->
+        <div class="flex items-center justify-center gap-3">
+          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">F</span>
+          <div class="seat-unit seat-free is-couple" data-seat="F1-F2" data-price="170000" data-type="couple">F1-F2</div>
+          <div class="seat-unit seat-free is-couple" data-seat="F3-F4" data-price="170000" data-type="couple">F3-F4</div>
+          <div class="seat-unit seat-sold is-couple" data-seat="F5-F6">✕</div>
+          <div class="seat-unit seat-free is-couple" data-seat="F7-F8" data-price="170000" data-type="couple">F7-F8</div>
+          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">F</span>
+        </div>
+
+      </div>
+
+      <!-- CLEAR SEAT LEGEND -->
+      <div class="mt-10 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-5 sm:gap-8 font-['Plus_Jakarta_Sans'] text-xs">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded bg-white border border-[#CBD5E1]"></div>
+          <span class="text-white/80 font-medium">Ghế Trống (75k)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded bg-[#BA2D27] text-white flex items-center justify-center font-bold text-[10px]">✓</div>
+          <span class="text-white font-bold">Đang Chọn</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded bg-white border-b-2 border-b-[#D97706]"></div>
+          <span class="text-[#D97706] font-bold">Ghế VIP (95k)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-10 h-6 rounded bg-white border border-[#CBD5E1] text-[9px] font-bold text-center leading-6 text-[#121316]">SWEET</div>
+          <span class="text-white/80 font-medium">Ghế Đôi (170k)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded bg-[#64748B] opacity-60 text-white flex items-center justify-center text-[10px]">✕</div>
+          <span class="text-white/40">Đã Bán</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- =========================================================================
+         BƯỚC 4: CHỌN ĐỒ ĂN DỊCH VỤ & COMBO BẮP NƯỚC
+         ========================================================================= -->
+    <div class="bg-white border border-[#E5E0D5] p-6 sm:p-8 mb-10">
+      <div class="border-b border-[#E5E0D5] pb-4 mb-6 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 bg-[#A6853B] text-white font-['JetBrains_Mono'] text-xs font-bold flex items-center justify-center">4</span>
+          <div>
+            <h3 class="font-['Georgia'] text-xl font-bold text-[#121316]">
+              Chọn Dịch Vụ Đồ Ăn & Bắp Nước (Tùy chọn)
+            </h3>
+            <p class="text-xs text-[#7A7E8B] mt-0.5">Đặt kèm bắp nước cùng vé để nhận nhanh tại quầy không cần xếp hàng.</p>
+          </div>
+        </div>
+        <a href="/bap-nuoc" target="_blank" class="text-xs font-['JetBrains_Mono'] text-[#A6853B] hover:underline font-bold">
+          Xem Toàn Bộ Menu Bắp Nước →
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <!-- Combo 1: Solo -->
+        <div class="border border-[#E5E0D5] p-4 flex flex-col justify-between bg-[#FAF8F5]">
+          <div>
+            <div class="aspect-video bg-[#EFEBE3] overflow-hidden mb-3 border border-[#E5E0D5]">
+              <img src="https://images.unsplash.com/photo-1585647347483-22b66260dfff?auto=format&fit=crop&w=400&q=80" alt="Combo Solo" class="w-full h-full object-cover" />
+            </div>
+            <h4 class="font-bold text-sm text-[#121316] font-['Georgia']">Combo Cine Solo</h4>
+            <p class="text-[11px] text-[#7A7E8B] mt-1 leading-snug">1 Bắp rang thơm giòn + 1 Nước ngọt lớn</p>
+          </div>
+          <div class="pt-4 mt-4 border-t border-[#E5E0D5] flex items-center justify-between">
+            <span class="font-['JetBrains_Mono'] font-bold text-xs text-[#121316]">75.000đ</span>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="adjustCombo('cb_solo', 'Combo Cine Solo', 75000, -1)" class="w-7 h-7 bg-white border border-[#E5E0D5] font-bold text-xs text-[#121316] flex items-center justify-center hover:bg-[#FAF8F5]">-</button>
+              <span id="qty_cb_solo" class="font-['JetBrains_Mono'] text-xs font-bold w-4 text-center">0</span>
+              <button type="button" onclick="adjustCombo('cb_solo', 'Combo Cine Solo', 75000, 1)" class="w-7 h-7 bg-[#121316] text-white font-bold text-xs flex items-center justify-center hover:bg-[#BA2D27]">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Combo 2: Couple -->
+        <div class="border border-[#E5E0D5] p-4 flex flex-col justify-between bg-[#FAF8F5]">
+          <div>
+            <div class="aspect-video bg-[#EFEBE3] overflow-hidden mb-3 border border-[#E5E0D5]">
+              <img src="https://images.unsplash.com/photo-1578849278619-e73505e9610f?auto=format&fit=crop&w=400&q=80" alt="Combo Couple" class="w-full h-full object-cover" />
+            </div>
+            <h4 class="font-bold text-sm text-[#121316] font-['Georgia']">Combo Cine Couple</h4>
+            <p class="text-[11px] text-[#7A7E8B] mt-1 leading-snug">1 Bắp lớn vị phô mai/caramel + 2 Nước ngọt</p>
+          </div>
+          <div class="pt-4 mt-4 border-t border-[#E5E0D5] flex items-center justify-between">
+            <span class="font-['JetBrains_Mono'] font-bold text-xs text-[#121316]">115.000đ</span>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="adjustCombo('cb_couple', 'Combo Cine Couple', 115000, -1)" class="w-7 h-7 bg-white border border-[#E5E0D5] font-bold text-xs text-[#121316] flex items-center justify-center hover:bg-[#FAF8F5]">-</button>
+              <span id="qty_cb_couple" class="font-['JetBrains_Mono'] text-xs font-bold w-4 text-center">0</span>
+              <button type="button" onclick="adjustCombo('cb_couple', 'Combo Cine Couple', 115000, 1)" class="w-7 h-7 bg-[#121316] text-white font-bold text-xs flex items-center justify-center hover:bg-[#BA2D27]">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Combo 3: Party -->
+        <div class="border border-[#E5E0D5] p-4 flex flex-col justify-between bg-[#FAF8F5]">
+          <div>
+            <div class="aspect-video bg-[#EFEBE3] overflow-hidden mb-3 border border-[#E5E0D5]">
+              <img src="https://images.unsplash.com/photo-1505686994434-e3cc5abf1330?auto=format&fit=crop&w=400&q=80" alt="Combo Party" class="w-full h-full object-cover" />
+            </div>
+            <h4 class="font-bold text-sm text-[#121316] font-['Georgia']">Combo Cine Party</h4>
+            <p class="text-[11px] text-[#7A7E8B] mt-1 leading-snug">2 Bắp vị tùy chọn + 4 Nước ngọt + Khoai lắc</p>
+          </div>
+          <div class="pt-4 mt-4 border-t border-[#E5E0D5] flex items-center justify-between">
+            <span class="font-['JetBrains_Mono'] font-bold text-xs text-[#121316]">195.000đ</span>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="adjustCombo('cb_party', 'Combo Cine Party', 195000, -1)" class="w-7 h-7 bg-white border border-[#E5E0D5] font-bold text-xs text-[#121316] flex items-center justify-center hover:bg-[#FAF8F5]">-</button>
+              <span id="qty_cb_party" class="font-['JetBrains_Mono'] text-xs font-bold w-4 text-center">0</span>
+              <button type="button" onclick="adjustCombo('cb_party', 'Combo Cine Party', 195000, 1)" class="w-7 h-7 bg-[#121316] text-white font-bold text-xs flex items-center justify-center hover:bg-[#BA2D27]">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Combo 4: Snack -->
+        <div class="border border-[#E5E0D5] p-4 flex flex-col justify-between bg-[#FAF8F5]">
+          <div>
+            <div class="aspect-video bg-[#EFEBE3] overflow-hidden mb-3 border border-[#E5E0D5]">
+              <img src="https://images.unsplash.com/photo-1627042633706-01a5e040c837?auto=format&fit=crop&w=400&q=80" alt="Snack Phô Mai" class="w-full h-full object-cover" />
+            </div>
+            <h4 class="font-bold text-sm text-[#121316] font-['Georgia']">Snack Phô Mai Que</h4>
+            <p class="text-[11px] text-[#7A7E8B] mt-1 leading-snug">2 Xúc xích nướng + Que phô mai giòn rụm</p>
+          </div>
+          <div class="pt-4 mt-4 border-t border-[#E5E0D5] flex items-center justify-between">
+            <span class="font-['JetBrains_Mono'] font-bold text-xs text-[#121316]">45.000đ</span>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="adjustCombo('cb_snack', 'Snack Phô Mai Que', 45000, -1)" class="w-7 h-7 bg-white border border-[#E5E0D5] font-bold text-xs text-[#121316] flex items-center justify-center hover:bg-[#FAF8F5]">-</button>
+              <span id="qty_cb_snack" class="font-['JetBrains_Mono'] text-xs font-bold w-4 text-center">0</span>
+              <button type="button" onclick="adjustCombo('cb_snack', 'Snack Phô Mai Que', 45000, 1)" class="w-7 h-7 bg-[#121316] text-white font-bold text-xs flex items-center justify-center hover:bg-[#BA2D27]">+</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- =========================================================================
+       STICKY BOTTOM CHECKOUT SUMMARY BAR
+       ========================================================================= -->
+  <form id="bookingForm" action="/thanh-toan" method="POST" class="fixed bottom-0 left-0 right-0 bg-[#FAF8F5]/98 border-t border-[#E5E0D5] backdrop-blur-md p-4 sm:p-5 z-40 shadow-2xl">
+    
+    <!-- Hidden inputs matching Express Route requirements -->
+    <input type="hidden" name="movieId" value="<%= phim._id %>" />
+    <input type="hidden" name="cinema" id="input_cinema" value="CGV Kim Cúc Plaza" />
+    <input type="hidden" name="showDate" id="input_showDate" value="2026-11-12" />
+    <input type="hidden" name="showTime" id="input_showTime" value="19:30" />
+    <input type="hidden" name="seats" id="input_seats" value="" />
+    <input type="hidden" name="total" id="input_total" value="0" />
+    <input type="hidden" name="comboDetails" id="input_comboDetails" value="" />
+    <input type="hidden" name="comboTotal" id="input_comboTotal" value="0" />
+
+    <div class="max-w-[1440px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 font-['JetBrains_Mono']">
+      
+      <!-- Left: Cinema, Time, Seats and Price summary -->
+      <div class="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-start text-xs">
+        <div>
+          <span class="block text-[10px] text-[#7A7E8B] uppercase tracking-wider">Suất chiếu đã chọn:</span>
+          <div class="text-[#121316] font-bold mt-0.5" id="summaryScreening">
+            CGV Kim Cúc Plaza • 19:30
+          </div>
+        </div>
+        <div class="border-l border-[#E5E0D5] pl-6">
+          <span class="block text-[10px] text-[#7A7E8B] uppercase tracking-wider">Ghế đã chọn:</span>
+          <div id="selectedSeatsLabel" class="text-[#121316] font-bold mt-0.5">
+            <span class="text-[#A6AAB6] italic font-normal">Chưa chọn ghế</span>
+          </div>
+        </div>
+        <div class="border-l border-[#E5E0D5] pl-6">
+          <span class="block text-[10px] text-[#7A7E8B] uppercase tracking-wider">Tổng tiền tạm tính:</span>
+          <div id="totalPriceLabel" class="text-xl font-bold text-[#BA2D27] mt-0.5">
+            0 đ
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Continue to Checkout Button -->
+      <div class="flex items-center gap-4 w-full sm:w-auto justify-end">
+        <button type="submit" id="btnContinueCheckout" disabled class="btn-editorial-primary w-full sm:w-auto py-3.5 px-8 text-xs font-bold block text-center disabled:opacity-40 disabled:cursor-not-allowed">
+          TIẾP TỤC ĐẾN BƯỚC THANH TOÁN →
+        </button>
+      </div>
+
+    </div>
+  </form>
+
 </main>
 
-<input type="hidden" id="raw-showtimes" value='<%= JSON.stringify(phim.showtimes || []) %>'>
-
 <script>
-    const showtimesData = JSON.parse(document.getElementById('raw-showtimes').value);
-    let selCinema = "", selDate = "", selTime = "", selSeats = [];
-    const SEAT_PRICE = 95000;
-    const mySessionId = Math.random().toString(36).substring(2); 
+  let selectedSeats = [];
+  let seatTotal = 0;
+  let comboItems = {};
+  let comboTotal = 0;
+  let currentCinema = 'CGV Kim Cúc Plaza';
+  let currentDate = '2026-11-12';
+  let currentTime = '19:30';
 
-    let combos = { solo: { qty: 0, price: 75000, name: 'Solo' }, couple: { qty: 0, price: 105000, name: 'Couple' } };
+  function setBookingCinema(name, btnEl) {
+    currentCinema = name;
+    document.getElementById('input_cinema').value = name;
+    document.getElementById('activeCinemaLabel').innerText = name;
 
-    // HÀM TÍNH TOÁN VÀ KIỂM TRA ĐIỀU KIỆN SUBMIT
-    function calcAll() {
-        let seatTotal = selSeats.length * SEAT_PRICE;
-        let comboStr = []; let comboTotal = 0;
-        
-        if(combos.solo.qty > 0) { comboStr.push(`${combos.solo.qty}x Solo`); comboTotal += combos.solo.qty * combos.solo.price; }
-        if(combos.couple.qty > 0) { comboStr.push(`${combos.couple.qty}x Couple`); comboTotal += combos.couple.qty * combos.couple.price; }
-        
-        document.getElementById('display-seats').innerText = selSeats.length ? selSeats.join(', ') : 'Chưa chọn';
-        document.getElementById('display-combo').innerText = comboStr.length ? comboStr.join(', ') : "Không";
-        
-        let finalTotal = seatTotal + comboTotal;
-        document.getElementById('display-total').innerText = finalTotal.toLocaleString('vi-VN') + ' đ';
-        
-        document.getElementById('input-seats').value = selSeats.join(',');
-        document.getElementById('input-combo-details').value = comboStr.join(', ');
-        document.getElementById('input-combo-total').value = comboTotal;
-        document.getElementById('input-total').value = finalTotal;
-
-        const btn = document.getElementById('btn-submit');
-        if(selCinema && selDate && selTime && selSeats.length > 0) {
-            btn.disabled = false;
-            btn.classList.replace('bg-outline-variant', 'bg-primary');
-            btn.classList.add('hover:scale-[1.02]');
-        } else {
-            btn.disabled = true;
-            btn.classList.replace('bg-primary', 'bg-outline-variant');
-            btn.classList.remove('hover:scale-[1.02]');
-        }
-    }
-
-    // 1. CHỌN RẠP
-    window.selectCinema = (name, el) => {
-        document.querySelectorAll('.cinema-btn').forEach(b => {
-            b.classList.remove('bg-primary', 'text-white', 'border-primary');
-            b.classList.add('text-on-surface-variant', 'border-outline-variant/20');
-        });
-        // Xóa class chữ đen trước khi bật đỏ
-        el.classList.remove('text-on-surface-variant', 'border-outline-variant/20');
-        el.classList.add('bg-primary', 'text-white', 'border-primary');
-        
-        selCinema = name;
-        document.getElementById('input-cinema').value = name;
-        document.getElementById('display-cinema').innerText = name;
-
-        const dateContainer = document.getElementById('date-slots');
-        dateContainer.innerHTML = ""; 
-
-        const matchedDates = showtimesData.filter(st => st.cinema === name);
-
-        if (matchedDates.length > 0) {
-            matchedDates.forEach((st, idx) => {
-                const parts = st.date.split('-');
-                const month = parts[1];
-                const day = parts[2];
-                
-                const btn = document.createElement('button');
-                btn.type = "button";
-                btn.className = "date-btn shrink-0 w-20 py-3 rounded-xl border-2 border-outline-variant/20 flex flex-col items-center justify-center transition-all text-on-surface-variant hover:border-primary";
-                btn.onclick = function() { window.selectDate(idx, this, st.date); };
-                btn.innerHTML = `
-                    <span class="text-[10px] font-black opacity-50 uppercase">Tháng ${month}</span>
-                    <span class="text-lg font-black">${day}</span>
-                `;
-                dateContainer.appendChild(btn);
-            });
-        } else {
-            dateContainer.innerHTML = '<p class="text-sm text-red-500 font-bold mt-2">Rạp này hiện chưa có lịch chiếu!</p>';
-        }
-
-        document.getElementById('step-datetime').classList.remove('opacity-50', 'pointer-events-none');
-        
-        selDate = ""; selTime = ""; resetSeats();
-        document.getElementById('time-slots').innerHTML = '<p class="text-sm text-on-surface-variant italic">Vui lòng chọn ngày để xem suất chiếu</p>';
-        document.getElementById('display-datetime').innerText = "Chưa chọn";
-        document.getElementById('step-seats').classList.add('opacity-50', 'pointer-events-none');
-        calcAll();
-    }
-
-    // 2. CHỌN NGÀY VÀ GIỜ
-    window.selectDate = (idx, el, dateStr) => {
-        document.querySelectorAll('.date-btn').forEach(b => {
-            b.classList.remove('bg-primary', 'text-white', 'border-primary');
-            b.classList.add('text-on-surface-variant', 'border-outline-variant/20');
-        });
-        // Xóa chữ đen của ô Ngày
-        el.classList.remove('text-on-surface-variant', 'border-outline-variant/20');
-        el.classList.add('bg-primary', 'text-white', 'border-primary');
-
-        selDate = dateStr;
-        document.getElementById('input-date').value = dateStr;
-        
-        selTime = "";
-        resetSeats();
-        document.getElementById('step-seats').classList.add('opacity-50', 'pointer-events-none');
-        document.getElementById('display-datetime').innerText = "Chọn giờ chiếu";
-        
-        const timeContainer = document.getElementById('time-slots');
-        timeContainer.innerHTML = "";
-
-        const matchedSt = showtimesData.find(st => st.date === dateStr && st.cinema === selCinema);
-        
-        const availTimes = matchedSt ? matchedSt.times : [];
-        availTimes.forEach(t => {
-            const btn = document.createElement('button');
-            btn.type = "button";
-            btn.className = "time-btn px-6 py-2.5 rounded-xl border-2 border-outline-variant/20 text-on-surface-variant font-bold text-sm hover:border-primary transition-all";
-            btn.innerText = t;
-            btn.onclick = function() {
-                document.querySelectorAll('.time-btn').forEach(b => {
-                    b.classList.remove('bg-primary', 'text-white', 'border-primary');
-                    b.classList.add('text-on-surface-variant', 'border-outline-variant/20');
-                });
-                // Xóa chữ đen của ô Giờ
-                this.classList.remove('text-on-surface-variant', 'border-outline-variant/20');
-                this.classList.add('bg-primary', 'text-white', 'border-primary');
-                
-                selTime = t;
-                document.getElementById('input-time').value = t;
-                document.getElementById('display-datetime').innerText = `${t} | ${selDate}`;
-                
-                document.getElementById('step-seats').classList.remove('opacity-50', 'pointer-events-none');
-                resetSeats();
-                syncSeats();
-                calcAll();
-            };
-            timeContainer.appendChild(btn);
-        });
-        calcAll();
-    }
-
-    // RESET GHẾ
-    function resetSeats() {
-        selSeats.forEach(id => {
-            fetch('/api/mo-khoa-ghe', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ movieId: '<%= phim._id %>', showDate: selDate, showTime: selTime, seatId: id, userId: mySessionId }) });
-        });
-        selSeats = [];
-        document.querySelectorAll('.seat-btn').forEach(btn => {
-            btn.classList.remove('bg-[#10b981]', 'text-white', 'bg-slate-200', 'text-slate-400', 'cursor-not-allowed', 'opacity-50');
-            btn.classList.add('text-[#10b981]', 'border-[#10b981]');
-            btn.disabled = false;
-        });
-    }
-
-    // 3. CHỌN GHẾ
-    document.querySelectorAll('.seat-btn').forEach(btn => {
-        btn.onclick = async () => {
-            const id = btn.getAttribute('data-seat');
-            if(selSeats.includes(id)) {
-                selSeats = selSeats.filter(s => s !== id);
-                btn.classList.remove('bg-[#10b981]', 'text-white');
-                // Trả lại class chữ xanh khi hủy chọn
-                btn.classList.add('text-[#10b981]'); 
-                fetch('/api/mo-khoa-ghe', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ movieId: '<%= phim._id %>', showDate: selDate, showTime: selTime, seatId: id, userId: mySessionId }) });
-            } else {
-                const res = await fetch('/api/khoa-ghe', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ movieId: '<%= phim._id %>', showDate: selDate, showTime: selTime, seatId: id, userId: mySessionId }) });
-                const data = await res.json();
-                if(!data.success) { alert(data.message); syncSeats(); return; }
-                
-                selSeats.push(id);
-                // Xóa class chữ xanh trước khi thêm nền xanh chữ trắng
-                btn.classList.remove('text-[#10b981]'); 
-                btn.classList.add('bg-[#10b981]', 'text-white');
-            }
-            calcAll();
-        };
+    document.querySelectorAll('.booking-cinema-btn').forEach(btn => {
+      btn.className = 'booking-cinema-btn p-4 border border-[#E5E0D5] bg-white hover:border-[#121316] text-left transition-all';
+      const check = btn.querySelector('.cinema-check');
+      if (check) {
+        check.className = 'cinema-check text-[#7A7E8B] text-xs font-[\'JetBrains_Mono\']';
+        check.innerText = 'Chọn Rạp';
+      }
     });
 
-    // 4. BẮP NƯỚC
-    window.updateCombo = function(type, change) {
-        let newQty = combos[type].qty + change;
-        if(newQty >= 0 && newQty <= 10) {
-            combos[type].qty = newQty;
-            document.getElementById(`qty-${type}`).innerText = newQty;
-            calcAll();
+    btnEl.className = 'booking-cinema-btn p-4 border-2 border-[#121316] bg-[#F3EFE6] text-left transition-all';
+    const check = btnEl.querySelector('.cinema-check');
+    if (check) {
+      check.className = 'cinema-check text-[#BA2D27] font-bold text-xs font-[\'JetBrains_Mono\']';
+      check.innerText = '✓ Đang Chọn';
+    }
+
+    updateSummaryScreening();
+  }
+
+  function setBookingDate(dateVal, dateLabel, btnEl) {
+    currentDate = dateVal;
+    document.getElementById('input_showDate').value = dateVal;
+
+    document.querySelectorAll('.date-btn').forEach(btn => {
+      btn.className = 'date-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-[\'JetBrains_Mono\'] text-xs';
+    });
+    btnEl.className = 'date-btn px-4 py-2 bg-[#121316] text-white font-[\'JetBrains_Mono\'] text-xs font-bold';
+
+    updateSummaryScreening();
+  }
+
+  function setBookingTime(timeVal, btnEl) {
+    currentTime = timeVal;
+    document.getElementById('input_showTime').value = timeVal;
+
+    document.querySelectorAll('.time-btn').forEach(btn => {
+      btn.className = 'time-btn px-4 py-2.5 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-[\'JetBrains_Mono\'] text-xs font-bold';
+      const sub = btn.querySelector('span');
+      if (sub) sub.className = 'text-[10px] text-[#7A7E8B] block font-normal';
+    });
+
+    btnEl.className = 'time-btn px-4 py-2.5 bg-[#BA2D27] text-white border border-[#BA2D27] font-[\'JetBrains_Mono\'] text-xs font-bold';
+    const sub = btnEl.querySelector('span');
+    if (sub) sub.className = 'text-[10px] text-white/80 block font-normal';
+
+    updateSummaryScreening();
+  }
+
+  function updateSummaryScreening() {
+    document.getElementById('activeScreeningLabel').innerText = currentDate + ' • ' + currentTime;
+    document.getElementById('summaryScreening').innerText = currentCinema + ' • ' + currentTime;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Parse URL params for preselected cinema/time
+    const urlParams = new URLSearchParams(window.location.search);
+    const preCinema = urlParams.get('cinema');
+    const preTime = urlParams.get('time');
+    if (preCinema) {
+      const targetBtn = Array.from(document.querySelectorAll('.booking-cinema-btn')).find(b => b.innerText.includes(preCinema));
+      if (targetBtn) setBookingCinema(preCinema, targetBtn);
+    }
+    if (preTime) {
+      const targetTimeBtn = Array.from(document.querySelectorAll('.time-btn')).find(b => b.innerText.includes(preTime));
+      if (targetTimeBtn) setBookingTime(preTime, targetTimeBtn);
+    }
+    updateSummaryScreening();
+
+    // Client-side seat click handlers
+    const seatUnits = document.querySelectorAll('.seat-unit.seat-free');
+    seatUnits.forEach(seat => {
+      seat.addEventListener('click', () => {
+        const seatCode = seat.getAttribute('data-seat');
+        const price = parseInt(seat.getAttribute('data-price') || '75000', 10);
+
+        if (seat.classList.contains('seat-selected')) {
+          seat.classList.remove('seat-selected');
+          selectedSeats = selectedSeats.filter(s => s.code !== seatCode);
+          seatTotal -= price;
+        } else {
+          if (selectedSeats.length >= 8) {
+            alert('Bạn chỉ có thể chọn tối đa 8 ghế trong một lần đặt vé.');
+            return;
+          }
+          seat.classList.add('seat-selected');
+          selectedSeats.push({ code: seatCode, price: price });
+          seatTotal += price;
         }
+
+        updateBottomSummary();
+      });
+    });
+  });
+
+  function adjustCombo(id, name, price, delta) {
+    if (!comboItems[id]) {
+      comboItems[id] = { name, price, qty: 0 };
+    }
+    comboItems[id].qty += delta;
+    if (comboItems[id].qty < 0) comboItems[id].qty = 0;
+
+    const qtyEl = document.getElementById('qty_' + id);
+    if (qtyEl) qtyEl.innerText = comboItems[id].qty;
+
+    comboTotal = 0;
+    const comboDescList = [];
+    for (const key in comboItems) {
+      if (comboItems[key].qty > 0) {
+        comboTotal += comboItems[key].price * comboItems[key].qty;
+        comboDescList.push(`${comboItems[key].name} x${comboItems[key].qty}`);
+      }
     }
 
-    // 5. ĐỒNG BỘ GHẾ TRỰC TUYẾN
-    async function syncSeats() {
-        if (!selCinema || !selDate || !selTime) return;
-        try {
-            const res = await fetch(`/api/ghe-da-dat?movieId=<%= phim._id %>&cinema=${encodeURIComponent(selCinema)}&showDate=${selDate}&showTime=${selTime}&userId=${mySessionId}`);
-            const data = await res.json();
-            const locked = [...data.bookedSeats, ...data.tempLocked];
+    document.getElementById('input_comboDetails').value = comboDescList.join(', ');
+    document.getElementById('input_comboTotal').value = comboTotal;
 
-            document.querySelectorAll('.seat-btn').forEach(btn => {
-                const id = btn.getAttribute('data-seat');
-                if (locked.includes(id) && !selSeats.includes(id)) {
-                    btn.disabled = true;
-                    btn.classList.add('bg-slate-200', 'text-slate-400', 'cursor-not-allowed', 'opacity-50');
-                    btn.classList.remove('border-[#10b981]', 'text-[#10b981]', 'hover:bg-[#10b981]');
-                } else {
-                    btn.disabled = false;
-                    btn.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed', 'opacity-50');
-                    if (!selSeats.includes(id)) btn.classList.add('border-[#10b981]', 'text-[#10b981]');
-                }
-            });
-        } catch (e) { console.error(e); }
+    updateBottomSummary();
+  }
+
+  function updateBottomSummary() {
+    const seatsLabel = document.getElementById('selectedSeatsLabel');
+    const priceLabel = document.getElementById('totalPriceLabel');
+    const btnSubmit = document.getElementById('btnContinueCheckout');
+
+    const grandTotal = seatTotal + comboTotal;
+    document.getElementById('input_total').value = grandTotal;
+
+    if (selectedSeats.length === 0) {
+      seatsLabel.innerHTML = '<span class="text-[#A6AAB6] italic font-normal">Chưa chọn ghế</span>';
+      priceLabel.innerText = comboTotal > 0 ? (comboTotal.toLocaleString('vi-VN') + ' đ') : '0 đ';
+      btnSubmit.disabled = true;
+      document.getElementById('input_seats').value = '';
+    } else {
+      const seatCodes = selectedSeats.map(s => s.code);
+      seatsLabel.innerHTML = seatCodes.map(code => 
+        `<span class="inline-block px-1.5 py-0.5 bg-[#121316] text-white text-[11px] font-bold mr-1">${code}</span>`
+      ).join('');
+      priceLabel.innerText = grandTotal.toLocaleString('vi-VN') + ' đ';
+      btnSubmit.disabled = false;
+      document.getElementById('input_seats').value = seatCodes.join(',');
     }
-    setInterval(syncSeats, 3000);
+  }
 </script>
 
 <%- include('partials/footer') %>

@@ -1,249 +1,120 @@
 <%- include('partials/admin-header') %>
 
-<header class="sticky top-0 w-full z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 flex justify-between items-center px-8 py-4 shadow-sm">
-    <h1 class="text-2xl font-black text-slate-900">Quản Lý Mã Giảm Giá (Voucher)</h1>
-</header>
-
-<main class="p-8 flex-1 bg-[#f8f9fa] font-['Be_Vietnam_Pro']">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        <div class="lg:col-span-1 bg-white p-6 rounded-[1.5rem] shadow-sm border border-slate-100 h-fit">
-            <h2 class="text-base font-black text-slate-900 mb-6 uppercase tracking-wider">Thêm mã ưu đãi mới</h2>
-            <form action="/admin/vouchers/add" method="POST" class="space-y-4">
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Mã Voucher (Ví dụ: CINEGO50)</label>
-                    <input name="code" required class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-sm font-semibold uppercase" type="text"/>
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Tiêu đề chiến dịch</label>
-                    <input name="title" required class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-sm font-semibold" type="text"/>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Loại giảm giá</label>
-                        <select name="discountType" id="addType" onchange="toggleAddInputs()" class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-sm font-semibold">
-                            <option value="percentage">Giảm theo %</option>
-                            <option value="fixed">Giảm tiền mặt (K)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label id="lblAddValue" class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Mức giảm (%)</label>
-                        <input name="discountValue" required class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-sm font-semibold" type="number"/>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Đơn tối thiểu (K)</label>
-                        <input name="minOrderValue" value="0" class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-sm font-semibold" type="number"/>
-                    </div>
-                    <div id="divAddMax">
-                        <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Giảm tối đa (K)</label>
-                        <input name="maxDiscountValue" value="0" class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-sm font-semibold" type="number"/>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Ngày hết hạn</label>
-                    <input name="expiryDate" class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-sm font-semibold" type="date"/>
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Link hình ảnh đại diện</label>
-                    <input name="imageUrl" class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-sm font-semibold" type="url"/>
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Mô tả điều kiện áp dụng</label>
-                    <textarea name="description" rows="3" class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-sm font-semibold" placeholder="Thông tin chi tiết..."></textarea>
-                </div>
-                <button type="submit" class="w-full py-3.5 bg-red-600 text-white font-black rounded-xl shadow-lg hover:bg-red-700 transition-all text-sm uppercase tracking-wider">
-                    PHÁT HÀNH VOUCHER
-                </button>
-            </form>
-        </div>
-
-        <div class="lg:col-span-2 space-y-4">
-            <div class="bg-white p-6 rounded-[1.5rem] shadow-sm border border-slate-100">
-                <h2 class="text-base font-black text-slate-900 mb-6 uppercase tracking-wider">Danh sách Voucher hệ thống</h2>
-                
-                <div class="space-y-4">
-                    <% if (typeof vouchers !== 'undefined' && vouchers.length > 0) { %>
-                        <% vouchers.forEach(v => { %>
-                            <div class="p-5 border border-slate-100 rounded-2xl flex flex-wrap md:flex-nowrap justify-between items-center gap-4 hover:border-red-200 hover:bg-red-50/20 transition-all">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-14 h-14 bg-red-100 text-red-600 rounded-xl flex items-center justify-center font-black text-sm shrink-0">
-                                        <%= v.discountType === 'percentage' ? v.discountValue + '%' : (v.discountValue/1000) + 'K' %>
-                                    </div>
-                                    <div>
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-mono font-black text-slate-900 uppercase tracking-wide text-base"><%= v.code %></span>
-                                            <span class="text-[10px] font-bold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md uppercase"><%= v.discountType === 'percentage' ? 'Tỷ lệ %' : 'Cố định' %></span>
-                                        </div>
-                                        <p class="font-bold text-xs text-slate-700 mt-0.5"><%= v.title %></p>
-                                        <p class="text-[11px] text-slate-400 font-medium mt-1">
-                                            HSD: <%= v.expiryDate ? new Date(v.expiryDate).toLocaleDateString('vi-VN') : 'Vô thời hạn' %> | Đơn tối thiểu: <%= (v.minOrderValue/1000) %>K
-                                        </p>
-                                    </div>
-                                </div>
-                                
-                                <div class="flex items-center gap-2 ml-auto">
-                                    <button type="button" 
-                                        onclick="handleEditClick(this)"
-                                        data-id="<%= v._id %>"
-                                        data-code="<%= v.code %>"
-                                        data-title="<%= v.title %>"
-                                        data-type="<%= v.discountType %>"
-                                        data-val="<%= v.discountValue %>"
-                                        data-min="<%= v.minOrderValue %>"
-                                        data-max="<%= v.maxDiscountValue %>"
-                                        data-expiry="<%= v.expiryDate ? v.expiryDate.toISOString().split('T')[0] : '' %>"
-                                        data-img="<%= v.imageUrl || '' %>"
-                                        data-desc="<%= v.description || '' %>"
-                                        class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors">
-                                        SỬA
-                                    </button>
-                                    <form action="/admin/vouchers/delete/<%= v._id %>" method="POST" onsubmit="return confirm('Bạn chắc chắn muốn xoá mã này chứ?')" class="inline">
-                                        <button type="submit" class="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-colors">
-                                            XOÁ
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        <% }) %>
-                    <% } else { %>
-                        <p class="text-center text-slate-400 text-sm py-8">Hệ thống chưa tạo mã khuyến mãi nào.</p>
-                    <% } %>
-                </div>
-            </div>
-        </div>
+<main class="p-6 sm:p-10 space-y-8 max-w-7xl">
+  
+  <!-- Header Title -->
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E5E0D5]">
+    <div>
+      <span class="archival-index">MARKETING & VOUCHER</span>
+      <h1 class="editorial-headline text-3xl font-bold mt-1">Quản Lý Voucher & Flash Sale</h1>
+      <p class="text-xs text-[#7A7E8B] mt-0.5 font-light">Tạo mã ưu đãi, kiểm soát tỷ lệ giảm và thiết lập các đợt săn vé Flash Sale.</p>
     </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 text-xs font-['Plus_Jakarta_Sans']">
+    
+    <!-- LEFT 4 COLS: FORM TẠO VOUCHER MỚI -->
+    <div class="lg:col-span-5 bg-white border border-[#E5E0D5] p-6 space-y-4 shadow-sm">
+      <h2 class="font-['Georgia'] text-sm font-bold text-[#121316] uppercase tracking-wider pb-3 border-b border-[#E5E0D5]">
+        Phát Hành Voucher Mới
+      </h2>
+
+      <form action="/admin/vouchers/add" method="POST" class="space-y-4">
+        <div>
+          <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
+            Mã Voucher (Code) <span class="text-[#BA2D27]">*</span>
+          </label>
+          <input name="code" required placeholder="CINEGO50" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] uppercase font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
+        </div>
+
+        <div>
+          <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
+            Tiêu đề chiến dịch <span class="text-[#BA2D27]">*</span>
+          </label>
+          <input name="title" required placeholder="Giảm 50K cho đơn từ 150K" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-bold focus:outline-none focus:border-[#121316]" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Loại giảm</label>
+            <select name="discountType" id="addType" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] font-semibold focus:outline-none focus:border-[#121316]">
+              <option value="percentage">Giảm theo %</option>
+              <option value="fixed">Giảm tiền mặt (K)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Mức giảm</label>
+            <input name="discountValue" required placeholder="20" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Đơn tối thiểu (K)</label>
+            <input name="minOrderValue" value="100" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
+          </div>
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Giảm tối đa (K)</label>
+            <input name="maxDiscountValue" value="50" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Ngày hết hạn</label>
+          <input name="expiryDate" type="date" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] focus:outline-none focus:border-[#121316]" />
+        </div>
+
+        <button type="submit" class="btn-editorial-primary w-full py-3 text-xs font-bold uppercase tracking-wider block text-center !bg-[#BA2D27]">
+          TẠO MÃ VOUCHER MỚI →
+        </button>
+      </form>
+    </div>
+
+    <!-- RIGHT 7 COLS: DANH SÁCH VOUCHER ĐANG CHẠY -->
+    <div class="lg:col-span-7 bg-white border border-[#E5E0D5] p-6 space-y-4 shadow-sm">
+      <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-3">
+        <h2 class="font-['Georgia'] text-sm font-bold text-[#121316] uppercase tracking-wider">
+          Danh Mục Voucher Đang Hoạt Động
+        </h2>
+        <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">
+          <%= typeof vouchers !== 'undefined' ? vouchers.length : 0 %> CHIẾN DỊCH
+        </span>
+      </div>
+
+      <div class="space-y-3">
+        <% if (typeof vouchers !== 'undefined' && vouchers && vouchers.length > 0) { %>
+          <% vouchers.forEach(v => { %>
+            <div class="p-4 bg-[#FAF8F5] border border-[#E5E0D5] flex items-center justify-between gap-4">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="font-['Georgia'] font-black text-sm text-[#121316]"><%= v.code %></span>
+                  <span class="px-1.5 py-0.5 bg-[#121316] text-white text-[9px] font-['JetBrains_Mono'] font-bold">
+                    <%= v.discountType === 'percentage' ? (v.discountValue + '%') : ((v.discountValue/1000) + 'K') %>
+                  </span>
+                </div>
+                <p class="text-xs text-[#474A54]"><%= v.title %></p>
+                <div class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">
+                  Hạn: <%= v.expiryDate ? new Date(v.expiryDate).toLocaleDateString('vi-VN') : 'Vô thời hạn' %>
+                </div>
+              </div>
+
+              <form action="/admin/vouchers/delete/<%= v._id %>" method="POST" onsubmit="return confirm('Bạn muốn xóa voucher này?')">
+                <button type="submit" class="text-xs font-['JetBrains_Mono'] font-bold text-[#BA2D27] hover:underline px-2 py-1">
+                  Xóa
+                </button>
+              </form>
+            </div>
+          <% }); %>
+        <% } else { %>
+          <div class="p-4 bg-[#FAF8F5] border border-[#E5E0D5] text-center text-[#7A7E8B] font-['JetBrains_Mono'] text-xs">
+            Chưa có voucher nào trong hệ thống.
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+  </div>
+
 </main>
-
-<div id="editModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
-    <div class="bg-white p-8 rounded-[1.5rem] w-full max-w-lg shadow-2xl m-4">
-        <h3 class="text-lg font-black text-slate-900 mb-6 uppercase">Cập nhật mã giảm giá</h3>
-        <form id="editForm" method="POST" class="space-y-4">
-            <div>
-                <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Mã Voucher</label>
-                <input id="editCode" name="code" required class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-sm font-semibold uppercase" type="text"/>
-            </div>
-            <div>
-                <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Tiêu đề chiến dịch</label>
-                <input id="editTitle" name="title" required class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-sm font-semibold" type="text"/>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Loại giảm giá</label>
-                    <select id="editDiscountType" name="discountType" onchange="toggleEditInputs()" class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-sm font-semibold">
-                        <option value="percentage">Giảm theo %</option>
-                        <option value="fixed">Giảm tiền mặt (K)</option>
-                    </select>
-                </div>
-                <div>
-                    <label id="lblEditValue" class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Mức giảm</label>
-                    <input id="editDiscountValue" name="discountValue" required class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-sm font-semibold" type="number"/>
-                </div>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Đơn tối thiểu (K)</label>
-                    <input id="editMinOrder" name="minOrderValue" class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-sm font-semibold" type="number"/>
-                </div>
-                <div id="divEditMax">
-                    <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Giảm tối đa (K)</label>
-                    <input id="editMaxDiscount" name="maxDiscountValue" class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-sm font-semibold" type="number"/>
-                </div>
-            </div>
-            <div>
-                <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Ngày hết hạn</label>
-                <input id="editExpiry" name="expiryDate" class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-sm font-semibold" type="date"/>
-            </div>
-            <div>
-                <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Link hình ảnh đại diện</label>
-                <input id="editImage" name="imageUrl" class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-sm font-semibold" type="url"/>
-            </div>
-            <div>
-                <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Mô tả điều kiện áp dụng</label>
-                <textarea id="editDescription" name="description" rows="3" class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-sm font-semibold"></textarea>
-            </div>
-            <div class="flex justify-end gap-3 pt-2">
-                <button type="button" onclick="closeEditModal()" class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors">
-                    HỦY BỎ
-                </button>
-                <button type="submit" class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-black rounded-xl text-xs transition-colors uppercase">
-                    CẬP NHẬT
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-    function toggleAddInputs() {
-        const type = document.getElementById('addType').value;
-        const lblValue = document.getElementById('lblAddValue');
-        const divMax = document.getElementById('divAddMax');
-        if (type === 'fixed') {
-            lblValue.innerText = "Mức giảm (Đơn vị K)";
-            divMax.style.display = 'none';
-        } else {
-            lblValue.innerText = "Mức giảm (%)";
-            divMax.style.display = 'block';
-        }
-    }
-
-    function toggleEditInputs() {
-        const type = document.getElementById('editDiscountType').value;
-        const lblValue = document.getElementById('lblEditValue');
-        const divMax = document.getElementById('divEditMax');
-        if (type === 'fixed') {
-            lblValue.innerText = "Mức giảm (Đơn vị K)";
-            divMax.style.setProperty('display', 'none', 'important');
-        } else {
-            lblValue.innerText = "Mức giảm (%)";
-            divMax.style.setProperty('display', 'block', 'important');
-        }
-    }
-
-    // Hàm trung gian đọc dữ liệu từ data-* attributes
-    function handleEditClick(btn) {
-        const id = btn.getAttribute('data-id');
-        const code = btn.getAttribute('data-code');
-        const title = btn.getAttribute('data-title');
-        const type = btn.getAttribute('data-type');
-        const val = Number(btn.getAttribute('data-val'));
-        const min = Number(btn.getAttribute('data-min'));
-        const max = Number(btn.getAttribute('data-max'));
-        const expiry = btn.getAttribute('data-expiry');
-        const img = btn.getAttribute('data-img');
-        const desc = btn.getAttribute('data-desc');
-
-        openEditModal(id, code, title, type, val, min, max, expiry, img, desc);
-    }
-
-    function openEditModal(id, code, title, type, val, min, max, expiry, img, desc) {
-        const modal = document.getElementById('editModal');
-        document.getElementById('editForm').action = "/admin/vouchers/sua/" + id;
-        document.getElementById('editCode').value = code;
-        document.getElementById('editTitle').value = title;
-        document.getElementById('editDiscountType').value = type;
-        
-        document.getElementById('editDiscountValue').value = type === 'fixed' ? (val / 1000) : val;
-        document.getElementById('editMinOrder').value = min / 1000;
-        document.getElementById('editMaxDiscount').value = max / 1000;
-        
-        document.getElementById('editExpiry').value = expiry;
-        document.getElementById('editImage').value = img;
-        document.getElementById('editDescription').value = desc;
-
-        toggleEditInputs();
-
-        modal.classList.remove('hidden');
-        setTimeout(() => modal.classList.remove('opacity-0'), 10);
-    }
-
-    function closeEditModal() {
-        const modal = document.getElementById('editModal');
-        modal.classList.add('opacity-0');
-        setTimeout(() => modal.classList.add('hidden'), 300);
-    }
-</script>
 
 <%- include('partials/admin-footer') %>

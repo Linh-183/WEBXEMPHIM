@@ -1,0 +1,101 @@
+<%- include('partials/header') %>
+
+<main class="min-h-screen py-12 pb-24 bg-[#FAF8F5]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-8 space-y-12">
+    
+    <!-- Breadcrumb & Header -->
+    <div class="border-b border-[#E5E0D5] pb-6 flex items-center justify-between">
+      <div>
+        <a href="/he-thong-rap" class="font-['JetBrains_Mono'] text-xs text-[#7A7E8B] hover:text-[#BA2D27] uppercase tracking-wider block mb-1">
+          ← Quay Lại Hệ Thống 3 Cụm Rạp
+        </a>
+        <h1 class="editorial-headline mt-1">Hồ Sơ Cụm Rạp Điện Ảnh</h1>
+      </div>
+      <span class="text-xs font-['JetBrains_Mono'] text-[#10B981] font-semibold">● ĐANG MỞ CỬA</span>
+    </div>
+
+    <!-- Cinema Architectural Dossier -->
+    <div class="bg-white border border-[#E5E0D5] p-6 sm:p-10 space-y-8">
+      <div class="relative aspect-[21/9] bg-[#EFEBE3] border border-[#E5E0D5] overflow-hidden">
+        <img src="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1600&q=80" 
+             alt="Cụm rạp Quy Nhơn" 
+             class="w-full h-full object-cover" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+        <div class="absolute bottom-6 left-6 right-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4 text-white">
+          <div>
+            <span class="px-2.5 py-1 bg-[#BA2D27] text-white font-['JetBrains_Mono'] text-[10px] font-bold uppercase tracking-wider">
+              CỤM RẠP CHUẨN QUỐC TẾ
+            </span>
+            <h2 class="font-['Georgia'] text-3xl sm:text-5xl font-bold mt-2 leading-tight">
+              CGV Kim Cúc Plaza Quy Nhơn
+            </h2>
+            <p class="text-xs text-white/80 font-['Plus_Jakarta_Sans'] mt-1">
+              Tầng 3, Kim Cúc Plaza, Khu đô thị An Phú Thịnh, P. Ghềnh Ráng, TP. Quy Nhơn, Bình Định
+            </p>
+          </div>
+          <div class="font-['JetBrains_Mono'] text-xs text-white/80">
+            Hotline: <strong class="text-white text-sm">1900 6017</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Amenities Bar -->
+      <div class="p-4 bg-[#FAF8F5] border border-[#E5E0D5] flex flex-wrap items-center gap-6 text-xs font-['JetBrains_Mono'] text-[#474A54]">
+        <span class="flex items-center gap-1.5"><strong class="text-[#BA2D27]">✓</strong> Màn hình IMAX Laser 70mm</span>
+        <span class="flex items-center gap-1.5"><strong class="text-[#BA2D27]">✓</strong> Âm thanh vòm Dolby Atmos</span>
+        <span class="flex items-center gap-1.5"><strong class="text-[#BA2D27]">✓</strong> Hàng ghế đôi Sweetbox</span>
+        <span class="flex items-center gap-1.5"><strong class="text-[#BA2D27]">✓</strong> Bãi đậu xe ô tô miễn phí</span>
+      </div>
+    </div>
+
+    <!-- Today's Schedule at this Cinema -->
+    <div class="space-y-6">
+      <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-4">
+        <div>
+          <span class="archival-index">LỊCH TRÌNH DIỄN RA</span>
+          <h3 class="editorial-headline text-2xl sm:text-3xl mt-0.5">Suất Chiếu Hôm Nay Tại Rạp</h3>
+        </div>
+        <div class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">HÔM NAY: 12/11/2026</div>
+      </div>
+
+      <div class="space-y-6">
+        <!-- Movie 1 Schedule Row -->
+        <div class="bg-white border border-[#E5E0D5] p-6 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+          <div class="flex items-center gap-4 sm:gap-6 flex-1">
+            <div class="w-20 h-28 bg-[#EFEBE3] overflow-hidden shrink-0 border border-[#E5E0D5]">
+              <img src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=400&q=80" alt="Dune 2" class="w-full h-full object-cover" />
+            </div>
+            <div class="space-y-1">
+              <span class="px-2 py-0.5 bg-[#BA2D27] text-white text-[10px] font-['JetBrains_Mono'] font-bold">T16</span>
+              <h4 class="font-['Georgia'] text-2xl font-bold text-[#121316]">
+                Dune: Hành Tinh Cát (Phần Hai)
+              </h4>
+              <p class="text-xs text-[#7A7E8B] font-['JetBrains_Mono']">166 Phút • Khoa học viễn tưởng, Hành động</p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2.5">
+            <a href="/dat-ve/sample?cinema=CGV Kim Cúc Plaza&time=09:30" class="px-3.5 py-2 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316]">
+              09:30
+            </a>
+            <a href="/dat-ve/sample?cinema=CGV Kim Cúc Plaza&time=13:15" class="px-3.5 py-2 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316]">
+              13:15
+            </a>
+            <a href="/dat-ve/sample?cinema=CGV Kim Cúc Plaza&time=16:45" class="px-3.5 py-2 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316]">
+              16:45
+            </a>
+            <a href="/dat-ve/sample?cinema=CGV Kim Cúc Plaza&time=19:30" class="px-3.5 py-2 bg-[#121316] text-white text-xs font-['JetBrains_Mono'] font-bold hover:bg-[#BA2D27] transition-all">
+              19:30 (Hot)
+            </a>
+            <a href="/dat-ve/sample?cinema=CGV Kim Cúc Plaza&time=22:15" class="px-3.5 py-2 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316]">
+              22:15
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<%- include('partials/footer') %>

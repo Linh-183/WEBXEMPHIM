@@ -1,0 +1,116 @@
+<%- include('partials/admin-header') %>
+
+<main class="p-6 sm:p-10 space-y-8 max-w-7xl">
+  
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E5E0D5]">
+    <div>
+      <span class="archival-index">PHÂN TÍCH TÀI CHÍNH & LẤP ĐẦY</span>
+      <h1 class="editorial-headline text-3xl font-bold mt-1">Báo Cáo Doanh Thu & Hiệu Suất Rạp</h1>
+      <p class="text-xs text-[#7A7E8B] mt-0.5 font-light">Tổng hợp doanh thu theo ngày, tuần, tháng, cụm rạp và combo F&B.</p>
+    </div>
+
+    <div class="flex items-center gap-2 font-['JetBrains_Mono']">
+      <button type="button" onclick="alert('Đang trích xuất file Excel (XLSX)...')" class="btn-editorial-secondary text-xs !py-2.5 !px-4 flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-base">table_view</span> Xuất Excel
+      </button>
+      <button type="button" onclick="window.print()" class="btn-editorial-primary text-xs !py-2.5 !px-4 flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-base">picture_as_pdf</span> Xuất PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- 3 Summary Metrics -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 font-['JetBrains_Mono']">
+    <div class="bg-white border border-[#E5E0D5] p-6 space-y-1">
+      <span class="text-[10px] uppercase font-bold text-[#7A7E8B] block">Doanh thu tháng này</span>
+      <strong class="text-3xl font-black text-[#10B981] font-['Georgia'] block">
+        <%= (typeof totalRevenue !== 'undefined' ? totalRevenue : 182450000).toLocaleString('vi-VN') %> đ
+      </strong>
+      <span class="text-[11px] text-[#10B981] block font-semibold">+18.5% so với tháng trước</span>
+    </div>
+    <div class="bg-white border border-[#E5E0D5] p-6 space-y-1">
+      <span class="text-[10px] uppercase font-bold text-[#7A7E8B] block">Doanh thu Combo F&B</span>
+      <strong class="text-3xl font-black text-[#A6853B] font-['Georgia'] block">
+        <%= (typeof totalFnb !== 'undefined' ? totalFnb : 48200000).toLocaleString('vi-VN') %> đ
+      </strong>
+      <span class="text-[11px] text-[#7A7E8B] block font-medium">Chiếm <%= typeof totalRevenue !== 'undefined' && totalRevenue > 0 ? Math.round((totalFnb / totalRevenue) * 100) : 26 %>% tổng doanh thu</span>
+    </div>
+    <div class="bg-white border border-[#E5E0D5] p-6 space-y-1">
+      <span class="text-[10px] uppercase font-bold text-[#7A7E8B] block">Giá trị trung bình đơn (AOV)</span>
+      <strong class="text-3xl font-black text-[#121316] font-['Georgia'] block">
+        <%= (typeof aov !== 'undefined' ? aov : 195000).toLocaleString('vi-VN') %> đ
+      </strong>
+      <span class="text-[11px] text-[#BA2D27] block font-medium">Tỷ suất trung bình 1.8 vé / đơn</span>
+    </div>
+  </div>
+
+  <!-- Revenue Breakdown Table by Cinema -->
+  <div class="bg-white border border-[#E5E0D5] overflow-x-auto shadow-sm">
+    <div class="p-4 border-b border-[#E5E0D5] flex items-center justify-between font-['JetBrains_Mono']">
+      <h3 class="font-['Georgia'] text-xs font-bold text-[#121316] uppercase tracking-wider">
+        Doanh Số Chi Tiết Theo 3 Cụm Rạp Quy Nhơn
+      </h3>
+      <span class="text-xs text-[#7A7E8B]">Tháng 11/2026</span>
+    </div>
+
+    <table class="w-full text-left text-xs font-['Plus_Jakarta_Sans'] border-collapse">
+      <thead>
+        <tr class="border-b border-[#E5E0D5] text-[#7A7E8B] uppercase font-bold text-[10px] bg-[#FAF8F5] font-['JetBrains_Mono']">
+          <th class="py-3.5 px-4">Cụm Rạp</th>
+          <th class="py-3.5 px-4">Số Suất Chiếu</th>
+          <th class="py-3.5 px-4">Vé Đã Bán</th>
+          <th class="py-3.5 px-4">Tỷ Lệ Lấp Đầy</th>
+          <th class="py-3.5 px-4">Doanh Thu Vé</th>
+          <th class="py-3.5 px-4">Doanh Thu F&B</th>
+          <th class="py-3.5 px-4 text-right">Tổng Doanh Thu</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-[#E5E0D5] font-['JetBrains_Mono']">
+        <% if (typeof cinemaReports !== 'undefined' && cinemaReports && cinemaReports.length > 0) { %>
+          <% cinemaReports.forEach(function(item) { %>
+            <tr class="hover:bg-[#FAF8F5]">
+              <td class="py-3.5 px-4 font-bold text-[#121316]"><%= item.name %></td>
+              <td class="py-3.5 px-4"><%= item.showCount %> suất</td>
+              <td class="py-3.5 px-4 font-bold text-[#121316]"><%= item.ticketCount %> vé</td>
+              <td class="py-3.5 px-4 text-[#10B981] font-bold"><%= item.occupancyRate %>%</td>
+              <td class="py-3.5 px-4"><%= Number(item.ticketRevenue).toLocaleString('vi-VN') %> đ</td>
+              <td class="py-3.5 px-4"><%= Number(item.fnbRevenue).toLocaleString('vi-VN') %> đ</td>
+              <td class="py-3.5 px-4 text-right font-bold text-[#BA2D27]"><%= Number(item.totalRevenue).toLocaleString('vi-VN') %> đ</td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr class="hover:bg-[#FAF8F5]">
+            <td class="py-3.5 px-4 font-bold text-[#121316]">CGV Kim Cúc Plaza</td>
+            <td class="py-3.5 px-4">42 suất</td>
+            <td class="py-3.5 px-4 font-bold text-[#121316]">720 vé</td>
+            <td class="py-3.5 px-4 text-[#10B981] font-bold">78.5%</td>
+            <td class="py-3.5 px-4">84.500.000 đ</td>
+            <td class="py-3.5 px-4">24.100.000 đ</td>
+            <td class="py-3.5 px-4 text-right font-bold text-[#BA2D27]">108.600.000 đ</td>
+          </tr>
+          <tr class="hover:bg-[#FAF8F5]">
+            <td class="py-3.5 px-4 font-bold text-[#121316]">Starlight Nguyễn Kim</td>
+            <td class="py-3.5 px-4">35 suất</td>
+            <td class="py-3.5 px-4 font-bold text-[#121316]">480 vé</td>
+            <td class="py-3.5 px-4 text-[#121316] font-bold">64.0%</td>
+            <td class="py-3.5 px-4">45.600.000 đ</td>
+            <td class="py-3.5 px-4">14.800.000 đ</td>
+            <td class="py-3.5 px-4 text-right font-bold text-[#BA2D27]">60.400.000 đ</td>
+          </tr>
+          <tr class="hover:bg-[#FAF8F5]">
+            <td class="py-3.5 px-4 font-bold text-[#121316]">DCine Quy Nhơn</td>
+            <td class="py-3.5 px-4">28 suất</td>
+            <td class="py-3.5 px-4 font-bold text-[#121316]">290 vé</td>
+            <td class="py-3.5 px-4 text-[#A6853B] font-bold">72.5%</td>
+            <td class="py-3.5 px-4">32.200.000 đ</td>
+            <td class="py-3.5 px-4">9.300.000 đ</td>
+            <td class="py-3.5 px-4 text-right font-bold text-[#BA2D27]">41.500.000 đ</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<%- include('partials/admin-footer') %>

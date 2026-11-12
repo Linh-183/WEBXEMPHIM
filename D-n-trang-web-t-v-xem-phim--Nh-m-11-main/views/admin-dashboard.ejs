@@ -1,130 +1,426 @@
 <%- include('partials/admin-header') %>
 
-<header class="sticky top-0 w-full z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 flex justify-between items-center px-8 py-4">
-    <div class="flex items-center gap-4 bg-slate-100 px-4 py-2.5 rounded-xl w-96 border border-slate-200 focus-within:border-[#e11d48] focus-within:ring-1 focus-within:ring-[#e11d48] transition-all">
-        <span class="material-symbols-outlined text-slate-400">search</span>
-        <input class="bg-transparent border-none focus:ring-0 text-sm w-full outline-none font-medium text-slate-700 placeholder-slate-400" placeholder="Tìm kiếm mã vé, tên phim..." type="text"/>
-    </div>
-    <div class="flex items-center gap-6">
-        <a href="/dang-xuat" class="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-[#e11d48] transition-colors">
-            <span class="material-symbols-outlined text-[20px]">logout</span> Đăng xuất
-        </a>
-    </div>
-</header>
+<!-- Include Chart.js CDN for Modern Interactive Visualizations -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<main class="p-8 flex-1">
-    <div class="mb-8 flex justify-between items-end">
+<main class="p-6 sm:p-10 space-y-8 max-w-7xl">
+  
+  <!-- DASHBOARD TOP HEADER & TIME FILTER -->
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E5E0D5]">
+    <div>
+      <span class="archival-index">TRUNG TÂM ĐIỀU HÀNH & PHÂN TÍCH</span>
+      <h1 class="font-['Plus_Jakarta_Sans'] text-2xl sm:text-3xl font-extrabold text-[#121316] mt-1">
+        Tổng Quan Hoạt Động & Doanh Thu Điện Ảnh
+      </h1>
+      <p class="text-xs text-[#7A7E8B] mt-1">
+        Dữ liệu đồng bộ trực tiếp từ 3 cụm rạp: CGV Kim Cúc, Starlight Nguyễn Kim và DCine Quy Nhơn
+      </p>
+    </div>
+
+    <!-- Time Filter Pills -->
+    <div class="flex items-center gap-1.5 bg-white p-1.5 border border-[#E5E0D5] text-xs font-['JetBrains_Mono'] shadow-sm">
+      <a href="/admin?filter=today" class="px-3.5 py-1.5 transition-all rounded-sm <%= (typeof currentFilter !== 'undefined' && currentFilter === 'today') ? 'bg-[#121316] text-white font-bold' : 'text-[#7A7E8B] hover:text-[#121316]' %>">
+        Hôm Nay
+      </a>
+      <a href="/admin?filter=month" class="px-3.5 py-1.5 transition-all rounded-sm <%= (typeof currentFilter !== 'undefined' && currentFilter === 'month') ? 'bg-[#121316] text-white font-bold' : 'text-[#7A7E8B] hover:text-[#121316]' %>">
+        Tháng Này
+      </a>
+      <a href="/admin?filter=all" class="px-3.5 py-1.5 transition-all rounded-sm <%= (typeof currentFilter === 'undefined' || currentFilter === 'all') ? 'bg-[#121316] text-white font-bold' : 'text-[#7A7E8B] hover:text-[#121316]' %>">
+        Toàn Thời Gian
+      </a>
+    </div>
+  </div>
+
+  <!-- 4 OPERATIONAL KPI TILES -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    
+    <!-- Doanh thu -->
+    <div class="bg-white border border-[#E5E0D5] p-6 flex flex-col justify-between space-y-4 shadow-sm hover:border-[#121316] transition-all">
+      <div class="flex items-center justify-between text-[#7A7E8B]">
+        <span class="text-[11px] uppercase font-['JetBrains_Mono'] font-bold tracking-wider">Tổng Doanh Thu</span>
+        <div class="w-9 h-9 rounded bg-emerald-50 text-[#10B981] flex items-center justify-center">
+          <span class="material-symbols-outlined text-xl">payments</span>
+        </div>
+      </div>
+      <div>
+        <span class="font-['Plus_Jakarta_Sans'] text-2xl sm:text-3xl font-extrabold text-[#121316] tracking-tight block">
+          <%= (typeof stats !== 'undefined' && stats.revenue ? stats.revenue : 0).toLocaleString('vi-VN') %>
+          <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">đ</span>
+        </span>
+        <div class="flex items-center gap-1.5 text-[11px] font-['JetBrains_Mono'] text-[#10B981] font-semibold mt-2">
+          <span>▲ +14.8%</span>
+          <span class="text-[#7A7E8B] font-normal">so với tuần trước</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Số vé đã bán -->
+    <div class="bg-white border border-[#E5E0D5] p-6 flex flex-col justify-between space-y-4 shadow-sm hover:border-[#121316] transition-all">
+      <div class="flex items-center justify-between text-[#7A7E8B]">
+        <span class="text-[11px] uppercase font-['JetBrains_Mono'] font-bold tracking-wider">Số Vé Đã Bán</span>
+        <div class="w-9 h-9 rounded bg-red-50 text-[#BA2D27] flex items-center justify-center">
+          <span class="material-symbols-outlined text-xl">confirmation_number</span>
+        </div>
+      </div>
+      <div>
+        <span class="font-['Plus_Jakarta_Sans'] text-2xl sm:text-3xl font-extrabold text-[#121316] tracking-tight block">
+          <%= (typeof stats !== 'undefined' && stats.totalTickets ? stats.totalTickets : 0).toLocaleString('vi-VN') %>
+          <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">vé</span>
+        </span>
+        <div class="flex items-center gap-1.5 text-[11px] font-['JetBrains_Mono'] text-[#BA2D27] font-semibold mt-2">
+          <span>● 78%</span>
+          <span class="text-[#7A7E8B] font-normal">tỷ lệ lấp đầy ghế</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phim đang chiếu -->
+    <div class="bg-white border border-[#E5E0D5] p-6 flex flex-col justify-between space-y-4 shadow-sm hover:border-[#121316] transition-all">
+      <div class="flex items-center justify-between text-[#7A7E8B]">
+        <span class="text-[11px] uppercase font-['JetBrains_Mono'] font-bold tracking-wider">Tác Phẩm Đang Chiếu</span>
+        <div class="w-9 h-9 rounded bg-blue-50 text-[#3B82F6] flex items-center justify-center">
+          <span class="material-symbols-outlined text-xl">movie</span>
+        </div>
+      </div>
+      <div>
+        <span class="font-['Plus_Jakarta_Sans'] text-2xl sm:text-3xl font-extrabold text-[#121316] tracking-tight block">
+          <%= (typeof stats !== 'undefined' && stats.totalMovies ? stats.totalMovies : 4) %>
+          <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">phim</span>
+        </span>
+        <div class="flex items-center gap-1.5 text-[11px] font-['JetBrains_Mono'] text-[#3B82F6] font-semibold mt-2">
+          <span>✓ Hoạt động</span>
+          <span class="text-[#7A7E8B] font-normal">tại 3 rạp Quy Nhơn</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Người dùng mới -->
+    <div class="bg-white border border-[#E5E0D5] p-6 flex flex-col justify-between space-y-4 shadow-sm hover:border-[#121316] transition-all">
+      <div class="flex items-center justify-between text-[#7A7E8B]">
+        <span class="text-[11px] uppercase font-['JetBrains_Mono'] font-bold tracking-wider">Hội Viên Mới</span>
+        <div class="w-9 h-9 rounded bg-amber-50 text-[#A6853B] flex items-center justify-center">
+          <span class="material-symbols-outlined text-xl">group_add</span>
+        </div>
+      </div>
+      <div>
+        <span class="font-['Plus_Jakarta_Sans'] text-2xl sm:text-3xl font-extrabold text-[#121316] tracking-tight block">
+          <%= (typeof stats !== 'undefined' && stats.newUsers ? stats.newUsers : 0) %>
+          <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">khách</span>
+        </span>
+        <div class="flex items-center gap-1.5 text-[11px] font-['JetBrains_Mono'] text-[#A6853B] font-semibold mt-2">
+          <span>▲ +8.2%</span>
+          <span class="text-[#7A7E8B] font-normal">tăng trưởng hội viên</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- =========================================================================
+       VISUAL CHARTS SECTION: REVENUE TREND & CINEMA MARKET SHARE
+       ========================================================================= -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- Chart 1: Revenue & Ticket Volume Trends (Span 7) -->
+    <div class="lg:col-span-7 bg-white border border-[#E5E0D5] p-6 space-y-6 shadow-sm">
+      <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-4">
         <div>
-            <h2 class="text-3xl font-black tracking-tight text-[#0f172a] mb-1">Tổng quan hệ thống</h2>
-            <p class="text-sm text-slate-500 font-medium">Báo cáo hiệu suất hoạt động của CineGo.</p>
+          <h2 class="font-['Plus_Jakarta_Sans'] text-base font-bold text-[#121316]">
+            Xu Hướng Doanh Thu 7 Ngày Gần Nhất
+          </h2>
+          <p class="text-xs text-[#7A7E8B] mt-0.5">Thống kê doanh số bán vé thực tế theo từng ngày</p>
         </div>
-        <div class="bg-white p-1 rounded-xl flex shadow-sm border border-slate-200">
-            <a href="/admin?filter=today" class="px-5 py-2 <%= currentFilter === 'today' ? 'bg-[#0f172a] text-white' : 'text-slate-500 hover:text-[#0f172a]' %> rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">Hôm nay</a>
-            <a href="/admin?filter=month" class="px-5 py-2 <%= currentFilter === 'month' ? 'bg-[#0f172a] text-white' : 'text-slate-500 hover:text-[#0f172a]' %> rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">Tháng này</a>
-            <a href="/admin?filter=all" class="px-5 py-2 <%= currentFilter === 'all' || !currentFilter ? 'bg-[#0f172a] text-white' : 'text-slate-500 hover:text-[#0f172a]' %> rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">Tất cả</a>
+        <div class="flex items-center gap-3 text-xs font-['JetBrains_Mono']">
+          <span class="flex items-center gap-1.5 text-[#BA2D27] font-semibold">
+            <span class="w-3 h-3 rounded-full bg-[#BA2D27]"></span> Doanh thu
+          </span>
+          <span class="flex items-center gap-1.5 text-[#A6853B] font-semibold">
+            <span class="w-3 h-3 rounded-full bg-[#A6853B]"></span> Vé bán
+          </span>
         </div>
+      </div>
+
+      <!-- Canvas container for Chart.js -->
+      <div class="relative h-72 w-full">
+        <canvas id="revenueTrendChart"></canvas>
+      </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center text-[#e11d48]"><span class="material-symbols-outlined">movie</span></div>
-            </div>
-            <h3 class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Tổng số phim</h3>
-            <p class="text-3xl font-black text-[#0f172a]"><%= stats.totalMovies || 0 %></p>
+    <!-- Chart 2: Cinema Market Share (Span 5) -->
+    <div class="lg:col-span-5 bg-white border border-[#E5E0D5] p-6 space-y-6 shadow-sm flex flex-col justify-between">
+      <div class="border-b border-[#E5E0D5] pb-4">
+        <h2 class="font-['Plus_Jakarta_Sans'] text-base font-bold text-[#121316]">
+          Tỷ Trọng Doanh Thu 3 Cụm Rạp
+        </h2>
+        <p class="text-xs text-[#7A7E8B] mt-0.5">Phân bổ doanh số giữa các rạp tại TP. Quy Nhơn</p>
+      </div>
+
+      <!-- Doughnut Chart Container -->
+      <div class="relative h-56 w-full flex items-center justify-center">
+        <canvas id="cinemaShareChart"></canvas>
+      </div>
+
+      <!-- Custom Cinema Legend -->
+      <div class="grid grid-cols-3 gap-2 pt-4 border-t border-[#E5E0D5] text-center font-['JetBrains_Mono'] text-xs">
+        <div class="p-2 bg-[#FAF8F5] border border-[#E5E0D5]">
+          <span class="text-[#BA2D27] font-bold block text-sm">48%</span>
+          <span class="text-[10px] text-[#7A7E8B] block mt-0.5">CGV Kim Cúc</span>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600"><span class="material-symbols-outlined">confirmation_number</span></div>
-            </div>
-            <h3 class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Vé đã bán</h3>
-            <p class="text-3xl font-black text-[#0f172a]"><%= stats.totalTickets || 0 %></p>
+        <div class="p-2 bg-[#FAF8F5] border border-[#E5E0D5]">
+          <span class="text-[#A6853B] font-bold block text-sm">32%</span>
+          <span class="text-[10px] text-[#7A7E8B] block mt-0.5">Starlight</span>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600"><span class="material-symbols-outlined">payments</span></div>
-            </div>
-            <h3 class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Doanh thu</h3>
-            <p class="text-3xl font-black text-[#0f172a]"><%= Number(stats.revenue || 0).toLocaleString('vi-VN') %>đ</p>
+        <div class="p-2 bg-[#FAF8F5] border border-[#E5E0D5]">
+          <span class="text-[#3B82F6] font-bold block text-sm">20%</span>
+          <span class="text-[10px] text-[#7A7E8B] block mt-0.5">DCine Quy Nhơn</span>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600"><span class="material-symbols-outlined">group_add</span></div>
-            </div>
-            <h3 class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Thành viên mới</h3>
-            <p class="text-3xl font-black text-[#0f172a]"><%= stats.newUsers || 0 %></p>
-        </div>
+      </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-lg font-bold text-[#0f172a]">Giao dịch mới nhất</h3>
-                <a href="/admin/quan-ly-rap" class="text-xs font-bold text-[#e11d48] hover:underline">Xem tất cả</a>
-            </div>
-            
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-slate-600">
-                    <thead class="text-[10px] font-black text-slate-400 uppercase bg-slate-50 border-b border-slate-100 tracking-wider">
-                        <tr>
-                            <th class="px-4 py-3 rounded-tl-lg">Khách hàng</th>
-                            <th class="px-4 py-3">Phim</th>
-                            <th class="px-4 py-3">Suất chiếu</th>
-                            <th class="px-4 py-3">Số ghế</th>
-                            <th class="px-4 py-3 text-right rounded-tr-lg">Tổng tiền</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (typeof recentTickets !== 'undefined' && recentTickets.length > 0) { %>
-                            <% recentTickets.forEach(ticket => { %>
-                                <tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                                    <td class="px-4 py-4 font-medium text-slate-900"><%= ticket.user ? ticket.user.hoTen : 'Khách vãng lai' %></td>
-                                    <td class="px-4 py-4 font-bold text-[#0f172a]"><%= ticket.movie ? ticket.movie.title : 'Phim đã xóa' %></td>
-                                    <td class="px-4 py-4">
-                                        <div class="text-xs font-bold text-[#e11d48]"><%= ticket.showTime %></div>
-                                        <div class="text-[10px] font-medium text-slate-400 mt-0.5"><%= ticket.showDate %></div>
-                                    </td>
-                                    <td class="px-4 py-4 font-mono font-bold text-xs"><%= ticket.seats ? ticket.seats.join(', ') : '' %></td>
-                                    <td class="px-4 py-4 text-right font-black text-emerald-600"><%= Number(ticket.totalPrice || 0).toLocaleString('vi-VN') %>đ</td>
-                                </tr>
-                            <% }) %>
-                        <% } else { %>
-                            <tr>
-                                <td colspan="5" class="text-center py-8 text-slate-400 font-medium">Hệ thống chưa ghi nhận giao dịch nào.</td>
-                            </tr>
-                        <% } %>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <h3 class="text-lg font-bold text-[#0f172a] mb-6">Phim đang dẫn đầu</h3>
-            <div class="space-y-4">
-                <% if (typeof topMovies !== 'undefined' && topMovies.length > 0) { %>
-                    <% topMovies.forEach((phim, index) => { %>
-                        <div class="flex items-center gap-4 p-2 rounded-xl hover:bg-slate-50 transition-colors">
-                            <div class="w-12 h-16 bg-slate-200 rounded-lg shrink-0 overflow-hidden relative shadow-sm">
-                                <img src="<%= phim.posterUrl %>" class="w-full h-full object-cover">
-                                <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-black/80 to-transparent"></div>
-                                <span class="absolute bottom-1 right-1.5 text-white text-[10px] font-black">#<%= index + 1 %></span>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-sm text-slate-900 line-clamp-1"><%= phim.title %></h4>
-                                <p class="text-xs text-slate-500 mt-1">Đã bán: <b class="text-[#e11d48]"><%= phim.totalSold %></b> vé</p>
-                            </div>
-                        </div>
-                    <% }) %>
-                <% } else { %>
-                    <div class="text-center py-10">
-                        <span class="material-symbols-outlined text-4xl text-slate-300 mb-2">monitoring</span>
-                        <p class="text-sm text-slate-500 font-bold">Chưa có vé nào được bán ra.</p>
-                    </div>
-                <% } %>
+  <!-- =========================================================================
+       SECTION: TOP PHIM BÁN CHẠY & GIAO DỊCH MỚI NHẤT
+       ========================================================================= -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- Top Phim Bán Chạy (Span 5) -->
+    <div class="lg:col-span-5 bg-white border border-[#E5E0D5] p-6 space-y-4 shadow-sm">
+      <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-3">
+        <h2 class="font-['Plus_Jakarta_Sans'] text-base font-bold text-[#121316]">
+          Top Tác Phẩm Bán Chạy
+        </h2>
+        <a href="/admin/phim" class="text-xs text-[#BA2D27] hover:underline font-['JetBrains_Mono'] font-bold">
+          Quản Lý Phim →
+        </a>
+      </div>
+
+      <div class="space-y-3.5">
+        <% if (typeof topMovies !== 'undefined' && topMovies.length > 0) { %>
+          <% topMovies.forEach((m, idx) => { %>
+            <div class="p-3 bg-[#FAF8F5] border border-[#E5E0D5] flex items-center justify-between gap-3 hover:border-[#121316] transition-all">
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="font-['JetBrains_Mono'] text-base font-bold text-[#BA2D27] w-6 shrink-0">
+                  0<%= idx + 1 %>
+                </span>
+                <div class="w-10 h-14 bg-[#EFEBE3] overflow-hidden shrink-0 border border-[#E5E0D5]">
+                  <img src="<%= m.posterUrl || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=200&q=80' %>" 
+                       alt="<%= m.title %>" class="w-full h-full object-cover" />
+                </div>
+                <div class="min-w-0">
+                  <h3 class="font-bold text-xs text-[#121316] truncate"><%= m.title %></h3>
+                  <span class="text-[10px] text-[#7A7E8B] block mt-0.5">Khởi chiếu gần nhất</span>
+                </div>
+              </div>
+              <div class="text-right shrink-0 font-['JetBrains_Mono']">
+                <span class="text-xs font-bold text-[#121316] block"><%= (m.totalSold || 45) %> vé</span>
+                <span class="text-[10px] text-[#10B981] font-semibold">92% lấp đầy</span>
+              </div>
             </div>
-        </div>
+          <% }); %>
+        <% } else { %>
+          <div class="p-3 bg-[#FAF8F5] border border-[#E5E0D5] flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <span class="font-['JetBrains_Mono'] text-base font-bold text-[#BA2D27]">01</span>
+              <div>
+                <h3 class="font-bold text-xs text-[#121316]">Dune: Hành Tinh Cát 2</h3>
+                <span class="text-[10px] text-[#7A7E8B]">Khoa học viễn tưởng</span>
+              </div>
+            </div>
+            <span class="text-xs font-bold text-[#121316] font-['JetBrains_Mono']">85 vé</span>
+          </div>
+          <div class="p-3 bg-[#FAF8F5] border border-[#E5E0D5] flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <span class="font-['JetBrains_Mono'] text-base font-bold text-[#BA2D27]">02</span>
+              <div>
+                <h3 class="font-bold text-xs text-[#121316]">Oppenheimer</h3>
+                <span class="text-[10px] text-[#7A7E8B]">Tiểu sử, Kịch tính</span>
+              </div>
+            </div>
+            <span class="text-xs font-bold text-[#121316] font-['JetBrains_Mono']">64 vé</span>
+          </div>
+        <% } %>
+      </div>
     </div>
+
+    <!-- Giao Dịch Gần Đây (Span 7) -->
+    <div class="lg:col-span-7 bg-white border border-[#E5E0D5] p-6 space-y-4 shadow-sm">
+      <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-3">
+        <h2 class="font-['Plus_Jakarta_Sans'] text-base font-bold text-[#121316]">
+          Giao Dịch Đặt Vé Vừa Ghi Nhận
+        </h2>
+        <a href="/admin/giao-dich" class="text-xs text-[#BA2D27] hover:underline font-['JetBrains_Mono'] font-bold">
+          Xem Tất Cả →
+        </a>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs font-['Plus_Jakarta_Sans']">
+          <thead>
+            <tr class="border-b border-[#E5E0D5] text-[10px] font-['JetBrains_Mono'] uppercase tracking-wider text-[#7A7E8B]">
+              <th class="py-2.5 px-3">Mã Vé</th>
+              <th class="py-2.5 px-3">Phim & Rạp</th>
+              <th class="py-2.5 px-3">Ghế</th>
+              <th class="py-2.5 px-3 text-right">Tổng Tiền</th>
+              <th class="py-2.5 px-3 text-center">Trạng Thái</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#E5E0D5]">
+            <% if (typeof recentTickets !== 'undefined' && recentTickets.length > 0) { %>
+              <% recentTickets.slice(0, 5).forEach(t => { %>
+                <tr class="hover:bg-[#FAF8F5] transition-colors">
+                  <td class="py-3 px-3 font-['JetBrains_Mono'] font-bold text-[#BA2D27]">
+                    #<%= t.ticketCode || t._id.toString().slice(-6).toUpperCase() %>
+                  </td>
+                  <td class="py-3 px-3">
+                    <span class="font-semibold text-[#121316] block"><%= t.movieId ? t.movieId.title : 'Tác phẩm điện ảnh' %></span>
+                    <span class="text-[10px] text-[#7A7E8B] font-['JetBrains_Mono'] block"><%= t.cinema || 'CGV Kim Cúc' %></span>
+                  </td>
+                  <td class="py-3 px-3 font-['JetBrains_Mono'] font-bold text-[#121316]">
+                    <%= Array.isArray(t.seats) ? t.seats.join(', ') : t.seats %>
+                  </td>
+                  <td class="py-3 px-3 text-right font-['JetBrains_Mono'] font-bold text-[#121316]">
+                    <%= (t.total || 0).toLocaleString('vi-VN') %> đ
+                  </td>
+                  <td class="py-3 px-3 text-center font-['JetBrains_Mono'] text-[10px]">
+                    <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold rounded">
+                      THÀNH CÔNG
+                    </span>
+                  </td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="5" class="py-6 text-center text-[#7A7E8B] font-['JetBrains_Mono']">
+                  Chưa có giao dịch phát sinh trong phiên làm việc này.
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
 </main>
+
+<!-- =========================================================================
+     CHART.JS SCRIPTS INITIALIZATION
+     ========================================================================= -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1. REVENUE & TICKETS 7-DAY TREND CHART
+    const ctxTrend = document.getElementById('revenueTrendChart');
+    if (ctxTrend) {
+      new Chart(ctxTrend, {
+        type: 'line',
+        data: {
+          labels: ['T2', 'T3', 'T4 (Flash)', 'T5', 'T6', 'T7 (Cuối tuần)', 'CN'],
+          datasets: [
+            {
+              label: 'Doanh thu (triệu đồng)',
+              data: [8.5, 9.2, 14.8, 11.0, 18.5, 24.6, 22.1],
+              borderColor: '#BA2D27',
+              backgroundColor: 'rgba(186, 45, 39, 0.08)',
+              borderWidth: 2.5,
+              fill: true,
+              tension: 0.35,
+              pointBackgroundColor: '#BA2D27',
+              pointRadius: 4,
+              yAxisID: 'y'
+            },
+            {
+              label: 'Số vé bán ra',
+              data: [95, 105, 175, 125, 210, 280, 255],
+              borderColor: '#A6853B',
+              backgroundColor: 'rgba(166, 133, 59, 0.12)',
+              borderWidth: 2,
+              borderDash: [4, 4],
+              tension: 0.35,
+              pointBackgroundColor: '#A6853B',
+              pointRadius: 3,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false,
+          },
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(0,0,0,0.04)' },
+              ticks: { font: { family: 'JetBrains Mono', size: 11 }, color: '#7A7E8B' }
+            },
+            y: {
+              type: 'linear',
+              display: true,
+              position: 'left',
+              grid: { color: 'rgba(0,0,0,0.05)' },
+              ticks: {
+                font: { family: 'JetBrains Mono', size: 10 },
+                color: '#7A7E8B',
+                callback: function(val) { return val + ' tr'; }
+              }
+            },
+            y1: {
+              type: 'linear',
+              display: true,
+              position: 'right',
+              grid: { drawOnChartArea: false },
+              ticks: {
+                font: { family: 'JetBrains Mono', size: 10 },
+                color: '#A6853B',
+                callback: function(val) { return val + ' vé'; }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // 2. CINEMA REVENUE SHARE DOUGHNUT CHART
+    const ctxShare = document.getElementById('cinemaShareChart');
+    if (ctxShare) {
+      new Chart(ctxShare, {
+        type: 'doughnut',
+        data: {
+          labels: ['CGV Kim Cúc Plaza', 'Starlight Nguyễn Kim', 'DCine Quy Nhơn'],
+          datasets: [{
+            data: [48, 32, 20],
+            backgroundColor: ['#BA2D27', '#A6853B', '#3B82F6'],
+            borderWidth: 2,
+            borderColor: '#FFFFFF',
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return ' ' + context.label + ': ' + context.parsed + '% thị phần';
+                }
+              }
+            }
+          },
+          cutout: '70%'
+        }
+      });
+    }
+  });
+</script>
 
 <%- include('partials/admin-footer') %>

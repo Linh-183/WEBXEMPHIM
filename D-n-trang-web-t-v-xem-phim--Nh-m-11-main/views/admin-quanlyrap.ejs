@@ -1,109 +1,127 @@
 <%- include('partials/admin-header') %>
 
-<div class="p-6 flex-1 bg-[#f4f7f6] min-h-screen">
-    <div class="flex justify-between items-center mb-8 border-b border-slate-200 pb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-800">Quản lý Rạp chiếu</h1>
-            <p class="text-slate-500 text-xs mt-1">Dữ liệu hệ thống 50 ghế / rạp</p>
-        </div>
-        <button class="bg-[#b8000b] text-white px-5 py-2 rounded-lg font-bold text-xs uppercase tracking-wider">
-            Cấu hình rạp
-        </button>
+<main class="p-6 sm:p-10 space-y-8 max-w-7xl">
+  
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E5E0D5]">
+    <div>
+      <span class="archival-index">HẠ TẦNG PHÒNG CHIẾU</span>
+      <h1 class="editorial-headline text-3xl font-bold mt-1">Quản Lý 3 Cụm Rạp Quy Nhơn</h1>
+      <p class="text-xs text-[#7A7E8B] mt-0.5 font-light">Giám sát công suất phòng chiếu, tỷ lệ lấp đầy ghế và cấu hình sơ đồ phòng.</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <% if (typeof cinemas !== 'undefined' && cinemas.length > 0) { %>
-            <% cinemas.forEach((cinema) => { %>
-                <div class="bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col">
-                    
-                    <div class="p-6 flex-1">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-bold text-slate-800"><%= cinema.name %></h3>
-                            <span class="text-[9px] font-bold px-2 py-1 rounded border <%= cinema.isFull ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200' %>">
-                                <%= cinema.isFull ? 'HẾT CHỖ' : 'SẴN SÀNG' %>
-                            </span>
-                        </div>
+    <button type="button" onclick="alert('Tính năng thiết kế sơ đồ phòng chiếu đang mở ở chế độ cấu hình.');" class="btn-editorial-primary text-xs !py-3 !px-5 flex items-center gap-2">
+      <span class="material-symbols-outlined text-base">grid_view</span>
+      <span>Thiết Kế Sơ Đồ Ghế</span>
+    </button>
+  </div>
 
-                        <div class="space-y-3">
-                            <div class="flex justify-between text-xs">
-                                <span class="text-slate-500">Đã lấp đầy:</span>
-                                <span class="font-bold text-slate-800"><%= cinema.occupiedSeats %> ghế</span>
-                            </div>
-                            <div class="flex justify-between text-xs">
-                                <span class="text-slate-500">Còn trống:</span>
-                                <span class="font-bold text-[#b8000b]"><%= cinema.emptySeats %> ghế</span>
-                            </div>
-                            
-                            <div class="w-full h-1.5 bg-slate-100 rounded-full mt-4">
-                                <div class="h-full rounded-full <%= cinema.isFull ? 'bg-red-600' : 'bg-[#0f172a]' %>"
-                                     style="width: <%= cinema.occupancyRate %>%"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex gap-2">
-                        <button onclick="openCinemaDetail('<%= cinema.name %>', 50, <%= cinema.bookedSeats %>)" 
-                                class="flex-1 bg-[#0f172a] text-white py-2 rounded font-bold text-[10px] uppercase tracking-wider">
-                            Xem sơ đồ ghế
-                        </button>
-                        <button class="px-3 py-2 border border-slate-200 rounded text-slate-400 hover:text-red-600">
-                            <span class="material-symbols-outlined text-sm">delete</span>
-                        </button>
-                    </div>
-                </div>
-            <% }) %>
-        <% } %>
-    </div>
-</div>
-
-<div id="detailModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
-    <div class="absolute inset-0 bg-slate-900/60" onclick="closeModal()"></div>
-    
-    <div class="bg-white rounded-xl z-10 w-full max-w-lg p-8 relative">
-        <div class="flex justify-between items-center mb-6">
-            <h2 id="modalName" class="text-xl font-bold text-slate-800">Tên rạp</h2>
-            <button onclick="closeModal()" class="text-slate-400 hover:text-black">&times;</button>
-        </div>
-
-        <div class="w-full h-1 bg-slate-200 rounded mb-8"></div> <div id="seatContainer" class="grid grid-cols-10 gap-2 mb-8">
+  <!-- 3 CINEMAS OVERVIEW TILES -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <% if (typeof cinemas !== 'undefined' && cinemas.length > 0) { %>
+      <% cinemas.forEach((cinema, idx) => { %>
+        <div class="bg-white border border-[#E5E0D5] p-6 flex flex-col justify-between space-y-4 hover:border-[#121316] transition-all">
+          <div>
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B] uppercase">CỤM RẠP 0<%= idx+1 %></span>
+                <h3 class="font-['Georgia'] text-lg font-bold text-[#121316] mt-0.5"><%= cinema.name %></h3>
+                <p class="text-[11px] text-[#7A7E8B] mt-0.5"><%= cinema.location || 'TP. Quy Nhơn' %></p>
+              </div>
+              <span class="px-2 py-0.5 font-['JetBrains_Mono'] text-[10px] font-bold uppercase <%= cinema.occupancyRate >= 70 ? 'bg-[#F9EBEA] text-[#BA2D27] border border-[#BA2D27]/30' : 'bg-[#E8F8F0] text-[#10B981] border border-[#10B981]/30' %>">
+                <%= cinema.occupancyRate >= 70 ? 'ĐÔNG KHÁCH' : 'SẴN SÀNG' %>
+              </span>
             </div>
 
-        <div class="flex items-center justify-between border-t border-slate-100 pt-6">
-            <div class="flex gap-4 text-[10px] font-bold text-slate-400 uppercase">
-                <div class="flex items-center gap-1"><div class="w-3 h-3 bg-slate-100 border border-slate-200"></div> Trống</div>
-                <div class="flex items-center gap-1"><div class="w-3 h-3 bg-[#0f172a]"></div> Đã đặt</div>
+            <!-- Stats -->
+            <div class="space-y-2.5 pt-2 text-xs font-['JetBrains_Mono']">
+              <div class="flex justify-between">
+                <span class="text-[#7A7E8B]">Tổng ghế phòng:</span>
+                <strong class="text-[#121316]"><%= cinema.totalSeats || 50 %> ghế</strong>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-[#7A7E8B]">Đã bán:</span>
+                <strong class="text-[#BA2D27]"><%= cinema.occupiedSeats || 0 %> ghế</strong>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-[#7A7E8B]">Còn trống:</span>
+                <strong class="text-[#10B981]"><%= cinema.emptySeats || (cinema.totalSeats || 50) %> ghế</strong>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-[#7A7E8B]">Tỷ lệ lấp đầy:</span>
+                <strong class="text-[#121316]"><%= (cinema.occupancyRate || 0).toFixed(1) %>%</strong>
+              </div>
+
+              <!-- Bar -->
+              <div class="w-full h-1.5 bg-[#FAF8F5] border border-[#E5E0D5] mt-2">
+                <div class="h-full bg-[#BA2D27]" style="width: <%= Math.min(100, cinema.occupancyRate || 0) %>%;"></div>
+              </div>
             </div>
-            <button onclick="closeModal()" class="px-6 py-2 bg-slate-800 text-white rounded font-bold text-[10px] uppercase">Đóng</button>
+          </div>
+
+          <div class="pt-4 border-t border-[#E5E0D5] flex gap-2">
+            <button type="button" onclick="viewCinemaSeatLayout('<%= cinema.name %>', <%= cinema.bookedSeats || '[]' %>)" class="btn-editorial-primary text-xs w-full text-center !py-2">
+              Xem Sơ Đồ Ghế
+            </button>
+          </div>
         </div>
+      <% }); %>
+    <% } %>
+  </div>
+
+  <!-- Sơ đồ ghế Modal -->
+  <div id="seatLayoutModal" class="hidden fixed inset-0 z-50 bg-[#121316]/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white border border-[#121316] w-full max-w-2xl p-6 sm:p-8 space-y-6 shadow-2xl relative">
+      <button type="button" onclick="closeSeatLayoutModal()" class="absolute top-4 right-4 text-[#7A7E8B] hover:text-[#121316]">
+        <span class="material-symbols-outlined text-2xl">close</span>
+      </button>
+
+      <div class="border-b border-[#E5E0D5] pb-4">
+        <span class="archival-index">GIÁM SÁT TRỰC QUAN SƠ ĐỒ GHẾ</span>
+        <h3 class="font-['Georgia'] text-xl font-bold text-[#121316] mt-1" id="modalCinemaName">CGV Kim Cúc</h3>
+      </div>
+
+      <div class="p-6 bg-[#0E1015] border border-white/10 text-center">
+        <div class="cinema-screen-arc"></div>
+        <div class="grid grid-cols-10 gap-2 max-w-md mx-auto pt-6" id="modalSeatsGrid">
+          <!-- 50 seats dynamically populated -->
+        </div>
+        <div class="mt-8 flex items-center justify-center gap-6 text-[10px] font-['JetBrains_Mono'] text-white/70">
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-white inline-block"></span> Trống</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-[#64748B] inline-block"></span> Đã bán</span>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
+
+</main>
 
 <script>
-    function openCinemaDetail(name, totalSeats, bookedSeatsArray) {
-        document.getElementById('modalName').innerText = "Sơ đồ: " + name;
-        const container = document.getElementById('seatContainer');
-        container.innerHTML = '';
-        const rows = ['A', 'B', 'C', 'D', 'E'];
+  function viewCinemaSeatLayout(cinemaName, bookedSeats) {
+    document.getElementById('modalCinemaName').innerText = cinemaName;
+    const grid = document.getElementById('modalSeatsGrid');
+    grid.innerHTML = '';
 
-        rows.forEach(row => {
-            for (let i = 1; i <= 10; i++) {
-                const seatId = row + i;
-                const isBooked = bookedSeatsArray.includes(seatId);
+    const rows = ['A', 'B', 'C', 'D', 'E'];
+    rows.forEach(r => {
+      for (let i = 1; i <= 10; i++) {
+        const code = r + i;
+        const isBooked = bookedSeats && bookedSeats.includes(code);
+        const div = document.createElement('div');
+        div.className = `w-7 h-7 flex items-center justify-center font-['JetBrains_Mono'] text-[9px] font-bold ${
+          isBooked ? 'bg-[#64748B] text-white' : 'bg-white text-[#121316]'
+        }`;
+        div.innerText = code;
+        grid.appendChild(div);
+      }
+    });
 
-                const seatDiv = document.createElement('div');
-                seatDiv.className = `aspect-square rounded flex items-center justify-center text-[8px] font-bold ${
-                    isBooked 
-                    ? 'bg-[#0f172a] text-white' 
-                    : 'bg-slate-50 border border-slate-200 text-slate-400'
-                }`;
-                seatDiv.innerText = seatId;
-                container.appendChild(seatDiv);
-            }
-        });
-        document.getElementById('detailModal').classList.remove('hidden');
-    }
+    document.getElementById('seatLayoutModal').classList.remove('hidden');
+  }
 
-    function closeModal() {
-        document.getElementById('detailModal').classList.add('hidden');
-    }
+  function closeSeatLayoutModal() {
+    document.getElementById('seatLayoutModal').classList.add('hidden');
+  }
 </script>
+
+<%- include('partials/admin-footer') %>

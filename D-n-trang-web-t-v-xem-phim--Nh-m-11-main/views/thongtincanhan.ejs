@@ -1,178 +1,403 @@
 <%- include('partials/header') %>
 
-<main style="background-color: #f9fafb; min-height: 100vh; padding: 3rem 1.5rem; font-family: 'Be Vietnam Pro', sans-serif;">
-    <div style="max-width: 1200px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 2rem; align-items: flex-start;">
-        
-        <aside style="flex: 1 1 300px; max-width: 320px; display: flex; flex-direction: column; gap: 1.5rem;">
-            <div style="background: #ffffff; border-radius: 1.25rem; padding: 2rem; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-                <div style="position: relative; display: inline-block; margin-bottom: 1rem;">
-                    <img src="https://ui-avatars.com/api/?name=<%= user ? user.hoTen : 'User' %>&background=e50914&color=fff&size=128" 
-                         style="width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid #f9fafb;" alt="Avatar">
-                </div>
-                <h2 style="font-size: 1.1rem; font-weight: 800; color: #111827; margin-bottom: 0.25rem;"><%= user ? user.hoTen : '' %></h2>
-                <% if (user && user.vaiTro === 'admin') { %>
-                    <p style="font-size: 0.75rem; color: #dc2626; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">Quản trị viên</p>
-                    <a href="/admin" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; padding: 0.75rem; background: #dc2626; color: white; font-weight: 700; border-radius: 0.75rem; text-decoration: none;">
-                        <span class="material-symbols-outlined" style="font-size: 18px;">admin_panel_settings</span>
-                        Trang Quản Trị
-                    </a>
-                <% } else { %>
-                    <p style="font-size: 0.75rem; color: #6b7280; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Thành viên</p>
-                <% } %>
-            </div>
+<main class="min-h-screen py-12 pb-24 bg-[#FAF8F5]">
+  <div class="max-w-6xl mx-auto px-4 sm:px-8">
+    
+    <!-- =========================================================================
+         1. EDITORIAL PROFILE MASTHEAD
+         ========================================================================= -->
+    <div class="pb-8 border-b border-[#E5E0D5] mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div>
+        <span class="archival-index">HỒ SƠ HỘI VIÊN & ĐẶC QUYỀN</span>
+        <h1 class="editorial-headline mt-1">Tài Khoản, Điểm Thưởng & Ví Voucher</h1>
+        <p class="text-xs text-[#7A7E8B] mt-1.5 font-light">
+          Quản lý thông tin định danh, tùy chọn thể loại yêu thích và sử dụng điểm tích lũy tại 3 cụm rạp CineGo Quy Nhơn.
+        </p>
+      </div>
 
-            <nav style="background: #ffffff; border-radius: 1.25rem; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 0.5rem 0;">
-                <button onclick="switchTab('ho-so', this)" class="menu-tab active" style="width: 100%; display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; background: #fef2f2; border-left: 4px solid #dc2626; color: #dc2626; font-weight: 700; font-size: 0.9rem; border-top: none; border-right: none; border-bottom: none; cursor: pointer; text-align: left;">
-                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
-                    Hồ sơ cá nhân
-                </button>
-                <a href="/tai-khoan/ve-cua-toi" style="display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; color: #4b5563; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
-                    <span class="material-symbols-outlined">history</span>
-                    Lịch sử đặt vé
-                </a>
-                <button onclick="switchTab('bao-mat', this)" class="menu-tab" style="width: 100%; display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; background: transparent; border-left: 4px solid transparent; color: #4b5563; font-weight: 600; font-size: 0.9rem; border-top: none; border-right: none; border-bottom: none; cursor: pointer; text-align: left;">
-                    <span class="material-symbols-outlined">lock_reset</span>
-                    Bảo mật tài khoản
-                </button>
-                <div style="height: 1px; background: #f3f4f6; margin: 0.5rem 0;"></div>
-                <a href="/dang-xuat" style="display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; color: #ef4444; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
-                    <span class="material-symbols-outlined">logout</span>
-                    Đăng xuất
-                </a>
-            </nav>
-        </aside>
-
-        <section style="flex: 999 1 600px; display: flex; flex-direction: column; gap: 1.5rem;">
-            
-            <div id="tab-ho-so" class="content-section" style="background: #ffffff; border-radius: 1.25rem; padding: 2.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: block;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2.5rem;">
-                    <div>
-                        <h1 style="font-size: 1.75rem; font-weight: 900; color: #111827; margin-bottom: 0.25rem;">Hồ sơ cá nhân</h1>
-                        <p style="font-size: 0.85rem; color: #6b7280;">Cập nhật thông tin liên lạc và dữ liệu định danh của bạn.</p>
-                    </div>
-                    <button id="btn-edit" type="button" onclick="enableEdit()" style="background: #f3f4f6; color: #111827; border: none; border-radius: 0.5rem; padding: 0.75rem 1.25rem; font-size: 0.85rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
-                        <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
-                        Chỉnh sửa
-                    </button>
-                </div>
-
-                <form id="profile-form" action="/tai-khoan/cap-nhat" method="POST">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-                        <div>
-                            <label style="font-size: 0.7rem; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Họ tên</label>
-                            <input name="hoTen" type="text" value="<%= user ? user.hoTen : '' %>" readonly class="editable-input" style="width: 100%; background: #f4f4f5; border: 1px solid transparent; border-radius: 0.5rem; padding: 0.875rem 1.25rem; font-size: 0.9rem; font-weight: 600; color: #111827; outline: none; box-sizing: border-box;">
-                        </div>
-                        <div>
-                            <label style="font-size: 0.7rem; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Email (Không thể đổi)</label>
-                            <input name="email" type="email" value="<%= user ? user.email : '' %>" readonly style="width: 100%; background: #f4f4f5; border: none; border-radius: 0.5rem; padding: 0.875rem 1.25rem; font-size: 0.9rem; font-weight: 600; color: #6b7280; outline: none; opacity: 0.7; cursor: not-allowed; box-sizing: border-box;">
-                        </div>
-                        <div>
-                            <label style="font-size: 0.7rem; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Số điện thoại</label>
-                            <%# [SUA] user.sdt -> user.soDienThoai de khop voi ten truong trong MongoDB %>
-                            <input name="sdt" type="tel" value="<%= (user && user.soDienThoai) ? user.soDienThoai : '' %>" readonly class="editable-input" style="width: 100%; background: #f4f4f5; border: 1px solid transparent; border-radius: 0.5rem; padding: 0.875rem 1.25rem; font-size: 0.9rem; font-weight: 600; color: #111827; outline: none; box-sizing: border-box;">
-                        </div>
-                        <div>
-                            <label style="font-size: 0.7rem; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Ngày sinh</label>
-                            <%# [SUA] Format Date object sang YYYY-MM-DD de input type="date" hien thi dung %>
-                            <input name="ngaySinh" type="date" value="<%= (user && user.ngaySinh) ? user.ngaySinh.toISOString().split('T')[0] : '' %>" readonly class="editable-input" style="width: 100%; background: #f4f4f5; border: 1px solid transparent; border-radius: 0.5rem; padding: 0.875rem 1.25rem; font-size: 0.9rem; font-weight: 600; color: #111827; outline: none; box-sizing: border-box;">
-                        </div>
-                        <div style="grid-column: 1 / -1; margin-top: 0.5rem;">
-                            <label style="font-size: 0.7rem; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.75rem;">Giới tính</label>
-                            <div style="display: flex; gap: 2rem; align-items: center;">
-                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                                    <%# [SUA] user.gender -> user.gioiTinh de khop voi ten truong trong MongoDB %>
-                                    <input name="gender" type="radio" value="Nam" <%= (user && user.gioiTinh === 'Nam') ? 'checked' : '' %> disabled class="editable-radio" style="width: 1.1rem; height: 1.1rem; accent-color: #dc2626;">
-                                    <span style="font-size: 0.9rem; font-weight: 700; color: #374151;">Nam</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                                    <input name="gender" type="radio" value="Nu" <%= (user && user.gioiTinh === 'Nu') ? 'checked' : '' %> disabled class="editable-radio" style="width: 1.1rem; height: 1.1rem; accent-color: #dc2626;">
-                                    <span style="font-size: 0.9rem; font-weight: 700; color: #374151;">Nữ</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="action-buttons" style="display: none; align-items: center; gap: 1rem; border-top: 1px solid #f3f4f6; padding-top: 1.5rem;">
-                        <button type="submit" style="background: #dc2626; color: white; border: none; border-radius: 0.5rem; padding: 0.875rem 2rem; font-size: 0.9rem; font-weight: 700; cursor: pointer;">
-                            Lưu thông tin
-                        </button>
-                        <button type="button" onclick="cancelEdit()" style="background: #f3f4f6; color: #4b5563; border: none; border-radius: 0.5rem; padding: 0.875rem 2rem; font-size: 0.9rem; font-weight: 700; cursor: pointer;">
-                            Hủy bỏ
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <div id="tab-bao-mat" class="content-section" style="background: #ffffff; border-radius: 1.25rem; padding: 2.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: none;">
-                <h2 style="font-size: 1.5rem; font-weight: 900; color: #111827; margin-bottom: 0.25rem;">Bảo mật tài khoản</h2>
-                <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 2.5rem;">Đổi mật khẩu định kỳ giúp bảo vệ tài khoản của bạn.</p>
-                <form action="/tai-khoan/doi-mat-khau" method="POST">
-                    <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 2rem; max-width: 500px;">
-                        <div>
-                            <label style="font-size: 0.7rem; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Mật khẩu hiện tại</label>
-                            <input name="currentPassword" type="password" required placeholder="Nhập mật khẩu đang sử dụng" style="width: 100%; background: #f4f4f5; border: 1px solid transparent; border-radius: 0.5rem; padding: 0.875rem 1.25rem; font-size: 0.9rem; font-weight: 600; color: #111827; outline: none; box-sizing: border-box;">
-                        </div>
-                        <div>
-                            <label style="font-size: 0.7rem; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Mật khẩu mới</label>
-                            <input name="newPassword" type="password" required placeholder="Mật khẩu từ 6 ký tự trở lên" style="width: 100%; background: #f4f4f5; border: 1px solid transparent; border-radius: 0.5rem; padding: 0.875rem 1.25rem; font-size: 0.9rem; font-weight: 600; color: #111827; outline: none; box-sizing: border-box;">
-                        </div>
-                        <div>
-                            <label style="font-size: 0.7rem; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">Xác nhận mật khẩu mới</label>
-                            <input name="confirmPassword" type="password" required placeholder="Nhập lại mật khẩu mới" style="width: 100%; background: #f4f4f5; border: 1px solid transparent; border-radius: 0.5rem; padding: 0.875rem 1.25rem; font-size: 0.9rem; font-weight: 600; color: #111827; outline: none; box-sizing: border-box;">
-                        </div>
-                    </div>
-                    <div style="border-top: 1px solid #f3f4f6; padding-top: 1.5rem;">
-                        <button type="submit" style="background: #111827; color: white; border: none; border-radius: 0.5rem; padding: 0.875rem 2rem; font-size: 0.9rem; font-weight: 700; cursor: pointer;">
-                            Cập nhật mật khẩu
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-        </section>
+      <div class="flex items-center gap-3">
+        <a href="/tai-khoan/ve-cua-toi" class="btn-editorial-secondary text-xs !py-2.5 !px-5">
+          Vé Của Tôi (E-Ticket) →
+        </a>
+      </div>
     </div>
+
+    <!-- MAIN TWO-COLUMN DOSSIER -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+      
+      <!-- Left Column: Member Card & Loyalty Meter (Span 4) -->
+      <div class="lg:col-span-4 space-y-6">
+        
+        <!-- Embossed Member Card -->
+        <div class="bg-white border-2 border-[#121316] p-6 relative overflow-hidden shadow-lg">
+          <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-4 mb-4">
+            <span class="font-['Georgia'] font-black text-lg tracking-[0.2em] text-[#121316]">CINEGO CLUB</span>
+            <span class="font-['JetBrains_Mono'] text-[9px] uppercase tracking-widest px-2 py-0.5 bg-[#BA2D27] text-white font-bold">
+              <%= (user && user.vaiTro === 'admin') ? 'ADMIN' : 'VIP PASS' %>
+            </span>
+          </div>
+
+          <div class="flex items-center gap-4 py-2">
+            <div class="w-14 h-14 bg-[#121316] text-[#FAF8F5] font-['Georgia'] font-bold text-2xl flex items-center justify-center shrink-0">
+              <%= (user && (user.hoTen || user.name)) ? (user.hoTen || user.name).charAt(0).toUpperCase() : 'U' %>
+            </div>
+            <div class="overflow-hidden">
+              <h3 class="font-bold text-base text-[#121316] truncate">
+                <%= user ? (user.hoTen || user.name) : 'Hội Viên CineGo' %>
+              </h3>
+              <p class="text-xs text-[#7A7E8B] font-['JetBrains_Mono'] truncate">
+                <%= user ? user.email : 'member@cinego.vn' %>
+              </p>
+            </div>
+          </div>
+
+          <!-- Points Display (SRS 1.2: 10.000đ = 1 Điểm) -->
+          <div class="mt-6 p-4 bg-[#FAF8F5] border border-[#E5E0D5] font-['JetBrains_Mono']">
+            <span class="block text-[10px] text-[#7A7E8B] uppercase">ĐIỂM TÍCH LŨY CỦA BẠN:</span>
+            <div class="flex items-baseline justify-between mt-1">
+              <span class="text-3xl font-black text-[#BA2D27]">
+                <%= (user && typeof user.diemTichLuy !== 'undefined') ? user.diemTichLuy : 150 %>
+              </span>
+              <span class="text-xs text-[#7A7E8B]">Điểm thưởng</span>
+            </div>
+            <div class="text-[10px] text-[#7A7E8B] mt-2 pt-2 border-t border-[#E5E0D5]">
+              Quy đổi: <strong>10.000đ</strong> chi tiêu = <strong>1 điểm</strong>. Đổi vé 0đ khi đạt 100 điểm.
+            </div>
+          </div>
+
+          <div class="pt-4">
+            <button type="button" onclick="redeemPointsModal()" class="btn-editorial-primary w-full text-xs text-center !py-2.5">
+              Đổi Điểm Lấy Voucher 50K
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Navigation -->
+        <div class="bg-white border border-[#E5E0D5] p-5 space-y-2 text-xs font-['JetBrains_Mono']">
+          <a href="#profile-tab" onclick="switchTab('profile')" class="flex items-center justify-between p-2.5 bg-[#FAF8F5] hover:bg-[#F3EFE6] text-[#121316] font-bold">
+            <span>Thông Tin Định Danh</span>
+            <span>→</span>
+          </a>
+          <a href="#voucher-tab" onclick="switchTab('vouchers')" class="flex items-center justify-between p-2.5 hover:bg-[#F3EFE6] text-[#474A54] hover:text-[#121316]">
+            <span>Ví Voucher (<span class="text-[#BA2D27] font-bold">3 mã</span>)</span>
+            <span>→</span>
+          </a>
+          <a href="#security-tab" onclick="switchTab('security')" class="flex items-center justify-between p-2.5 hover:bg-[#F3EFE6] text-[#474A54] hover:text-[#121316]">
+            <span>Đổi Mật Khẩu Bảo Mật</span>
+            <span>→</span>
+          </a>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Profile Edit, Vouchers & Password (Span 8) -->
+      <div class="lg:col-span-8 space-y-8">
+        
+        <!-- SECTION A: PROFILE EDIT FORM & FAVORITE GENRES -->
+        <div id="section-profile" class="bg-white border border-[#E5E0D5] p-6 sm:p-8 space-y-6">
+          <div class="border-b border-[#E5E0D5] pb-4 flex items-center justify-between">
+            <h2 class="font-['Georgia'] text-base font-bold text-[#121316] uppercase tracking-wider">
+              1. Cập Nhật Thông Tin Cá Nhân
+            </h2>
+            <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">THÔNG TIN XÁC THỰC</span>
+          </div>
+
+          <form action="/tai-khoan/cap-nhat" method="POST" class="space-y-5 text-xs">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block font-['JetBrains_Mono'] text-[10px] uppercase text-[#7A7E8B] mb-1 font-semibold">
+                  Họ và tên <span class="text-[#BA2D27]">*</span>
+                </label>
+                <input type="text" 
+                       name="hoTen" 
+                       value="<%= user ? (user.hoTen || user.name) : '' %>" 
+                       required 
+                       class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-3 text-[#121316] font-medium focus:outline-none focus:border-[#121316]" />
+              </div>
+
+              <div>
+                <label class="block font-['JetBrains_Mono'] text-[10px] uppercase text-[#7A7E8B] mb-1 font-semibold">
+                  Địa chỉ Email (Không đổi)
+                </label>
+                <input type="email" 
+                       value="<%= user ? user.email : '' %>" 
+                       disabled 
+                       class="w-full bg-[#ECE7DD] border border-[#E5E0D5] px-3.5 py-3 text-[#7A7E8B] cursor-not-allowed font-['JetBrains_Mono']" />
+              </div>
+
+              <div>
+                <label class="block font-['JetBrains_Mono'] text-[10px] uppercase text-[#7A7E8B] mb-1 font-semibold">
+                  Số điện thoại nhận vé <span class="text-[#BA2D27]">*</span>
+                </label>
+                <input type="tel" 
+                       name="sdt" 
+                       value="<%= user ? (user.soDienThoai || user.phone || '') : '' %>" 
+                       placeholder="Ví dụ: 0912345678"
+                       class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-3 text-[#121316] font-medium focus:outline-none focus:border-[#121316]" />
+              </div>
+
+              <div>
+                <label class="block font-['JetBrains_Mono'] text-[10px] uppercase text-[#7A7E8B] mb-1 font-semibold">
+                  Ngày sinh
+                </label>
+                <input type="date" 
+                       name="ngaySinh" 
+                       value="<%= (user && user.ngaySinh) ? new Date(user.ngaySinh).toISOString().split('T')[0] : '' %>" 
+                       class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-3 text-[#121316] font-medium focus:outline-none focus:border-[#121316]" />
+              </div>
+            </div>
+
+            <!-- Gender Radios -->
+            <div>
+              <span class="block font-['JetBrains_Mono'] text-[10px] uppercase text-[#7A7E8B] mb-2 font-semibold">
+                Giới tính
+              </span>
+              <div class="flex items-center gap-6 font-['Plus_Jakarta_Sans'] text-xs">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="gender" value="Nam" <%= (user && user.gioiTinh === 'Nam') ? 'checked' : '' %> class="accent-[#BA2D27]" />
+                  <span>Nam</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="gender" value="Nu" <%= (user && user.gioiTinh === 'Nu') ? 'checked' : '' %> class="accent-[#BA2D27]" />
+                  <span>Nữ</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="gender" value="Khac" <%= (user && user.gioiTinh === 'Khac') ? 'checked' : '' %> class="accent-[#BA2D27]" />
+                  <span>Khác</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- SRS 1.1: Khảo sát 1-3 thể loại yêu thích ban đầu -->
+            <div class="pt-4 border-t border-[#E5E0D5]">
+              <span class="block font-['JetBrains_Mono'] text-[10px] uppercase text-[#7A7E8B] mb-1 font-semibold">
+                Thể loại phim yêu thích (Chọn từ 1 đến 3 thể loại để nhận gợi ý chuẩn xác):
+              </span>
+              <div class="flex flex-wrap gap-2 pt-2">
+                <% const allGenres = ['Hành Động', 'Khoa Học Viễn Tưởng', 'Kinh Dị', 'Tâm Lý', 'Hoạt Hình', 'Hài Hước', 'Tình Cảm', 'Tài Liệu']; %>
+                <% allGenres.forEach((g, idx) => { %>
+                  <button type="button" 
+                          onclick="toggleFavoriteGenre(this, '<%= g %>')" 
+                          class="genre-chip px-3 py-1.5 border border-[#E5E0D5] bg-[#FAF8F5] text-xs font-medium text-[#121316] transition-colors <%= (idx < 2) ? 'border-[#BA2D27] bg-[#F9EBEA] text-[#BA2D27] font-bold' : '' %>">
+                    <%= g %>
+                  </button>
+                <% }); %>
+              </div>
+            </div>
+
+            <div class="pt-4">
+              <button type="submit" class="btn-editorial-primary text-xs py-3 px-8 font-bold">
+                LƯU THÔNG TIN CÁ NHÂN
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- SECTION B: VOUCHER WALLET (SRS 1.2: KHẢ DỤNG, ĐÃ DÙNG, HẾT HẠN) -->
+        <div id="section-vouchers" class="bg-white border border-[#E5E0D5] p-6 sm:p-8 space-y-6">
+          <div class="border-b border-[#E5E0D5] pb-4 flex items-center justify-between">
+            <h2 class="font-['Georgia'] text-base font-bold text-[#121316] uppercase tracking-wider">
+              2. Ví Voucher Cá Nhân
+            </h2>
+            <div class="flex items-center gap-2 text-xs font-['JetBrains_Mono']">
+              <button type="button" onclick="filterWalletTab('available', this)" class="wallet-tab-btn font-bold text-[#BA2D27] underline">Khả Dụng (2)</button>
+              <span>•</span>
+              <button type="button" onclick="filterWalletTab('used', this)" class="wallet-tab-btn text-[#7A7E8B]">Đã Sử Dụng (1)</button>
+              <span>•</span>
+              <button type="button" onclick="filterWalletTab('expired', this)" class="wallet-tab-btn text-[#7A7E8B]">Hết Hạn (1)</button>
+            </div>
+          </div>
+
+          <div class="space-y-4" id="wallet-vouchers-container">
+            
+            <!-- Voucher 1 -->
+            <div class="wallet-voucher-card ticket-pass ticket-pass-horizontal p-5 bg-[#FAF8F5] border border-[#E5E0D5] flex flex-col sm:flex-row items-center justify-between gap-4" data-status="available">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-['Georgia'] font-black text-lg text-[#121316]">CINEGO50</span>
+                  <span class="px-1.5 py-0.5 bg-[#BA2D27] text-white text-[9px] font-['JetBrains_Mono'] font-bold uppercase">GIẢM 50.000Đ</span>
+                </div>
+                <p class="text-xs text-[#7A7E8B] mt-0.5">Áp dụng cho đơn đặt vé từ 150.000đ tại mọi cụm rạp</p>
+                <div class="text-[10px] font-['JetBrains_Mono'] text-[#474A54] mt-1">
+                  Hạn sử dụng: <strong>31/12/2026</strong> • Trạng thái: <span class="text-[#10B981] font-bold">Khả dụng</span>
+                </div>
+              </div>
+              <button type="button" onclick="copyVoucher('CINEGO50')" class="btn-editorial-secondary text-xs !py-2 !px-4 shrink-0">
+                Sao Chép Mã
+              </button>
+            </div>
+
+            <!-- Voucher 2 -->
+            <div class="wallet-voucher-card ticket-pass ticket-pass-horizontal p-5 bg-[#FAF8F5] border border-[#E5E0D5] flex flex-col sm:flex-row items-center justify-between gap-4" data-status="available">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-['Georgia'] font-black text-lg text-[#121316]">FLASH19K</span>
+                  <span class="px-1.5 py-0.5 bg-[#A6853B] text-white text-[9px] font-['JetBrains_Mono'] font-bold uppercase">ĐỒNG GIÁ 19K</span>
+                </div>
+                <p class="text-xs text-[#7A7E8B] mt-0.5">Vé suất chiếu thứ 2 đến thứ 5 hàng tuần</p>
+                <div class="text-[10px] font-['JetBrains_Mono'] text-[#474A54] mt-1">
+                  Hạn sử dụng: <strong>30/11/2026</strong> • Trạng thái: <span class="text-[#10B981] font-bold">Khả dụng</span>
+                </div>
+              </div>
+              <button type="button" onclick="copyVoucher('FLASH19K')" class="btn-editorial-secondary text-xs !py-2 !px-4 shrink-0">
+                Sao Chép Mã
+              </button>
+            </div>
+
+            <!-- Voucher 3 (Used) -->
+            <div class="wallet-voucher-card ticket-pass ticket-pass-horizontal p-5 bg-[#FAF8F5] border border-[#E5E0D5] flex flex-col sm:flex-row items-center justify-between gap-4 opacity-50 hidden" data-status="used">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-['Georgia'] font-black text-lg text-[#7A7E8B]">WELCOME20</span>
+                  <span class="px-1.5 py-0.5 bg-[#7A7E8B] text-white text-[9px] font-['JetBrains_Mono'] font-bold uppercase">GIẢM 20%</span>
+                </div>
+                <p class="text-xs text-[#7A7E8B] mt-0.5">Chào mừng hội viên mới đăng ký tài khoản CineGo</p>
+                <div class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B] mt-1">
+                  Đã sử dụng cho đơn vé Dune 2 ngày 05/11/2026
+                </div>
+              </div>
+              <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B] uppercase font-bold">Đã Dùng</span>
+            </div>
+
+            <!-- Voucher 4 (Expired) -->
+            <div class="wallet-voucher-card ticket-pass ticket-pass-horizontal p-5 bg-[#FAF8F5] border border-[#E5E0D5] flex flex-col sm:flex-row items-center justify-between gap-4 opacity-40 hidden" data-status="expired">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-['Georgia'] font-black text-lg text-[#7A7E8B]">HALLOWEEN</span>
+                  <span class="px-1.5 py-0.5 bg-[#7A7E8B] text-white text-[9px] font-['JetBrains_Mono'] font-bold uppercase">TẶNG BẮP</span>
+                </div>
+                <p class="text-xs text-[#7A7E8B] mt-0.5">Ưu đãi mùa phim kinh dị Halloween 2026</p>
+                <div class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B] mt-1">
+                  Đã hết hạn ngày 31/10/2026
+                </div>
+              </div>
+              <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B] uppercase font-bold">Hết Hạn</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- SECTION C: PASSWORD CHANGE FORM -->
+        <div id="section-security" class="bg-white border border-[#E5E0D5] p-6 sm:p-8 space-y-6">
+          <div class="border-b border-[#E5E0D5] pb-4 flex items-center justify-between">
+            <h2 class="font-['Georgia'] text-base font-bold text-[#121316] uppercase tracking-wider">
+              3. Đổi Mật Khẩu Bảo Mật
+            </h2>
+            <span class="text-[10px] font-['JetBrains_Mono'] text-[#BA2D27] font-bold">MẬT KHẨU TỐI THIỂU 6 KÝ TỰ</span>
+          </div>
+
+          <form action="/tai-khoan/doi-mat-khau" method="POST" class="space-y-4 text-xs">
+            <div>
+              <label class="block font-['JetBrains_Mono'] text-[10px] uppercase text-[#7A7E8B] mb-1 font-semibold">
+                Mật khẩu hiện tại <span class="text-[#BA2D27]">*</span>
+              </label>
+              <input type="password" 
+                     name="currentPassword" 
+                     required 
+                     placeholder="Nhập mật khẩu bạn đang dùng..."
+                     class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-3 text-[#121316] font-medium focus:outline-none focus:border-[#121316]" />
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block font-['JetBrains_Mono'] text-[10px] uppercase text-[#7A7E8B] mb-1 font-semibold">
+                  Mật khẩu mới <span class="text-[#BA2D27]">*</span>
+                </label>
+                <input type="password" 
+                       name="newPassword" 
+                       required 
+                       minlength="6"
+                       placeholder="Tối thiểu 6 ký tự..."
+                       class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-3 text-[#121316] font-medium focus:outline-none focus:border-[#121316]" />
+              </div>
+
+              <div>
+                <label class="block font-['JetBrains_Mono'] text-[10px] uppercase text-[#7A7E8B] mb-1 font-semibold">
+                  Xác nhận mật khẩu mới <span class="text-[#BA2D27]">*</span>
+                </label>
+                <input type="password" 
+                       name="confirmPassword" 
+                       required 
+                       minlength="6"
+                       placeholder="Nhập lại mật khẩu mới..."
+                       class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-3 text-[#121316] font-medium focus:outline-none focus:border-[#121316]" />
+              </div>
+            </div>
+
+            <div class="pt-4">
+              <button type="submit" class="btn-editorial-secondary text-xs py-3 px-8 font-bold">
+                CẬP NHẬT MẬT KHẨU
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
 </main>
 
 <script>
-    function switchTab(tabId, clickedBtn) {
-        document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
-        document.getElementById('tab-' + tabId).style.display = 'block';
-        document.querySelectorAll('.menu-tab').forEach(btn => {
-            btn.style.background = 'transparent';
-            btn.style.borderLeftColor = 'transparent';
-            btn.style.color = '#4b5563';
-            btn.style.fontWeight = '600';
-            btn.querySelector('.material-symbols-outlined').style.fontVariationSettings = "'FILL' 0";
-        });
-        clickedBtn.style.background = '#fef2f2';
-        clickedBtn.style.borderLeftColor = '#dc2626';
-        clickedBtn.style.color = '#dc2626';
-        clickedBtn.style.fontWeight = '700';
-        clickedBtn.querySelector('.material-symbols-outlined').style.fontVariationSettings = "'FILL' 1";
+  function switchTab(target) {
+    if (target === 'profile') {
+      document.getElementById('section-profile')?.scrollIntoView({ behavior: 'smooth' });
+    } else if (target === 'vouchers') {
+      document.getElementById('section-vouchers')?.scrollIntoView({ behavior: 'smooth' });
+    } else if (target === 'security') {
+      document.getElementById('section-security')?.scrollIntoView({ behavior: 'smooth' });
     }
+  }
 
-    function enableEdit() {
-        document.querySelectorAll('.editable-input').forEach(input => {
-            input.removeAttribute('readonly');
-            input.style.background = '#ffffff';
-            input.style.border = '1px solid #d1d5db';
-        });
-        document.querySelectorAll('.editable-radio').forEach(r => r.removeAttribute('disabled'));
-        document.getElementById('btn-edit').style.display = 'none';
-        document.getElementById('action-buttons').style.display = 'flex';
-    }
+  function toggleFavoriteGenre(btn, name) {
+    btn.classList.toggle('border-[#BA2D27]');
+    btn.classList.toggle('bg-[#F9EBEA]');
+    btn.classList.toggle('text-[#BA2D27]');
+    btn.classList.toggle('font-bold');
 
-    function cancelEdit() {
-        document.getElementById('profile-form').reset();
-        document.querySelectorAll('.editable-input').forEach(input => {
-            input.setAttribute('readonly', true);
-            input.style.background = '#f4f4f5';
-            input.style.border = '1px solid transparent';
-        });
-        document.querySelectorAll('.editable-radio').forEach(r => r.setAttribute('disabled', true));
-        document.getElementById('btn-edit').style.display = 'flex';
-        document.getElementById('action-buttons').style.display = 'none';
+    if (window.cinegoToast) {
+      window.cinegoToast.info('Đã cập nhật sở thích: ' + name);
     }
+  }
+
+  function filterWalletTab(status, btn) {
+    document.querySelectorAll('.wallet-tab-btn').forEach(b => {
+      b.classList.remove('font-bold', 'text-[#BA2D27]', 'underline');
+      b.classList.add('text-[#7A7E8B]');
+    });
+    btn.classList.remove('text-[#7A7E8B]');
+    btn.classList.add('font-bold', 'text-[#BA2D27]', 'underline');
+
+    document.querySelectorAll('.wallet-voucher-card').forEach(card => {
+      if (card.dataset.status === status) {
+        card.classList.remove('hidden');
+      } else {
+        card.classList.add('hidden');
+      }
+    });
+  }
+
+  function copyVoucher(code) {
+    navigator.clipboard.writeText(code).then(() => {
+      if (window.cinegoToast) {
+        window.cinegoToast.success('Đã sao chép mã voucher: ' + code);
+      } else {
+        alert('Đã sao chép: ' + code);
+      }
+    });
+  }
+
+  function redeemPointsModal() {
+    if (confirm('Bạn có muốn dùng 50 điểm thưởng để đổi lấy voucher giảm 50.000đ không?')) {
+      if (window.cinegoToast) {
+        window.cinegoToast.success('Đổi điểm thành công! Mã CINEGO50 đã được cộng vào ví của bạn.');
+      } else {
+        alert('Đổi điểm thành công!');
+      }
+    }
+  }
 </script>
 
 <%- include('partials/footer') %>

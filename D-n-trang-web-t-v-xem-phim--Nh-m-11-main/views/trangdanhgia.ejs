@@ -1,0 +1,74 @@
+<%- include('partials/header') %>
+
+<main class="min-h-screen py-16 flex items-center justify-center bg-[#FAF8F5]">
+  <div class="max-w-xl w-full px-4 sm:px-6">
+    
+    <div class="bg-white border border-[#E5E0D5] p-8 sm:p-10 space-y-6 shadow-xl">
+      <div class="text-center pb-4 border-b border-[#E5E0D5]">
+        <span class="archival-index">GÓC NHÌN ĐIỆN ẢNH & BÌNH PHẨM</span>
+        <h1 class="editorial-headline text-3xl font-bold mt-1">Đánh Giá Phim Sau Suất Chiếu</h1>
+        <p class="text-xs text-[#7A7E8B] mt-1 font-light">Chia sẻ ý kiến khách quan để cộng đồng mọt phim CineGo có góc nhìn chân thực nhất.</p>
+      </div>
+
+      <div class="space-y-5 text-xs font-['Plus_Jakarta_Sans']">
+        <!-- Star Rating Picker -->
+        <div class="text-center py-2 bg-[#FAF8F5] border border-[#E5E0D5] p-4">
+          <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-2">Chấm điểm tác phẩm (1 đến 5 sao):</label>
+          <div class="flex items-center justify-center gap-3 text-3xl text-[#A6853B]" id="star-rating-container">
+            <button type="button" onclick="setStar(1)" class="hover:scale-125 transition-transform">★</button>
+            <button type="button" onclick="setStar(2)" class="hover:scale-125 transition-transform">★</button>
+            <button type="button" onclick="setStar(3)" class="hover:scale-125 transition-transform">★</button>
+            <button type="button" onclick="setStar(4)" class="hover:scale-125 transition-transform">★</button>
+            <button type="button" onclick="setStar(5)" class="hover:scale-125 transition-transform">★</button>
+          </div>
+          <span id="starRatingLabel" class="text-xs font-['JetBrains_Mono'] text-[#121316] font-bold block mt-2">5.0 / 5.0 (Tác Phẩm Xuất Sắc)</span>
+        </div>
+
+        <div>
+          <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1.5">Bình luận cảm nhận chi tiết:</label>
+          <textarea rows="4" placeholder="Cảm nghĩ của bạn về diễn xuất, âm thanh IMAX Atmos, kỹ xảo điện ảnh và nhịp điệu của bộ phim..." class="w-full bg-[#FAF8F5] border border-[#E5E0D5] p-3 text-xs text-[#121316] placeholder-[#A6AAB6] focus:outline-none focus:border-[#121316]"></textarea>
+        </div>
+
+        <div class="p-3 bg-[#FAF8F5] border border-[#E5E0D5] text-xs text-[#474A54] flex items-center gap-2 font-['JetBrains_Mono']">
+          <span class="text-[#10B981] font-bold text-base">✓</span>
+          <span>Xác thực: Chỉ khán giả đã hoàn thành xem vé tại rạp Quy Nhơn mới được đánh giá.</span>
+        </div>
+
+        <button type="button" onclick="submitReview(this)" class="w-full btn-editorial-primary text-xs py-3.5 font-bold text-center block">
+          GỬI BÌNH PHẨM ĐIỆN ẢNH →
+        </button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  function setStar(n) {
+    const labels = [
+      '', 
+      '1.0 / 5.0 (Kém hấp dẫn)', 
+      '2.0 / 5.0 (Tạm chấp nhận)', 
+      '3.0 / 5.0 (Khá tốt)', 
+      '4.0 / 5.0 (Rất đáng xem)', 
+      '5.0 / 5.0 (Tác Phẩm Xuất Sắc)'
+    ];
+    document.getElementById('starRatingLabel').innerText = labels[n];
+    if (window.cinegoToast) window.cinegoToast.info('Bạn đã chọn: ' + n + ' sao');
+  }
+
+  function submitReview(btn) {
+    btn.disabled = true;
+    btn.innerText = 'Đang gửi...';
+    setTimeout(() => {
+      if (window.cinegoToast) {
+        window.cinegoToast.success('Cảm ơn bạn! Đánh giá đã được ghi nhận vào chuyên mục phê bình CineGo.');
+      } else {
+        alert('Cảm ơn bạn đã đánh giá!');
+      }
+      setTimeout(() => window.location.href = '/tai-khoan/ve-cua-toi', 800);
+    }, 600);
+  }
+</script>
+
+<%- include('partials/footer') %>

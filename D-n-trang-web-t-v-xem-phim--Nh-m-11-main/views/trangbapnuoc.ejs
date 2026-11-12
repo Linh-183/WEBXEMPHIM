@@ -1,0 +1,634 @@
+<%- include('partials/header') %>
+
+<main class="min-h-screen py-10 pb-24 bg-[#FAF8F5]">
+  <div class="max-w-[1520px] mx-auto px-6 sm:px-10 lg:px-12">
+    
+    <!-- =========================================================================
+         1. EDITORIAL HEADER & CINEMA PICKER
+         ========================================================================= -->
+    <div class="pb-8 border-b border-[#E5E0D5] mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div>
+        <div class="flex items-center gap-2 font-['JetBrains_Mono'] text-xs text-[#7A7E8B]">
+          <span class="px-2 py-0.5 bg-[#BA2D27] text-white font-bold uppercase tracking-wider">DỊCH VỤ ĐỘC LẬP</span>
+          <span>/</span>
+          <span>KHÔNG BẮT BUỘC MUA VÉ XEM PHIM</span>
+        </div>
+        <h1 class="font-['Georgia'] text-3xl sm:text-5xl font-bold text-[#121316] mt-2 tracking-tight">
+          Quầy Bắp Nước & Ẩm Thực Rạp Chiếu
+        </h1>
+        <p class="text-sm text-[#474A54] mt-2 max-w-2xl font-normal leading-relaxed">
+          Thưởng thức bắp rang bơ nóng giòn thơm lừng, combo bắp nước cao cấp và thức uống mát lạnh. Bạn có thể đặt trước và nhận tại quầy Fast-Track hoặc mang về nhà mà không cần phải mua vé xem phim.
+        </p>
+      </div>
+
+      <!-- Quick Benefit Badges -->
+      <div class="flex flex-wrap items-center gap-3 text-xs font-['JetBrains_Mono']">
+        <div class="p-3 bg-white border border-[#E5E0D5] flex items-center gap-2.5">
+          <span class="material-symbols-outlined text-[#10B981] text-lg">bolt</span>
+          <div>
+            <span class="block text-[#121316] font-bold">LẤY NHANH TẠI QUẦY</span>
+            <span class="text-[10px] text-[#7A7E8B]">Ưu tiên không cần xếp hàng</span>
+          </div>
+        </div>
+        <div class="p-3 bg-white border border-[#E5E0D5] flex items-center gap-2.5">
+          <span class="material-symbols-outlined text-[#BA2D27] text-lg">local_mall</span>
+          <div>
+            <span class="block text-[#121316] font-bold">MANG VỀ HOẶC TẬN RẠP</span>
+            <span class="text-[10px] text-[#7A7E8B]">Đóng gói túi giữ nhiệt</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         2. STEP 1: CHỌN CỤM RẠP NHẬN HÀNG
+         ========================================================================= -->
+    <div class="bg-white border border-[#E5E0D5] p-6 mb-10">
+      <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-4 mb-6">
+        <div>
+          <span class="font-['JetBrains_Mono'] text-[10px] text-[#BA2D27] font-bold uppercase tracking-widest block">BƯỚC 01</span>
+          <h2 class="font-['Georgia'] text-xl font-bold text-[#121316]">
+            Chọn Cụm Rạp Bạn Sẽ Nhận Bắp Nước
+          </h2>
+        </div>
+        <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">3 ĐỊA ĐIỂM TẠI QUY NHƠN</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="cinemaSelectorGrid">
+        
+        <!-- Cinema 1: CGV -->
+        <button type="button" 
+                onclick="selectConcessionCinema('CGV Kim Cúc Plaza', 'Tầng 3, Kim Cúc Plaza, P. Ghềnh Ráng, Quy Nhơn', this)"
+                class="cinema-concession-btn active-cinema-card p-5 border-2 border-[#121316] bg-[#F3EFE6] text-left transition-all">
+          <div class="flex items-center justify-between">
+            <span class="font-['Georgia'] font-bold text-base text-[#121316]">CGV Kim Cúc Plaza</span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#10B981]"></span>
+          </div>
+          <p class="text-xs text-[#474A54] mt-2 font-normal">Tầng 3, Kim Cúc Plaza, P. Ghềnh Ráng</p>
+          <div class="mt-3 pt-3 border-t border-[#E5E0D5] flex items-center justify-between text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B]">
+            <span>Mở cửa: 08:30 - 23:30</span>
+            <span class="text-[#BA2D27] font-bold">✓ Đang Chọn</span>
+          </div>
+        </button>
+
+        <!-- Cinema 2: Starlight -->
+        <button type="button" 
+                onclick="selectConcessionCinema('Starlight Nguyễn Kim', 'Tầng 8 TTTM Nguyễn Kim, An Dương Vương, Quy Nhơn', this)"
+                class="cinema-concession-btn p-5 border border-[#E5E0D5] bg-white hover:border-[#121316] text-left transition-all">
+          <div class="flex items-center justify-between">
+            <span class="font-['Georgia'] font-bold text-base text-[#121316]">Starlight Nguyễn Kim</span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#10B981]"></span>
+          </div>
+          <p class="text-xs text-[#474A54] mt-2 font-normal">Tầng 8 TTTM Nguyễn Kim, An Dương Vương</p>
+          <div class="mt-3 pt-3 border-t border-[#E5E0D5] flex items-center justify-between text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B]">
+            <span>Mở cửa: 08:30 - 23:30</span>
+            <span class="font-bold">Chọn Rạp →</span>
+          </div>
+        </button>
+
+        <!-- Cinema 3: DCine -->
+        <button type="button" 
+                onclick="selectConcessionCinema('DCine Quy Nhơn', 'Tầng 4 Trung Tâm Phú Tài, Trần Hưng Đạo, Quy Nhơn', this)"
+                class="cinema-concession-btn p-5 border border-[#E5E0D5] bg-white hover:border-[#121316] text-left transition-all">
+          <div class="flex items-center justify-between">
+            <span class="font-['Georgia'] font-bold text-base text-[#121316]">DCine Quy Nhơn</span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#10B981]"></span>
+          </div>
+          <p class="text-xs text-[#474A54] mt-2 font-normal">Tầng 4 Trung Tâm Phú Tài, Trần Hưng Đạo</p>
+          <div class="mt-3 pt-3 border-t border-[#E5E0D5] flex items-center justify-between text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B]">
+            <span>Mở cửa: 08:30 - 23:30</span>
+            <span class="font-bold">Chọn Rạp →</span>
+          </div>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         3. TWO-COLUMN: MENU ITEMS (LEFT 8) & STICKY CART (RIGHT 4)
+         ========================================================================= -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+      
+      <!-- Left Column: Menu Items & Category Filters (Span 8) -->
+      <div class="lg:col-span-8 space-y-8">
+        
+        <!-- Category Filter Tabs -->
+        <div class="flex flex-wrap items-center gap-2 border-b border-[#E5E0D5] pb-4 font-['Plus_Jakarta_Sans'] text-xs font-bold uppercase tracking-wider">
+          <button type="button" onclick="filterMenu('all', this)" class="category-btn px-4 py-2 bg-[#121316] text-white">Tất Cả Thực Đơn</button>
+          <button type="button" onclick="filterMenu('combo', this)" class="category-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#474A54] hover:border-[#121316]">Combo Tiết Kiệm</button>
+          <button type="button" onclick="filterMenu('popcorn', this)" class="category-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#474A54] hover:border-[#121316]">Bắp Rang Nóng</button>
+          <button type="button" onclick="filterMenu('drink', this)" class="category-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#474A54] hover:border-[#121316]">Nước Giải Khát</button>
+          <button type="button" onclick="filterMenu('snack', this)" class="category-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#474A54] hover:border-[#121316]">Snack & Món Ăn Nóng</button>
+        </div>
+
+        <!-- ITEMS GRID -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6" id="concessionItemsGrid">
+          <% if (typeof combos !== 'undefined' && combos && combos.length > 0) { %>
+            <% combos.forEach(function(item, idx) { 
+                const itemId = 'combo_' + (item._id || idx);
+            %>
+              <div class="menu-item-card bg-white border border-[#E5E0D5] p-5 flex flex-col justify-between" data-category="<%= item.category || 'combo' %>">
+                <div>
+                  <div class="relative aspect-[16/10] bg-[#FAF8F5] overflow-hidden mb-4 border border-[#E5E0D5]">
+                    <img src="<%= item.imageUrl || 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?auto=format&fit=crop&w=600&q=80' %>" alt="<%= item.name %>" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                    <% if (item.badge) { %>
+                      <span class="absolute top-2.5 left-2.5 px-2 py-0.5 bg-[#BA2D27] text-white font-['JetBrains_Mono'] text-[9px] font-bold uppercase tracking-wider">
+                        <%= item.badge %>
+                      </span>
+                    <% } %>
+                  </div>
+                  <h3 class="font-['Georgia'] text-lg font-bold text-[#121316]"><%= item.name %></h3>
+                  <p class="text-xs text-[#7A7E8B] mt-1 leading-relaxed">
+                    <%= item.description %>
+                  </p>
+                  
+                  <% if (item.flavors && item.flavors.length > 0) { %>
+                    <div class="mt-3 pt-3 border-t border-[#E5E0D5] flex items-center justify-between text-xs">
+                      <span class="text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B]">Tùy chọn:</span>
+                      <select id="flavor_<%= itemId %>" class="bg-[#FAF8F5] border border-[#E5E0D5] text-xs py-1 px-2 font-medium text-[#121316] focus:outline-none">
+                        <% item.flavors.forEach(function(flv) { %>
+                          <option value="<%= flv %>"><%= flv %></option>
+                        <% }); %>
+                      </select>
+                    </div>
+                  <% } else { %>
+                    <input type="hidden" id="flavor_<%= itemId %>" value="Mặc định" />
+                  <% } %>
+                </div>
+
+                <div class="pt-4 mt-4 border-t border-[#E5E0D5] flex items-center justify-between font-['JetBrains_Mono']">
+                  <div>
+                    <span class="text-base font-bold text-[#BA2D27]"><%= (item.price || 0).toLocaleString('vi-VN') %> đ</span>
+                    <% if (item.originalPrice) { %>
+                      <span class="text-[10px] text-[#A6AAB6] line-through ml-1"><%= item.originalPrice.toLocaleString('vi-VN') %> đ</span>
+                    <% } %>
+                  </div>
+                  <button type="button" 
+                          onclick="addToConcessionCart('<%= itemId %>', '<%= item.name %>', <%= item.price %>, document.getElementById('flavor_<%= itemId %>').value)"
+                          class="btn-editorial-primary text-xs !py-2 !px-4">
+                    + Thêm Vào Đơn
+                  </button>
+                </div>
+              </div>
+            <% }); %>
+          <% } else { %>
+          <!-- Item 1: Combo Cine Solo -->
+          <div class="menu-item-card bg-white border border-[#E5E0D5] p-5 flex flex-col justify-between" data-category="combo">
+            <div>
+              <div class="relative aspect-[16/10] bg-[#FAF8F5] overflow-hidden mb-4 border border-[#E5E0D5]">
+                <img src="https://images.unsplash.com/photo-1585647347483-22b66260dfff?auto=format&fit=crop&w=600&q=80" alt="Combo Cine Solo" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                <span class="absolute top-2.5 left-2.5 px-2 py-0.5 bg-[#BA2D27] text-white font-['JetBrains_Mono'] text-[9px] font-bold uppercase tracking-wider">
+                  BÁN CHẠY
+                </span>
+              </div>
+              <h3 class="font-['Georgia'] text-lg font-bold text-[#121316]">Combo Cine Solo</h3>
+              <p class="text-xs text-[#7A7E8B] mt-1 leading-relaxed">
+                1 Bắp rang thơm giòn (tùy chọn vị bơ/ngọt) + 1 Ly nước ngọt Pepsi/Coke 32oz mát lạnh.
+              </p>
+              
+              <!-- Flavor Selector -->
+              <div class="mt-3 pt-3 border-t border-[#E5E0D5] flex items-center justify-between text-xs">
+                <span class="text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B]">Vị bắp:</span>
+                <select id="flavor_cb_solo" class="bg-[#FAF8F5] border border-[#E5E0D5] text-xs py-1 px-2 font-medium text-[#121316] focus:outline-none">
+                  <option value="Bơ truyền thống">Bơ truyền thống</option>
+                  <option value="Ngọt ngào">Ngọt ngào</option>
+                  <option value="Phô mai (+10k)">Phô mai (+10k)</option>
+                  <option value="Caramel (+10k)">Caramel (+10k)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="pt-4 mt-4 border-t border-[#E5E0D5] flex items-center justify-between font-['JetBrains_Mono']">
+              <div>
+                <span class="text-base font-bold text-[#BA2D27]">75.000 đ</span>
+                <span class="text-[10px] text-[#A6AAB6] line-through ml-1">90.000 đ</span>
+              </div>
+              <button type="button" 
+                      onclick="addToConcessionCart('cb_solo', 'Combo Cine Solo', 75000, document.getElementById('flavor_cb_solo').value)"
+                      class="btn-editorial-primary text-xs !py-2 !px-4">
+                + Thêm Vào Đơn
+              </button>
+            </div>
+          </div>
+
+          <!-- Item 2: Combo Cine Couple -->
+          <div class="menu-item-card bg-white border border-[#E5E0D5] p-5 flex flex-col justify-between" data-category="combo">
+            <div>
+              <div class="relative aspect-[16/10] bg-[#FAF8F5] overflow-hidden mb-4 border border-[#E5E0D5]">
+                <img src="https://images.unsplash.com/photo-1578849278619-e73505e9610f?auto=format&fit=crop&w=600&q=80" alt="Combo Cine Couple" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                <span class="absolute top-2.5 left-2.5 px-2 py-0.5 bg-[#A6853B] text-white font-['JetBrains_Mono'] text-[9px] font-bold uppercase tracking-wider">
+                  TIẾT KIỆM 30%
+                </span>
+              </div>
+              <h3 class="font-['Georgia'] text-lg font-bold text-[#121316]">Combo Cine Couple</h3>
+              <p class="text-xs text-[#7A7E8B] mt-1 leading-relaxed">
+                1 Hộp bắp lớn size khổng lồ vị lắc phô mai hoặc caramel + 2 Ly nước ngọt mát lạnh cho 2 người.
+              </p>
+
+              <!-- Flavor Selector -->
+              <div class="mt-3 pt-3 border-t border-[#E5E0D5] flex items-center justify-between text-xs">
+                <span class="text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B]">Vị bắp:</span>
+                <select id="flavor_cb_couple" class="bg-[#FAF8F5] border border-[#E5E0D5] text-xs py-1 px-2 font-medium text-[#121316] focus:outline-none">
+                  <option value="Lắc Phô Mai">Lắc Phô Mai</option>
+                  <option value="Phủ Caramel">Phủ Caramel</option>
+                  <option value="Bơ Thơm">Bơ Thơm</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="pt-4 mt-4 border-t border-[#E5E0D5] flex items-center justify-between font-['JetBrains_Mono']">
+              <div>
+                <span class="text-base font-bold text-[#BA2D27]">115.000 đ</span>
+                <span class="text-[10px] text-[#A6AAB6] line-through ml-1">150.000 đ</span>
+              </div>
+              <button type="button" 
+                      onclick="addToConcessionCart('cb_couple', 'Combo Cine Couple', 115000, document.getElementById('flavor_cb_couple').value)"
+                      class="btn-editorial-primary text-xs !py-2 !px-4">
+                + Thêm Vào Đơn
+              </button>
+            </div>
+          </div>
+
+          <!-- Item 3: Bắp Lắc Phô Mai Cheddar -->
+          <div class="menu-item-card bg-white border border-[#E5E0D5] p-5 flex flex-col justify-between" data-category="popcorn">
+            <div>
+              <div class="relative aspect-[16/10] bg-[#FAF8F5] overflow-hidden mb-4 border border-[#E5E0D5]">
+                <img src="https://images.unsplash.com/photo-1512149177596-f817c7ef5d4c?auto=format&fit=crop&w=600&q=80" alt="Bắp Phô Mai" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+              </div>
+              <h3 class="font-['Georgia'] text-lg font-bold text-[#121316]">Bắp Lắc Phô Mai Cheddar (Lớn)</h3>
+              <p class="text-xs text-[#7A7E8B] mt-1 leading-relaxed">
+                Hạt ngô nổ bung đều vàng óng, phủ lớp bột phô mai Cheddar béo ngậy mặn ngọt đậm đà khó cưỡng.
+              </p>
+            </div>
+
+            <div class="pt-4 mt-4 border-t border-[#E5E0D5] flex items-center justify-between font-['JetBrains_Mono']">
+              <span class="text-base font-bold text-[#BA2D27]">65.000 đ</span>
+              <button type="button" 
+                      onclick="addToConcessionCart('pop_cheese', 'Bắp Lắc Phô Mai Cheddar', 65000, 'Cheddar chuẩn')"
+                      class="btn-editorial-primary text-xs !py-2 !px-4">
+                + Thêm Vào Đơn
+              </button>
+            </div>
+          </div>
+
+          <!-- Item 4: Bắp Phủ Caramel Hạnh Nhân -->
+          <div class="menu-item-card bg-white border border-[#E5E0D5] p-5 flex flex-col justify-between" data-category="popcorn">
+            <div>
+              <div class="relative aspect-[16/10] bg-[#FAF8F5] overflow-hidden mb-4 border border-[#E5E0D5]">
+                <img src="https://images.unsplash.com/photo-1505686994434-e3cc5abf1330?auto=format&fit=crop&w=600&q=80" alt="Bắp Caramel" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+              </div>
+              <h3 class="font-['Georgia'] text-lg font-bold text-[#121316]">Bắp Phủ Caramel Nâu Óng (Lớn)</h3>
+              <p class="text-xs text-[#7A7E8B] mt-1 leading-relaxed">
+                Vị ngọt thanh từ đường thắng caramel truyền thống, hạt bắp giòn rụm thơm lừng mùi bơ Pháp.
+              </p>
+            </div>
+
+            <div class="pt-4 mt-4 border-t border-[#E5E0D5] flex items-center justify-between font-['JetBrains_Mono']">
+              <span class="text-base font-bold text-[#BA2D27]">65.000 đ</span>
+              <button type="button" 
+                      onclick="addToConcessionCart('pop_caramel', 'Bắp Phủ Caramel Nâu Óng', 65000, 'Caramel giòn')"
+                      class="btn-editorial-primary text-xs !py-2 !px-4">
+                + Thêm Vào Đơn
+              </button>
+            </div>
+          </div>
+
+          <!-- Item 5: Trà Đào Cam Sả Hạt Chia -->
+          <div class="menu-item-card bg-white border border-[#E5E0D5] p-5 flex flex-col justify-between" data-category="drink">
+            <div>
+              <div class="relative aspect-[16/10] bg-[#FAF8F5] overflow-hidden mb-4 border border-[#E5E0D5]">
+                <img src="https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80" alt="Trà Đào Cam Sả" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+              </div>
+              <h3 class="font-['Georgia'] text-lg font-bold text-[#121316]">Trà Đào Cam Sả Hạt Chia (Ly 700ml)</h3>
+              <p class="text-xs text-[#7A7E8B] mt-1 leading-relaxed">
+                Thức uống thanh nhiệt mát lạnh kết hợp miếng đào giòn ngọt và hạt chia bổ dưỡng.
+              </p>
+            </div>
+
+            <div class="pt-4 mt-4 border-t border-[#E5E0D5] flex items-center justify-between font-['JetBrains_Mono']">
+              <span class="text-base font-bold text-[#BA2D27]">45.000 đ</span>
+              <button type="button" 
+                      onclick="addToConcessionCart('drink_peach', 'Trà Đào Cam Sả Hạt Chia', 45000, 'Ít ngọt, vừa đá')"
+                      class="btn-editorial-primary text-xs !py-2 !px-4">
+                + Thêm Vào Đơn
+              </button>
+            </div>
+          </div>
+
+          <!-- Item 6: Xúc Xích Đức Phô Mai Nướng -->
+          <div class="menu-item-card bg-white border border-[#E5E0D5] p-5 flex flex-col justify-between" data-category="snack">
+            <div>
+              <div class="relative aspect-[16/10] bg-[#FAF8F5] overflow-hidden mb-4 border border-[#E5E0D5]">
+                <img src="https://images.unsplash.com/photo-1627042633706-01a5e040c837?auto=format&fit=crop&w=600&q=80" alt="Xúc Xích Đức" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+              </div>
+              <h3 class="font-['Georgia'] text-lg font-bold text-[#121316]">Xúc Xích Đức Phô Mai Nướng (2 Cây)</h3>
+              <p class="text-xs text-[#7A7E8B] mt-1 leading-relaxed">
+                2 Xúc xích nướng nóng hổi nhân hạt phô mai béo ngậy kèm tương ớt và mù tạt vàng.
+              </p>
+            </div>
+
+            <div class="pt-4 mt-4 border-t border-[#E5E0D5] flex items-center justify-between font-['JetBrains_Mono']">
+              <span class="text-base font-bold text-[#BA2D27]">45.000 đ</span>
+              <button type="button" 
+                      onclick="addToConcessionCart('snack_sausage', 'Xúc Xích Đức Phô Mai Nướng', 45000, 'Ăn nóng')"
+                      class="btn-editorial-primary text-xs !py-2 !px-4">
+                + Thêm Vào Đơn
+              </button>
+            </div>
+          </div>
+          <% } %>
+
+        </div>
+      </div>
+
+      <!-- Right Column: Sticky Itemized Cart & Checkout (Span 4) -->
+      <div class="lg:col-span-4">
+        <div class="sticky top-28 bg-white border border-[#E5E0D5] p-6 space-y-6 shadow-xl">
+          
+          <div class="border-b border-[#E5E0D5] pb-4 flex items-center justify-between">
+            <div>
+              <span class="font-['JetBrains_Mono'] text-[10px] text-[#A6853B] font-bold uppercase tracking-widest block">ĐƠN BẮP NƯỚC RIÊNG</span>
+              <h3 class="font-['Georgia'] text-xl font-bold text-[#121316]">Chi Tiết Đơn Hàng</h3>
+            </div>
+            <span id="cartCountBadge" class="w-7 h-7 bg-[#121316] text-white flex items-center justify-center font-['JetBrains_Mono'] text-xs font-bold">0</span>
+          </div>
+
+          <!-- Selected Cinema Notice -->
+          <div class="p-3 bg-[#FAF8F5] border border-[#E5E0D5] text-xs font-['JetBrains_Mono']">
+            <span class="text-[#7A7E8B] block text-[10px] uppercase">Rạp Nhận Hàng:</span>
+            <span id="cartSelectedCinema" class="font-bold text-[#121316]">CGV Kim Cúc Plaza</span>
+          </div>
+
+          <!-- Itemized Cart List -->
+          <div id="cartItemsList" class="space-y-3 min-h-[120px] max-h-[260px] overflow-y-auto divide-y divide-[#E5E0D5]">
+            <div id="emptyCartMessage" class="py-10 text-center text-xs font-['JetBrains_Mono'] text-[#A6AAB6]">
+              Chưa có món nào được chọn.<br>Vui lòng bấm "+ Thêm Vào Đơn" từ thực đơn bên trái.
+            </div>
+          </div>
+
+          <!-- Total Calculation Ledger -->
+          <div class="space-y-2 pt-4 border-t border-[#E5E0D5] text-xs font-['JetBrains_Mono']">
+            <div class="flex justify-between text-[#474A54]">
+              <span>Tạm tính ẩm thực:</span>
+              <span id="cartSubtotal" class="font-bold text-[#121316]">0 đ</span>
+            </div>
+            <div class="flex justify-between text-[#10B981]">
+              <span>Phí đóng gói & phục vụ:</span>
+              <span class="font-bold">0 đ (Miễn phí)</span>
+            </div>
+            <div class="pt-3 border-t border-[#121316] flex items-baseline justify-between">
+              <span class="font-bold uppercase text-[#121316]">Tổng thanh toán:</span>
+              <span id="cartGrandTotal" class="font-['Georgia'] text-2xl font-black text-[#BA2D27]">0 đ</span>
+            </div>
+          </div>
+
+          <!-- Customer Info Fields -->
+          <div class="space-y-3 pt-2 text-xs">
+            <div>
+              <label class="block font-bold text-[#121316] mb-1">Họ và tên người nhận:</label>
+              <input type="text" id="custName" placeholder="Nhập họ và tên..." class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs font-['Plus_Jakarta_Sans'] focus:outline-none focus:border-[#121316]" value="<%= (typeof user !== 'undefined' && user) ? user.hoTen : '' %>" />
+            </div>
+            <div>
+              <label class="block font-bold text-[#121316] mb-1">Số điện thoại:</label>
+              <input type="tel" id="custPhone" placeholder="Số điện thoại nhận mã QR..." class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs font-['JetBrains_Mono'] focus:outline-none focus:border-[#121316]" value="<%= (typeof user !== 'undefined' && user && user.soDienThoai) ? user.soDienThoai : '' %>" />
+            </div>
+          </div>
+
+          <!-- Payment Options -->
+          <div class="space-y-2 text-xs">
+            <label class="block font-bold text-[#121316]">Phương thức thanh toán:</label>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="p-2.5 bg-[#FAF8F5] border border-[#121316] flex items-center gap-2 cursor-pointer font-semibold text-[11px]">
+                <input type="radio" name="concessionPayment" value="vietqr" checked class="accent-[#BA2D27]" />
+                <span>VietQR (Khuyên dùng)</span>
+              </label>
+              <label class="p-2.5 bg-[#FAF8F5] border border-[#E5E0D5] flex items-center gap-2 cursor-pointer text-[11px]">
+                <input type="radio" name="concessionPayment" value="momo" class="accent-[#BA2D27]" />
+                <span>Ví MoMo</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Submit CTA -->
+          <button type="button" 
+                  id="btnSubmitConcessionOrder" 
+                  onclick="processConcessionCheckout()" 
+                  disabled
+                  class="btn-editorial-primary w-full py-3.5 text-xs font-bold text-center block !bg-[#BA2D27] hover:!bg-[#8E1F1A] disabled:opacity-40 disabled:cursor-not-allowed">
+            THANH TOÁN ĐƠN BẮP NƯỚC →
+          </button>
+
+          <p class="text-[10px] text-center font-['JetBrains_Mono'] text-[#7A7E8B]">
+            Mã QR nhận bắp nước sẽ hiển thị tức thì sau khi bấm xác nhận.
+          </p>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+<!-- =========================================================================
+     4. ORDER CONFIRMATION / QR CODE PICKUP MODAL
+     ========================================================================= -->
+<div id="concessionModal" class="hidden fixed inset-0 z-50 bg-[#121316]/80 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white border-2 border-[#121316] max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl relative">
+    
+    <div class="flex items-start justify-between border-b border-[#E5E0D5] pb-4">
+      <div>
+        <span class="font-['JetBrains_Mono'] text-[10px] text-[#10B981] font-bold uppercase tracking-widest block">
+          ✓ THANH TOÁN THÀNH CÔNG
+        </span>
+        <h3 class="font-['Georgia'] text-2xl font-bold text-[#121316] mt-1">
+          Phiếu Lấy Bắp Nước Trực Tuyến
+        </h3>
+      </div>
+      <button type="button" onclick="closeConcessionModal()" class="text-[#7A7E8B] hover:text-[#121316]">
+        <span class="material-symbols-outlined text-2xl">close</span>
+      </button>
+    </div>
+
+    <!-- QR Code Centerpiece -->
+    <div class="p-6 bg-[#FAF8F5] border border-[#E5E0D5] text-center space-y-4">
+      <div class="w-44 h-44 mx-auto bg-white border border-[#121316] p-2 flex items-center justify-center shadow-md">
+        <!-- Live Simulated VietQR / Barcode -->
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=CINEGO-CORN-<%= Date.now() %>" alt="QR Code Nhận Bắp Nước" class="w-full h-full object-contain" />
+      </div>
+      
+      <div>
+        <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B] uppercase block">Mã Nhận Đơn Fast-Track:</span>
+        <span id="modalOrderCode" class="font-['JetBrains_Mono'] text-xl font-bold text-[#BA2D27] tracking-widest">
+          CG-CORN-8892
+        </span>
+      </div>
+
+      <div class="text-xs font-['Plus_Jakarta_Sans'] text-[#474A54]">
+        Đưa mã QR hoặc mã đơn trên cho nhân viên quầy Concessions tại <strong id="modalCinemaName">CGV Kim Cúc Plaza</strong> để nhận bắp nước nóng giòn ngay lập tức!
+      </div>
+    </div>
+
+    <!-- Order Summary Ledger -->
+    <div class="text-xs font-['JetBrains_Mono'] space-y-1.5 border-t border-[#E5E0D5] pt-4">
+      <div class="flex justify-between">
+        <span class="text-[#7A7E8B]">Người nhận:</span>
+        <span id="modalCustName" class="font-bold text-[#121316]">Khách Hàng</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-[#7A7E8B]">Số điện thoại:</span>
+        <span id="modalCustPhone" class="font-bold text-[#121316]">0900000000</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-[#7A7E8B]">Tổng tiền đã thanh toán:</span>
+        <span id="modalTotalPaid" class="font-bold text-[#BA2D27]">0 đ</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 pt-2">
+      <button type="button" onclick="window.print()" class="btn-editorial-secondary flex-1 text-center text-xs">
+        In Phiếu Nhận
+      </button>
+      <button type="button" onclick="closeConcessionModal()" class="btn-editorial-primary flex-1 text-center text-xs !bg-[#BA2D27]">
+        Hoàn Tất
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let concessionCart = [];
+  let currentCinema = 'CGV Kim Cúc Plaza';
+
+  function selectConcessionCinema(cinemaName, address, btnEl) {
+    currentCinema = cinemaName;
+    document.getElementById('cartSelectedCinema').innerText = cinemaName;
+    document.querySelectorAll('.cinema-concession-btn').forEach(btn => {
+      btn.className = 'cinema-concession-btn p-5 border border-[#E5E0D5] bg-white hover:border-[#121316] text-left transition-all';
+      const label = btn.querySelector('.font-bold');
+      const footerSpan = btn.querySelector('.mt-3 span:last-child');
+      if (footerSpan) footerSpan.innerText = 'Chọn Rạp →';
+    });
+
+    btnEl.className = 'cinema-concession-btn active-cinema-card p-5 border-2 border-[#121316] bg-[#F3EFE6] text-left transition-all';
+    const footerSpan = btnEl.querySelector('.mt-3 span:last-child');
+    if (footerSpan) footerSpan.innerText = '✓ Đang Chọn';
+  }
+
+  function filterMenu(category, btnEl) {
+    document.querySelectorAll('.category-btn').forEach(b => {
+      b.className = 'category-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#474A54] hover:border-[#121316]';
+    });
+    btnEl.className = 'category-btn px-4 py-2 bg-[#121316] text-white';
+
+    const cards = document.querySelectorAll('.menu-item-card');
+    cards.forEach(c => {
+      if (category === 'all' || c.getAttribute('data-category') === category) {
+        c.style.display = 'flex';
+      } else {
+        c.style.display = 'none';
+      }
+    });
+  }
+
+  function addToConcessionCart(id, name, price, flavor) {
+    const existing = concessionCart.find(item => item.id === id && item.flavor === flavor);
+    if (existing) {
+      existing.qty++;
+    } else {
+      concessionCart.push({ id, name, price, flavor, qty: 1 });
+    }
+    renderCart();
+    if (window.cinegoToast) {
+      window.cinegoToast.success('Đã thêm "' + name + '" vào giỏ bắp nước!');
+    }
+  }
+
+  function changeCartQty(index, delta) {
+    concessionCart[index].qty += delta;
+    if (concessionCart[index].qty <= 0) {
+      concessionCart.splice(index, 1);
+    }
+    renderCart();
+  }
+
+  function renderCart() {
+    const listEl = document.getElementById('cartItemsList');
+    const emptyEl = document.getElementById('emptyCartMessage');
+    const countBadge = document.getElementById('cartCountBadge');
+    const subtotalEl = document.getElementById('cartSubtotal');
+    const grandTotalEl = document.getElementById('cartGrandTotal');
+    const btnSubmit = document.getElementById('btnSubmitConcessionOrder');
+
+    if (concessionCart.length === 0) {
+      listEl.innerHTML = `
+        <div id="emptyCartMessage" class="py-10 text-center text-xs font-['JetBrains_Mono'] text-[#A6AAB6]">
+          Chưa có món nào được chọn.<br>Vui lòng bấm "+ Thêm Vào Đơn" từ thực đơn bên trái.
+        </div>
+      `;
+      countBadge.innerText = '0';
+      subtotalEl.innerText = '0 đ';
+      grandTotalEl.innerText = '0 đ';
+      btnSubmit.disabled = true;
+      return;
+    }
+
+    let total = 0;
+    let count = 0;
+    listEl.innerHTML = '';
+
+    concessionCart.forEach((item, idx) => {
+      const itemSum = item.price * item.qty;
+      total += itemSum;
+      count += item.qty;
+
+      const row = document.createElement('div');
+      row.className = 'py-3 flex items-center justify-between text-xs';
+      row.innerHTML = `
+        <div class="flex-1 pr-2">
+          <div class="font-bold text-[#121316] font-['Plus_Jakarta_Sans']">${item.name}</div>
+          <div class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">${item.flavor || 'Chuẩn vị'}</div>
+          <div class="text-[11px] font-['JetBrains_Mono'] text-[#BA2D27] font-semibold">${item.price.toLocaleString('vi-VN')} đ</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="changeCartQty(${idx}, -1)" class="w-6 h-6 bg-[#F3EFE6] border border-[#E5E0D5] text-[#121316] font-bold flex items-center justify-center hover:bg-white">-</button>
+          <span class="font-['JetBrains_Mono'] font-bold text-xs w-4 text-center">${item.qty}</span>
+          <button type="button" onclick="changeCartQty(${idx}, 1)" class="w-6 h-6 bg-[#121316] text-white font-bold flex items-center justify-center hover:bg-[#BA2D27]">+</button>
+        </div>
+      `;
+      listEl.appendChild(row);
+    });
+
+    countBadge.innerText = count;
+    subtotalEl.innerText = total.toLocaleString('vi-VN') + ' đ';
+    grandTotalEl.innerText = total.toLocaleString('vi-VN') + ' đ';
+    btnSubmit.disabled = false;
+  }
+
+  function processConcessionCheckout() {
+    if (concessionCart.length === 0) return;
+    const name = document.getElementById('custName').value.trim() || 'Khách Hàng';
+    const phone = document.getElementById('custPhone').value.trim() || '0912345678';
+    
+    let total = 0;
+    concessionCart.forEach(i => total += (i.price * i.qty));
+
+    const code = 'CG-CORN-' + Math.floor(1000 + Math.random() * 9000);
+    document.getElementById('modalOrderCode').innerText = code;
+    document.getElementById('modalCinemaName').innerText = currentCinema;
+    document.getElementById('modalCustName').innerText = name;
+    document.getElementById('modalCustPhone').innerText = phone;
+    document.getElementById('modalTotalPaid').innerText = total.toLocaleString('vi-VN') + ' đ';
+
+    document.getElementById('concessionModal').classList.remove('hidden');
+  }
+
+  function closeConcessionModal() {
+    document.getElementById('concessionModal').classList.add('hidden');
+    concessionCart = [];
+    renderCart();
+  }
+</script>
+
+<%- include('partials/footer') %>

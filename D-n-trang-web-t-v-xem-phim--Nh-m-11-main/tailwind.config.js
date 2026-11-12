@@ -56,9 +56,12 @@ module.exports = {
         "on-error-container": "#93000a"
       },
       fontFamily: {
-        "headline": ["Be Vietnam Pro", "sans-serif"],
-        "body": ["Be Vietnam Pro", "sans-serif"],
-        "label": ["Be Vietnam Pro", "sans-serif"]
+        "headline": ["Georgia", "serif"],
+        "body": ["Plus Jakarta Sans", "sans-serif"],
+        "label": ["Plus Jakarta Sans", "sans-serif"],
+        "serif": ["Georgia", "Times New Roman", "serif"],
+        "sans": ["Plus Jakarta Sans", "-apple-system", "sans-serif"],
+        "mono": ["JetBrains Mono", "monospace"]
       },
       borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
     },

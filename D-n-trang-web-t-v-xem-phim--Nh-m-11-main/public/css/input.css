@@ -6,9 +6,12 @@
 /* Định dạng cơ bản cho toàn trang */
 @layer base {
   body {
-    font-family: 'Be Vietnam Pro', sans-serif;
-    background-color: #f9f9f9;
-    color: #1a1c1c;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #FAF8F5;
+    color: #121316;
+  }
+  h1, h2, h3, .font-serif, .editorial-heading {
+    font-family: Georgia, 'Times New Roman', serif;
   }
 }
 

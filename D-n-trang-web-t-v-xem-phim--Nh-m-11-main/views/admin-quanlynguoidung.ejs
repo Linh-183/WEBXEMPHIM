@@ -1,60 +1,114 @@
 <%- include('partials/admin-header') %>
 
-<header class="sticky top-0 w-full z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 flex justify-between items-center px-8 py-4">
-    <div class="flex items-center gap-4 bg-slate-100 px-4 py-2.5 rounded-xl w-96 border border-slate-200">
-        <span class="material-symbols-outlined text-slate-400">search</span>
-        <input class="bg-transparent border-none focus:ring-0 text-sm w-full outline-none font-medium text-slate-700" placeholder="Tìm người dùng..." type="text"/>
+<main class="p-6 sm:p-10 space-y-8 max-w-7xl">
+  
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E5E0D5]">
+    <div>
+      <span class="archival-index">CƠ SỞ DỮ LIỆU THÀNH VIÊN</span>
+      <h1 class="editorial-headline text-3xl font-bold mt-1">Quản Lý Người Dùng & Điểm</h1>
+      <p class="text-xs text-[#7A7E8B] mt-0.5 font-light">Tổng số: <%= (typeof users !== 'undefined') ? users.length : 0 %> tài khoản trong hệ thống CineGo.</p>
     </div>
-    <a href="/dang-xuat" class="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-[#e11d48]">
-        <span class="material-symbols-outlined text-[20px]">logout</span> Đăng xuất
-    </a>
-</header>
+  </div>
 
-<main class="p-8 flex-1">
-    <div class="max-w-7xl mx-auto">
-        <div class="flex justify-between items-end mb-8">
-            <div>
-                <h1 class="text-3xl font-black text-[#0f172a] tracking-tight mb-1">Thành viên hệ thống</h1>
-                <p class="text-slate-500 text-sm font-medium">Tổng số: <%= users.length %> tài khoản đăng ký.</p>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50 border-b border-slate-200">
-                        <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Họ tên</th>
-                        <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Tài khoản</th>
-                        <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Phân quyền</th>
-                        <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400 text-right">Khóa/Xóa</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    <% users.forEach(u => { %>
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-6 py-4 text-sm font-bold text-slate-900"><%= u.hoTen %></td>
-                            <td class="px-6 py-4">
-                                <p class="text-sm font-bold text-slate-600"><%= u.email %></p>
-                                <p class="text-[11px] text-slate-400 mt-0.5"><%= u.soDienThoai %></p>
-                            </td>
-                            <td class="px-6 py-4">
-                                <% if (u.vaiTro === 'admin') { %>
-                                    <span class="px-3 py-1 bg-[#0f172a] text-white text-[10px] font-black rounded-md uppercase">Admin</span>
-                                <% } else { %>
-                                    <span class="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black rounded-md uppercase">Member</span>
-                                <% } %>
-                            </td>
-                            <td class="px-6 py-4 text-right">
-                                <% if (u.vaiTro !== 'admin') { %>
-                                    <form action="/admin/nguoi-dung/xoa/<%= u._id %>" method="POST" onsubmit="return confirm('Xóa vĩnh viễn user này?');" class="inline">
-                                        <button type="submit" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 border border-slate-200 hover:border-red-200 ml-auto"><span class="material-symbols-outlined text-[18px]">delete</span></button>
-                                    </form>
-                                <% } %>
-                            </td>
-                        </tr>
-                    <% }) %>
-                </tbody>
-            </table>
-        </div>
+  <!-- Search & Toolbar -->
+  <div class="bg-white border border-[#E5E0D5] p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-2 w-full sm:w-80 bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs">
+      <span class="material-symbols-outlined text-[#7A7E8B] text-lg">search</span>
+      <input type="text" id="userSearchInput" placeholder="Tìm tên, email hoặc SĐT..." class="bg-transparent border-none text-xs text-[#121316] placeholder-[#A6AAB6] focus:outline-none w-full" oninput="filterAdminUsers()" />
     </div>
+
+    <div class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">
+      Phân quyền: <strong class="text-[#121316]">Quản Trị Viên (Admin) / Hội Viên (User)</strong>
+    </div>
+  </div>
+
+  <!-- Users Table (Swiss High Density) -->
+  <div class="bg-white border border-[#E5E0D5] overflow-x-auto shadow-sm">
+    <table class="w-full text-left text-xs font-['Plus_Jakarta_Sans'] border-collapse">
+      <thead>
+        <tr class="border-b border-[#E5E0D5] text-[#7A7E8B] uppercase font-bold text-[10px] bg-[#FAF8F5] font-['JetBrains_Mono']">
+          <th class="py-3.5 px-4 w-12 text-center">STT</th>
+          <th class="py-3.5 px-4">Thành Viên</th>
+          <th class="py-3.5 px-4">Liên Hệ</th>
+          <th class="py-3.5 px-4">Phân Quyền</th>
+          <th class="py-3.5 px-4">Điểm Thưởng</th>
+          <th class="py-3.5 px-4 text-right">Thao Tác</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-[#E5E0D5]" id="usersTableBody">
+        <% if (typeof users !== 'undefined' && users && users.length > 0) { %>
+          <% users.forEach((u, index) => { %>
+            <tr class="hover:bg-[#FAF8F5] transition-colors user-row" data-search="<%= (u.hoTen + ' ' + u.email + ' ' + (u.soDienThoai || '')).toLowerCase() %>">
+              <td class="py-3.5 px-4 text-center font-['JetBrains_Mono'] font-bold text-[#7A7E8B]"><%= index + 1 %></td>
+              <td class="py-3.5 px-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 bg-[#121316] text-white flex items-center justify-center font-['Georgia'] font-bold text-xs shrink-0">
+                    <%= (u.hoTen && u.hoTen.length > 0) ? u.hoTen.charAt(0).toUpperCase() : 'U' %>
+                  </div>
+                  <div>
+                    <p class="font-bold text-sm text-[#121316]"><%= u.hoTen %></p>
+                    <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">
+                      Mã: <%= u._id.toString().substring(18).toUpperCase() %>
+                    </span>
+                  </div>
+                </div>
+              </td>
+              <td class="py-3.5 px-4 font-['JetBrains_Mono']">
+                <p class="font-semibold text-[#121316]"><%= u.email %></p>
+                <p class="text-[11px] text-[#7A7E8B]"><%= u.soDienThoai || 'Chưa cập nhật' %></p>
+              </td>
+              <td class="py-3.5 px-4 font-['JetBrains_Mono']">
+                <% if (u.vaiTro === 'admin') { %>
+                  <span class="px-2 py-0.5 bg-[#121316] text-white text-[9px] font-bold uppercase tracking-wider">
+                    ADMIN
+                  </span>
+                <% } else { %>
+                  <span class="px-2 py-0.5 bg-[#F3EFE6] text-[#474A54] border border-[#E5E0D5] text-[9px] font-bold uppercase tracking-wider">
+                    HỘI VIÊN
+                  </span>
+                <% } %>
+              </td>
+              <td class="py-3.5 px-4 font-['JetBrains_Mono'] font-bold text-[#BA2D27]">
+                <%= u.diemTichLuy || 0 %> điểm
+              </td>
+              <td class="py-3.5 px-4 text-right">
+                <% if (u.vaiTro !== 'admin') { %>
+                  <form action="/admin/nguoi-dung/xoa/<%= u._id %>" method="POST" onsubmit="return confirm('Bạn chắc chắn muốn xóa tài khoản này?')" class="inline">
+                    <button type="submit" class="text-xs font-['JetBrains_Mono'] text-[#BA2D27] hover:underline font-bold px-2 py-1">
+                      Xóa
+                    </button>
+                  </form>
+                <% } else { %>
+                  <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B] italic">Hệ thống</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="6" class="py-12 text-center text-[#7A7E8B] font-['JetBrains_Mono']">
+              Chưa có người dùng nào.
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
 </main>
+
+<script>
+  function filterAdminUsers() {
+    const q = document.getElementById('userSearchInput').value.toLowerCase();
+    document.querySelectorAll('.user-row').forEach(row => {
+      const search = row.dataset.search || '';
+      if (search.includes(q)) {
+        row.classList.remove('hidden');
+      } else {
+        row.classList.add('hidden');
+      }
+    });
+  }
+</script>
+
+<%- include('partials/admin-footer') %>

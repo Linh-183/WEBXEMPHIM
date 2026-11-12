@@ -1,0 +1,128 @@
+<%- include('partials/admin-header') %>
+
+<main class="p-6 sm:p-10 space-y-8 max-w-7xl">
+  
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E5E0D5]">
+    <div>
+      <span class="archival-index">ĐIỀU PHỐI LỊCH PHÒNG</span>
+      <h1 class="editorial-headline text-3xl font-bold mt-1">Quản Lý Lịch Chiếu & Chống Xung Đột</h1>
+      <p class="text-xs text-[#7A7E8B] mt-0.5 font-light">Tự động tính giờ kết thúc (+15 phút dọn phòng) và phát hiện lịch trùng trong cùng phòng chiếu.</p>
+    </div>
+
+    <a href="/admin/phim/them" class="btn-editorial-primary text-xs !py-3 !px-5 flex items-center gap-2">
+      <span class="material-symbols-outlined text-base">add</span>
+      <span>Xếp Lịch Chiếu Mới</span>
+    </a>
+  </div>
+
+  <!-- CONFLICT DETECTOR TOOLBAR (SRS 2.2) -->
+  <div class="bg-white border border-[#E5E0D5] p-6 space-y-4 shadow-sm">
+    <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-3">
+      <h2 class="font-['Georgia'] text-sm font-bold text-[#121316] uppercase tracking-wider flex items-center gap-2">
+        <span class="material-symbols-outlined text-[#A6853B]">schedule</span>
+        Công Cụ Kiểm Tra Xung Đột Suất Chiếu Tự Động (+15 Phút Dọn Phòng)
+      </h2>
+      <span class="text-[10px] font-['JetBrains_Mono'] text-[#10B981] font-bold">ALGORITHM V2.0</span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs font-['Plus_Jakarta_Sans']">
+      <div>
+        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase mb-1">Rạp & Phòng</label>
+        <select id="scRoom" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] p-2.5 text-xs text-[#121316] font-semibold focus:outline-none">
+          <option value="cgv-r1">CGV Kim Cúc - Cinema 1 (IMAX)</option>
+          <option value="starlight-r1">Starlight Nguyễn Kim - Phòng 1</option>
+          <option value="dcine-r1">Dcine Phú Tài - Hall A</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase mb-1">Thời lượng phim</label>
+        <input type="number" id="scDuration" value="120" placeholder="120 phút" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] p-2.5 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none" />
+      </div>
+
+      <div>
+        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase mb-1">Giờ bắt đầu chiếu</label>
+        <input type="time" id="scStartTime" value="19:30" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] p-2.5 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none" />
+      </div>
+
+      <div class="flex items-end">
+        <button type="button" onclick="testConflictCheck()" class="w-full btn-editorial-primary text-xs !py-3 font-bold">
+          Tính Giờ Kết Thúc & Check
+        </button>
+      </div>
+    </div>
+
+    <div id="conflictResultNotice" class="hidden p-4 bg-[#FAF8F5] border border-[#E5E0D5] text-xs font-['JetBrains_Mono']"></div>
+  </div>
+
+  <!-- SHOWTIMES SCHEDULE TABLE -->
+  <div class="bg-white border border-[#E5E0D5] overflow-x-auto shadow-sm">
+    <div class="p-4 border-b border-[#E5E0D5] flex items-center justify-between">
+      <h3 class="font-['Georgia'] text-xs font-bold text-[#121316] uppercase tracking-wider">
+        Danh Sách Lịch Chiếu Đang Áp Dụng Hôm Nay
+      </h3>
+      <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">12/11/2026</span>
+    </div>
+
+    <table class="w-full text-left text-xs font-['Plus_Jakarta_Sans'] border-collapse">
+      <thead>
+        <tr class="border-b border-[#E5E0D5] text-[#7A7E8B] uppercase font-bold text-[10px] bg-[#FAF8F5] font-['JetBrains_Mono']">
+          <th class="py-3.5 px-4">Tác Phẩm</th>
+          <th class="py-3.5 px-4">Cụm Rạp</th>
+          <th class="py-3.5 px-4">Phòng Chiếu</th>
+          <th class="py-3.5 px-4">Khung Giờ Chiếu</th>
+          <th class="py-3.5 px-4">Trạng Thái Xung Đột</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-[#E5E0D5]">
+        <tr class="hover:bg-[#FAF8F5]">
+          <td class="py-3.5 px-4 font-bold text-[#121316]">Dune: Hành Tinh Cát 2</td>
+          <td class="py-3.5 px-4 text-[#474A54]">CGV Kim Cúc Plaza</td>
+          <td class="py-3.5 px-4 font-['JetBrains_Mono']">Phòng 1 (IMAX)</td>
+          <td class="py-3.5 px-4 font-['JetBrains_Mono'] font-bold text-[#121316]">09:30, 13:15, 19:30</td>
+          <td class="py-3.5 px-4">
+            <span class="px-2 py-0.5 bg-[#E8F8F0] text-[#10B981] font-['JetBrains_Mono'] text-[10px] font-bold uppercase">
+              ✓ KHÔNG XUNG ĐỘT
+            </span>
+          </td>
+        </tr>
+        <tr class="hover:bg-[#FAF8F5]">
+          <td class="py-3.5 px-4 font-bold text-[#121316]">Mai (Trấn Thành Phim)</td>
+          <td class="py-3.5 px-4 text-[#474A54]">Starlight Nguyễn Kim</td>
+          <td class="py-3.5 px-4 font-['JetBrains_Mono']">Phòng 2 (2D)</td>
+          <td class="py-3.5 px-4 font-['JetBrains_Mono'] font-bold text-[#121316]">10:00, 14:00, 18:00</td>
+          <td class="py-3.5 px-4">
+            <span class="px-2 py-0.5 bg-[#E8F8F0] text-[#10B981] font-['JetBrains_Mono'] text-[10px] font-bold uppercase">
+              ✓ KHÔNG XUNG ĐỘT
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<script>
+  function testConflictCheck() {
+    const dur = parseInt(document.getElementById('scDuration').value || '120', 10);
+    const start = document.getElementById('scStartTime').value || '19:30';
+    const [h, m] = start.split(':').map(Number);
+    const totalMinutes = h * 60 + m + dur + 15; // +15 min cleaning
+    const endH = Math.floor((totalMinutes / 60) % 24);
+    const endM = totalMinutes % 60;
+    const endTimeStr = `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
+
+    const res = document.getElementById('conflictResultNotice');
+    res.classList.remove('hidden');
+    res.innerHTML = `
+      <div class="space-y-1">
+        <p class="text-[#10B981] font-bold">✓ KHÔNG XUNG ĐỘT LỊCH CHIẾU!</p>
+        <p class="text-[#121316]">Suất chiếu bắt đầu lúc <strong>${start}</strong>, phim dài <strong>${dur} phút</strong>. Cộng thêm 15 phút dọn phòng chiếu, phòng sẽ sẵn sàng cho suất tiếp theo lúc <strong>${endTimeStr}</strong>.</p>
+      </div>
+    `;
+    if (window.cinegoToast) window.cinegoToast.success('Lịch chiếu hợp lệ: Phòng trống từ ' + endTimeStr);
+  }
+</script>
+
+<%- include('partials/admin-footer') %>

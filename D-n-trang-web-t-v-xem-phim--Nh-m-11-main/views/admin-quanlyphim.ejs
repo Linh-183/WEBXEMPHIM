@@ -1,105 +1,138 @@
 <%- include('partials/admin-header') %>
 
-        <header class="sticky top-0 w-full z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 flex justify-between items-center px-8 py-4 shadow-sm">
-            <div class="flex items-center gap-4 bg-slate-100 px-4 py-2 rounded-full w-96 border border-slate-200">
-                <span class="material-symbols-outlined text-slate-400">search</span>
-                <input class="bg-transparent border-none focus:ring-0 text-sm w-full outline-none font-medium text-slate-700" placeholder="Tìm kiếm phim..." type="text"/>
-            </div>
-            <div class="flex items-center gap-6">
-                <button class="hover:bg-slate-100 rounded-full p-2 transition-all relative">
-                    <span class="material-symbols-outlined text-slate-500">notifications</span>
-                    <span class="absolute top-2 right-2 w-2 h-2 bg-red-600 rounded-full border border-white"></span>
-                </button>
-                <div class="h-6 w-[1px] bg-slate-300"></div>
+<main class="p-6 sm:p-10 space-y-8 max-w-7xl">
+  
+  <!-- Header Title & Add Action -->
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E5E0D5]">
+    <div>
+      <span class="archival-index">QUẢN LÝ DANH MỤC ĐIỆN ẢNH</span>
+      <h1 class="editorial-headline text-3xl font-bold mt-1">Danh Sách Phim Chiếu Rạp</h1>
+      <p class="text-xs text-[#7A7E8B] mt-0.5 font-light">Cập nhật, điều chỉnh thông tin và lịch chiếu phim tại 3 rạp Quy Nhơn.</p>
+    </div>
+
+    <a href="/admin/phim/them" class="btn-editorial-primary text-xs !py-3 !px-5 flex items-center gap-2">
+      <span class="material-symbols-outlined text-base">add</span>
+      <span>Thêm Phim Mới</span>
+    </a>
+  </div>
+
+  <!-- Filter & Search Toolbar -->
+  <div class="bg-white border border-[#E5E0D5] p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-2 w-full sm:w-80 bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs">
+      <span class="material-symbols-outlined text-[#7A7E8B] text-lg">search</span>
+      <input type="text" id="adminMovieSearch" placeholder="Tìm tên phim, thể loại..." class="bg-transparent border-none text-xs text-[#121316] placeholder-[#A6AAB6] focus:outline-none w-full" oninput="filterAdminMovies()" />
+    </div>
+
+    <!-- Quick Status Tabs -->
+    <div class="flex items-center gap-1.5 text-xs font-['JetBrains_Mono']">
+      <button onclick="filterMovieStatus('all', this)" class="movie-status-btn px-3 py-1.5 bg-[#121316] text-white font-bold">Tất Cả</button>
+      <button onclick="filterMovieStatus('DangChieu', this)" class="movie-status-btn px-3 py-1.5 bg-[#FAF8F5] border border-[#E5E0D5] text-[#474A54] hover:text-[#121316]">Đang Chiếu</button>
+      <button onclick="filterMovieStatus('SapChieu', this)" class="movie-status-btn px-3 py-1.5 bg-[#FAF8F5] border border-[#E5E0D5] text-[#474A54] hover:text-[#121316]">Sắp Chiếu</button>
+    </div>
+  </div>
+
+  <!-- Movies Table (Swiss Style High Density) -->
+  <div class="bg-white border border-[#E5E0D5] overflow-x-auto shadow-sm">
+    <table class="w-full text-left text-xs font-['Plus_Jakarta_Sans'] border-collapse">
+      <thead>
+        <tr class="border-b border-[#E5E0D5] text-[#7A7E8B] uppercase font-bold text-[10px] bg-[#FAF8F5] font-['JetBrains_Mono']">
+          <th class="py-3.5 px-4 w-12 text-center">STT</th>
+          <th class="py-3.5 px-4">Tác Phẩm</th>
+          <th class="py-3.5 px-4">Thể Loại</th>
+          <th class="py-3.5 px-4">Thời Lượng</th>
+          <th class="py-3.5 px-4">Trạng Thái</th>
+          <th class="py-3.5 px-4">Độ Tuổi</th>
+          <th class="py-3.5 px-4 text-right">Thao Tác</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-[#E5E0D5]" id="adminMoviesTbody">
+        <% if (typeof movies !== 'undefined' && movies && movies.length > 0) { %>
+          <% movies.forEach((phim, index) => { %>
+            <tr class="hover:bg-[#FAF8F5] transition-colors movie-row" data-status="<%= phim.status %>" data-title="<%= (phim.title || '').toLowerCase() %>">
+              <td class="py-3.5 px-4 text-center font-['JetBrains_Mono'] font-bold text-[#7A7E8B]"><%= index + 1 %></td>
+              <td class="py-3.5 px-4">
                 <div class="flex items-center gap-3">
-                    <div class="text-right">
-                        <p class="text-sm font-bold text-slate-900 leading-tight"><%= (typeof user !== 'undefined' && user) ? user.hoTen : 'Quản trị viên' %></p>
-                        <a href="/dang-xuat" class="text-[10px] uppercase tracking-widest text-red-600 font-bold hover:underline">Đăng xuất</a>
-                    </div>
+                  <img src="<%= phim.posterUrl %>" alt="<%= phim.title %>" class="w-10 h-14 object-cover border border-[#E5E0D5] shrink-0" />
+                  <div class="min-w-0">
+                    <p class="font-bold text-sm text-[#121316] truncate max-w-xs"><%= phim.title %></p>
+                    <p class="text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B]">Đạo diễn: <%= phim.director || 'Chưa cập nhật' %></p>
+                  </div>
                 </div>
-            </div>
-        </header>
+              </td>
+              <td class="py-3.5 px-4 text-[#474A54]"><%= phim.genre %></td>
+              <td class="py-3.5 px-4 font-['JetBrains_Mono'] text-[#121316]"><%= phim.duration %> phút</td>
+              <td class="py-3.5 px-4 font-['JetBrains_Mono']">
+                <% if (phim.status === 'DangChieu') { %>
+                  <span class="px-2 py-0.5 text-[10px] font-bold uppercase bg-[#E8F8F0] text-[#10B981] border border-[#10B981]/30">
+                    Đang Chiếu
+                  </span>
+                <% } else { %>
+                  <span class="px-2 py-0.5 text-[10px] font-bold uppercase bg-[#FBF6EB] text-[#A6853B] border border-[#A6853B]/30">
+                    Sắp Chiếu
+                  </span>
+                <% } %>
+              </td>
+              <td class="py-3.5 px-4">
+                <span class="px-1.5 py-0.5 bg-[#FAF8F5] border border-[#E5E0D5] font-['JetBrains_Mono'] text-[10px] font-bold text-[#121316]">
+                  <%= phim.ageRating || 'P' %>
+                </span>
+              </td>
+              <td class="py-3.5 px-4 text-right">
+                <div class="flex items-center justify-end gap-2 font-['JetBrains_Mono']">
+                  <a href="/admin/phim/sua/<%= phim._id %>" class="px-2.5 py-1 bg-white border border-[#E5E0D5] hover:border-[#121316] text-xs font-semibold text-[#121316]">
+                    Sửa
+                  </a>
+                  <form action="/admin/phim/xoa/<%= phim._id %>" method="POST" onsubmit="return confirm('Bạn chắc chắn muốn xóa phim này khỏi rạp?')" class="inline">
+                    <button type="submit" class="px-2.5 py-1 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] hover:text-[#BA2D27] text-xs font-semibold text-[#7A7E8B]">
+                      Xóa
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="7" class="py-12 text-center text-[#7A7E8B] font-['JetBrains_Mono']">
+              Chưa có phim nào trong danh mục cơ sở dữ liệu.
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
 
-        <main class="p-8 flex-1">
-            <div class="max-w-7xl mx-auto">
-                <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
-                    <div>
-                        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-1">Kho Phim</h2>
-                        <p class="text-slate-500 text-sm font-medium">Cập nhật và điều chỉnh thông tin phim của hệ thống.</p>
-                    </div>
-                    <a href="/admin/phim/them" class="bg-red-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-md shadow-red-600/20 hover:bg-red-700 active:scale-95 transition-all">
-                        <span class="material-symbols-outlined">add</span> Thêm phim mới
-                    </a>
-                </div>
+</main>
 
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50 border-b border-slate-200">
-                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500 w-16 text-center">STT</th>
-                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Phim</th>
-                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Thể loại</th>
-                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Thời lượng</th>
-                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Trạng thái</th>
-                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500 text-right">Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100">
-                                <% if (typeof movies !== 'undefined' && movies && movies.length > 0) { %>
-                                    <% movies.forEach((phim, index) => { %>
-                                        <tr class="hover:bg-slate-50 transition-colors group">
-                                            <td class="px-6 py-4 text-sm font-bold text-slate-400 text-center"><%= index + 1 %></td>
-                                            <td class="px-6 py-4">
-                                                <div class="flex items-center gap-4">
-                                                    <div class="w-12 h-16 rounded-lg overflow-hidden bg-slate-200 shrink-0 shadow-sm border border-slate-200">
-                                                        <img alt="<%= phim.title %>" class="w-full h-full object-cover" src="<%= phim.posterUrl %>"/>
-                                                    </div>
-                                                    <div>
-                                                        <p class="text-sm font-bold text-slate-900 group-hover:text-red-600 transition-colors line-clamp-1"><%= phim.title %></p>
-                                                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1"><%= phim.ageRating %></p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4"><span class="text-[10px] px-3 py-1 rounded-md bg-slate-100 text-slate-600 font-bold uppercase tracking-widest"><%= phim.genre %></span></td>
-                                            <td class="px-6 py-4 text-sm font-bold text-slate-700"><%= phim.duration %> Phút</td>
-                                            <td class="px-6 py-4">
-                                                <% if(phim.status === 'DangChieu') { %>
-                                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-green-50 text-green-700 text-[10px] font-bold uppercase tracking-widest border border-green-200">
-                                                        <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>Đang chiếu
-                                                    </span>
-                                                <% } else { %>
-                                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-orange-50 text-orange-700 text-[10px] font-bold uppercase tracking-widest border border-orange-200">
-                                                        <span class="w-1.5 h-1.5 rounded-full bg-orange-600"></span>Sắp chiếu
-                                                    </span>
-                                                <% } %>
-                                            </td>
-                                            <td class="px-6 py-4 text-right">
-                                                <div class="flex items-center justify-end gap-2">
-                                                    <a href="/admin/phim/sua/<%= phim._id %>" class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 border border-transparent transition-all" title="Sửa"><span class="material-symbols-outlined text-lg">edit</span></a>
-                                                    <form action="/admin/phim/xoa/<%= phim._id %>" method="POST" onsubmit="return confirm('Xác nhận xóa phim <%= phim.title %> vĩnh viễn?');" class="inline">
-                                                        <button type="submit" class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 border border-transparent transition-all cursor-pointer" title="Xóa"><span class="material-symbols-outlined text-lg">delete</span></button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <% }) %>
-                                <% } else { %>
-                                    <tr>
-                                        <td colspan="6" class="text-center py-16">
-                                            <div class="flex flex-col items-center justify-center text-slate-400">
-                                                <span class="material-symbols-outlined text-5xl mb-3 opacity-50">movie_off</span>
-                                                <p class="font-bold text-base text-slate-600">Kho phim trống</p>
-                                                <p class="text-sm mt-1">Bấm "Thêm phim mới" để đưa phim lên hệ thống.</p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <% } %>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </main>
+<script>
+  function filterMovieStatus(status, btn) {
+    document.querySelectorAll('.movie-status-btn').forEach(b => {
+      b.classList.remove('bg-[#121316]', 'text-white', 'font-bold');
+      b.classList.add('bg-[#FAF8F5]', 'text-[#474A54]');
+    });
+    btn.classList.remove('bg-[#FAF8F5]', 'text-[#474A54]');
+    btn.classList.add('bg-[#121316]', 'text-white', 'font-bold');
+
+    document.querySelectorAll('.movie-row').forEach(row => {
+      if (status === 'all' || row.dataset.status === status) {
+        row.classList.remove('hidden');
+      } else {
+        row.classList.add('hidden');
+      }
+    });
+  }
+
+  function filterAdminMovies() {
+    const q = document.getElementById('adminMovieSearch').value.toLowerCase();
+    document.querySelectorAll('.movie-row').forEach(row => {
+      const title = row.dataset.title || '';
+      if (title.includes(q)) {
+        row.classList.remove('hidden');
+      } else {
+        row.classList.add('hidden');
+      }
+    });
+  }
+</script>
 
 <%- include('partials/admin-footer') %>

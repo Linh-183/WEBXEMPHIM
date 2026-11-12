@@ -1,48 +1,151 @@
 <%- include('partials/header') %>
 
-<main class="min-h-screen flex items-center justify-center bg-surface-container-low py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
+<main class="min-h-screen py-16 flex items-center justify-center px-4 sm:px-6 bg-[#FAF8F5]">
+  <div class="w-full max-w-4xl bg-white border border-[#E5E0D5] grid grid-cols-1 md:grid-cols-12 shadow-2xl overflow-hidden">
+    
+    <!-- Left Column: Editorial Manifesto (Span 5) -->
+    <div class="hidden md:flex md:col-span-5 bg-[#0E1015] p-8 flex-col justify-between text-white relative">
+      <div class="space-y-2 z-10">
+        <span class="font-['Georgia'] font-black text-xl tracking-[0.2em] text-white">CINEGO</span>
+        <span class="block font-['JetBrains_Mono'] text-[9px] uppercase tracking-widest text-[#BA2D27]">
+          THÀNH VIÊN MỚI
+        </span>
+      </div>
 
-    <div class="max-w-md w-full bg-surface-container-lowest p-8 rounded-3xl shadow-xl border border-outline-variant/20 relative z-10">
-        <div class="text-center mb-8">
-            <h2 class="text-3xl font-black text-on-surface tracking-tight">TẠO TÀI KHOẢN</h2>
-            <p class="text-sm text-on-surface-variant mt-2 font-medium">Gia nhập cộng đồng CineGo ngay hôm nay</p>
+      <div class="space-y-4 z-10 my-auto py-12">
+        <blockquote class="font-['Georgia'] italic text-2xl text-[#C5C8D1] leading-snug">
+          "Trở thành một phần của cộng đồng điện ảnh đích thực tại Quy Nhơn."
+        </blockquote>
+        <div class="space-y-2 text-xs font-['JetBrains_Mono'] text-white/70">
+          <div class="flex items-center gap-2">
+            <span class="text-[#BA2D27]">✓</span> Tặng ngay voucher giảm 20%
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[#BA2D27]">✓</span> Tích 1 điểm cho mỗi 10.000đ
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[#BA2D27]">✓</span> Ưu tiên săn vé Flash Sale 19K
+          </div>
         </div>
-        
-        <form action="/dang-ky" method="POST" class="space-y-5">
-            <div>
-                <label class="block text-sm font-bold text-slate-700 mb-2">Họ và tên</label>
-                <input type="text" name="hoTen" required placeholder="VD: Nguyễn Văn A" 
-                       class="w-full px-4 py-3 rounded-xl border-slate-300 focus:ring-primary focus:border-primary transition-colors bg-surface/50">
-            </div>
-            
-            <div>
-                <label class="block text-sm font-bold text-slate-700 mb-2">Email</label>
-                <input type="email" name="email" required placeholder="VD: email@example.com" 
-                       class="w-full px-4 py-3 rounded-xl border-slate-300 focus:ring-primary focus:border-primary transition-colors bg-surface/50">
-            </div>
-            
-            <div>
-                <label class="block text-sm font-bold text-slate-700 mb-2">Số điện thoại</label>
-                <input type="tel" name="soDienThoai" placeholder="VD: 0912345678" 
-                       class="w-full px-4 py-3 rounded-xl border-slate-300 focus:ring-primary focus:border-primary transition-colors bg-surface/50">
-            </div>
-            
-            <div>
-                <label class="block text-sm font-bold text-slate-700 mb-2">Mật khẩu</label>
-                <input type="password" name="matKhau" required placeholder="Tạo mật khẩu (ít nhất 6 ký tự)" 
-                       class="w-full px-4 py-3 rounded-xl border-slate-300 focus:ring-primary focus:border-primary transition-colors bg-surface/50">
-            </div>
-            
-            <button type="submit" class="w-full py-4 mt-2 bg-gradient-to-r from-primary to-primary-container text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
-                ĐĂNG KÝ
-            </button>
-        </form>
-        
-        <p class="mt-8 text-center text-sm text-slate-600 font-medium">
-            Đã có tài khoản? <a href="/dang-nhap" class="font-bold text-primary hover:underline underline-offset-4 decoration-2">Đăng nhập</a>
-        </p>
+      </div>
+
+      <div class="font-['JetBrains_Mono'] text-[10px] text-white/40 z-10 border-t border-white/10 pt-4">
+        3 CỤM RẠP QUY NHƠN • BẢO MẬT TUYỆT ĐỐI
+      </div>
     </div>
+
+    <!-- Right Column: Editorial Registration Form (Span 7) -->
+    <div class="md:col-span-7 p-8 sm:p-12 space-y-6">
+      
+      <div class="space-y-2">
+        <span class="archival-index">GIA NHẬP CINEGO CLUB</span>
+        <h1 class="editorial-headline text-3xl font-bold">Đăng Ký Tài Khoản</h1>
+        <p class="text-xs text-[#7A7E8B] font-light">
+          Đăng ký nhanh chóng để hưởng đầy đủ đặc quyền đặt vé và voucher giảm giá.
+        </p>
+      </div>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="p-3.5 bg-[#FFF2F1] border-l-4 border-[#BA2D27] text-[#BA2D27] text-xs font-['Plus_Jakarta_Sans'] flex items-center gap-2">
+          <span class="material-symbols-outlined text-base">error</span>
+          <span><%= error %></span>
+        </div>
+      <% } %>
+
+      <form action="/dang-ky" method="POST" class="space-y-4 text-xs font-['Plus_Jakarta_Sans']" onsubmit="return validateRegisterForm()">
+        <div>
+          <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-widest mb-1">
+            Họ và tên <span class="text-[#BA2D27]">*</span>
+          </label>
+          <input type="text" 
+                 name="hoTen" 
+                 required 
+                 value="<%= (typeof formData !== 'undefined' && formData && formData.hoTen) ? formData.hoTen : '' %>"
+                 placeholder="Ví dụ: Nguyễn Văn An" 
+                 class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-3 text-xs text-[#121316] font-medium focus:outline-none focus:border-[#121316]" />
+        </div>
+
+        <div>
+          <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-widest mb-1">
+            Địa chỉ Email <span class="text-[#BA2D27]">*</span>
+          </label>
+          <input type="email" 
+                 name="email" 
+                 required 
+                 value="<%= (typeof formData !== 'undefined' && formData && formData.email) ? formData.email : '' %>"
+                 placeholder="name@example.com" 
+                 class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-3 text-xs text-[#121316] font-medium focus:outline-none focus:border-[#121316]" />
+        </div>
+
+        <div>
+          <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-widest mb-1">
+            Số điện thoại (10 chữ số) <span class="text-[#BA2D27]">*</span>
+          </label>
+          <input type="tel" 
+                 name="soDienThoai" 
+                 id="reg_sdt"
+                 required 
+                 pattern="[0-9]{10}"
+                 value="<%= (typeof formData !== 'undefined' && formData && formData.soDienThoai) ? formData.soDienThoai : '' %>"
+                 placeholder="0912345678" 
+                 class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-3 text-xs text-[#121316] font-medium focus:outline-none focus:border-[#121316]" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-widest mb-1">
+              Mật khẩu (Tối thiểu 6 ký tự) <span class="text-[#BA2D27]">*</span>
+            </label>
+            <input type="password" 
+                   name="matKhau" 
+                   id="reg_matKhau"
+                   required 
+                   minlength="6"
+                   placeholder="••••••••" 
+                   class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-3 text-xs text-[#121316] font-medium focus:outline-none focus:border-[#121316]" />
+          </div>
+
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-widest mb-1">
+              Xác nhận mật khẩu <span class="text-[#BA2D27]">*</span>
+            </label>
+            <input type="password" 
+                   id="reg_confirmPassword"
+                   required 
+                   minlength="6"
+                   placeholder="••••••••" 
+                   class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-3 text-xs text-[#121316] font-medium focus:outline-none focus:border-[#121316]" />
+          </div>
+        </div>
+
+        <button type="submit" class="btn-editorial-primary w-full py-3.5 text-xs font-bold uppercase tracking-widest mt-2">
+          HOÀN TẤT ĐĂNG KÝ HỘI VIÊN →
+        </button>
+      </form>
+
+      <div class="pt-6 border-t border-[#E5E0D5] text-center font-['JetBrains_Mono'] text-xs text-[#7A7E8B]">
+        <span>Đã có tài khoản? </span>
+        <a href="/dang-nhap" class="text-[#121316] hover:text-[#BA2D27] underline font-bold">
+          Đăng nhập ngay
+        </a>
+      </div>
+
+    </div>
+
+  </div>
 </main>
+
+<script>
+  function validateRegisterForm() {
+    const pw = document.getElementById('reg_matKhau').value;
+    const confirm = document.getElementById('reg_confirmPassword').value;
+    if (pw !== confirm) {
+      if (window.cinegoToast) window.cinegoToast.error('Mật khẩu và xác nhận mật khẩu không khớp!');
+      else alert('Mật khẩu không khớp!');
+      return false;
+    }
+    return true;
+  }
+</script>
 
 <%- include('partials/footer') %>

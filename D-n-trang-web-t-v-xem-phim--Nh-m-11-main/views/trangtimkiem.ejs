@@ -1,0 +1,85 @@
+<%- include('partials/header') %>
+
+<main class="min-h-screen py-12 pb-24 bg-[#FAF8F5]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-8">
+    
+    <div class="mb-10 text-center max-w-2xl mx-auto space-y-2">
+      <span class="archival-index">TRA CỨU TOÀN BỘ PHIM CHIẾU RẠP</span>
+      <h1 class="editorial-headline">Tìm Kiếm Phim & Rạp Quy Nhơn</h1>
+    </div>
+
+    <!-- Search Input Box -->
+    <div class="max-w-3xl mx-auto mb-12">
+      <form action="/tim-kiem" method="GET" class="relative flex items-center bg-white border border-[#E5E0D5] p-2">
+        <span class="material-symbols-outlined text-[#7A7E8B] text-xl ml-3">search</span>
+        <input type="text" 
+               name="keyword" 
+               value="<%= typeof tuKhoa !== 'undefined' ? tuKhoa : '' %>" 
+               placeholder="Nhập tên phim, đạo diễn hoặc rạp (CGV, Starlight, Dcine)..." 
+               class="w-full bg-transparent border-none pl-3 pr-28 py-3 text-sm text-[#121316] placeholder-[#A6AAB6] focus:outline-none font-['Plus_Jakarta_Sans']" />
+        <button type="submit" class="btn-editorial-primary text-xs !py-2.5 !px-6 absolute right-2">
+          TÌM KIẾM
+        </button>
+      </form>
+    </div>
+
+    <!-- Results count & grid -->
+    <div class="space-y-8">
+      <div class="flex items-center justify-between pb-4 border-b border-[#E5E0D5] text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">
+        <span>KẾT QUẢ TÌM KIẾM CHO: <strong class="text-[#121316]">"<%= typeof tuKhoa !== 'undefined' ? tuKhoa : 'Tất cả' %>"</strong></span>
+        <span>HIỂN THỊ: <%= (typeof movies !== 'undefined') ? movies.length : 0 %> TÁC PHẨM</span>
+      </div>
+
+      <% if (typeof movies !== 'undefined' && movies.length > 0) { %>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <% movies.forEach(function(phim) { %>
+            <article class="bg-white border border-[#E5E0D5] p-4 flex flex-col justify-between group hover:border-[#121316] transition-all">
+              <div>
+                <div class="relative aspect-[3/4] bg-[#EFEBE3] overflow-hidden mb-4 border border-[#E5E0D5]">
+                  <img src="<%= phim.posterUrl %>" alt="<%= phim.title %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <span class="absolute top-2.5 left-2.5 px-2 py-0.5 bg-[#121316] text-white font-['JetBrains_Mono'] text-[10px] font-bold">
+                    <%= phim.ageRating || 'P' %>
+                  </span>
+                </div>
+                <div class="space-y-1.5">
+                  <div class="text-[10px] font-['JetBrains_Mono'] uppercase tracking-widest text-[#7A7E8B]">
+                    <%= phim.genre || 'Điện ảnh' %>
+                  </div>
+                  <h3 class="font-['Georgia'] text-2xl font-bold text-[#121316] leading-tight group-hover:text-[#BA2D27] transition-colors">
+                    <a href="/phim/<%= phim._id %>"><%= phim.title %></a>
+                  </h3>
+                  <div class="text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B]">
+                    Thời lượng: <span class="text-[#121316]"><%= phim.duration ? (phim.duration + ' phút') : '120 phút' %></span>
+                  </div>
+                </div>
+              </div>
+              <div class="pt-4 mt-4 border-t border-[#E5E0D5] flex items-center gap-2">
+                <a href="/dat-ve/<%= phim._id %>" class="btn-editorial-primary text-xs flex-1 !py-2 !px-3 text-center">
+                  Đặt Vé
+                </a>
+                <a href="/phim/<%= phim._id %>" class="btn-editorial-secondary text-xs !py-2 !px-3 text-center">
+                  Chi Tiết
+                </a>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="text-center py-20 bg-white border border-[#E5E0D5] p-8 space-y-4">
+          <span class="material-symbols-outlined text-4xl text-[#7A7E8B]">search_off</span>
+          <h3 class="font-['Georgia'] text-xl font-bold text-[#121316]">Không Tìm Thấy Tác Phẩm Phù Hợp</h3>
+          <p class="text-xs text-[#7A7E8B] max-w-sm mx-auto">
+            Thử tìm kiếm với từ khóa khác như "Dune", "Mai", "Kung Fu Panda" hoặc khám phá toàn bộ lịch chiếu.
+          </p>
+          <div class="pt-2">
+            <a href="/phim" class="btn-editorial-primary text-xs">Xem Toàn Bộ Danh Mục Phim</a>
+          </div>
+        </div>
+      <% } %>
+
+    </div>
+
+  </div>
+</main>
+
+<%- include('partials/footer') %>

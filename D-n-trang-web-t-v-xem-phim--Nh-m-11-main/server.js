@@ -32,12 +32,14 @@ app.use(express.json());
 // 3. CẤU HÌNH SESSION ĐỂ QUẢN LÝ ĐĂNG NHẬP
 // ==========================================
 app.use(session({
-    secret: 'cinego_secret_key_sieu_bao_mat',
+    secret: process.env.SESSION_SECRET || 'cinego_secret_key_sieu_bao_mat_2026',
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: { 
+        httpOnly: true, // Bảo vệ cookie phiên chống truy cập trộm bằng JavaScript XSS
+        sameSite: 'lax', // Phòng chống tấn công CSRF
         secure: false, // Để false khi chạy localhost, đổi thành true nếu dùng HTTPS trên host thật
-        maxAge: 1000 * 60 * 60 * 24 // Tùy chọn thêm: Giữ session trong 24 giờ
+        maxAge: 1000 * 60 * 60 * 24 // Giữ session trong 24 giờ
     }
 }));
 

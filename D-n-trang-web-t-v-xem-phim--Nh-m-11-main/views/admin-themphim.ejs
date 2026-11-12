@@ -1,197 +1,194 @@
 <%- include('partials/admin-header') %>
 
-    <header
-        class="sticky top-0 w-full z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 flex justify-between items-center px-8 py-4 shadow-sm">
-        <div class="flex items-center gap-4">
-            <a href="/admin/phim"
-                class="w-10 h-10 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-colors">
-                <span class="material-symbols-outlined">arrow_back</span>
-            </a>
-            <h1 class="text-2xl font-black text-slate-900">Thêm Phim Mới</h1>
+<main class="p-6 sm:p-10 space-y-8 max-w-7xl">
+  
+  <!-- Top Return & Headline -->
+  <div class="flex items-center gap-4 pb-6 border-b border-[#E5E0D5]">
+    <a href="/admin/phim" class="w-9 h-9 border border-[#E5E0D5] bg-white hover:border-[#121316] text-[#121316] flex items-center justify-center transition-colors">
+      <span class="material-symbols-outlined text-lg">arrow_back</span>
+    </a>
+    <div>
+      <span class="archival-index">BIỂU MẪU ĐIỆN ẢNH</span>
+      <h1 class="editorial-headline text-3xl font-bold mt-0.5">Thêm Phim Mới Vào Hệ Thống</h1>
+    </div>
+  </div>
+
+  <form action="/admin/phim/them" method="POST" class="grid grid-cols-1 lg:grid-cols-12 gap-8 text-xs font-['Plus_Jakarta_Sans']">
+    
+    <!-- LEFT 8 COLS: GENERAL INFO & SHOWTIME SLOTS -->
+    <div class="lg:col-span-8 space-y-6">
+      
+      <!-- Basic Movie Information Card -->
+      <div class="bg-white border border-[#E5E0D5] p-6 sm:p-8 space-y-5">
+        <h2 class="font-['Georgia'] text-sm font-bold text-[#121316] uppercase tracking-wider pb-3 border-b border-[#E5E0D5]">
+          1. Thông Tin Cơ Bản Của Phim
+        </h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          
+          <!-- Tên phim -->
+          <div class="sm:col-span-2">
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
+              Tên phim <span class="text-[#BA2D27]">*</span>
+            </label>
+            <input name="title" required placeholder="Nhập tiêu đề phim tiếng Việt hoặc tiếng Anh..." class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-bold focus:outline-none focus:border-[#121316]" />
+          </div>
+
+          <!-- Đạo diễn -->
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Đạo diễn</label>
+            <input name="director" placeholder="Họ tên đạo diễn..." class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] focus:outline-none focus:border-[#121316]" />
+          </div>
+
+          <!-- Thể loại -->
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Thể loại</label>
+            <input name="genre" placeholder="Hành động, Hoạt hình, Viễn tưởng..." class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] focus:outline-none focus:border-[#121316]" />
+          </div>
+
+          <!-- Thời lượng -->
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
+              Thời lượng (Phút) <span class="text-[#BA2D27]">*</span>
+            </label>
+            <input name="duration" type="number" required placeholder="120" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
+          </div>
+
+          <!-- Ngày khởi chiếu -->
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Ngày khởi chiếu</label>
+            <input name="releaseDate" type="date" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-['JetBrains_Mono'] focus:outline-none focus:border-[#121316]" />
+          </div>
+
+          <!-- Trạng thái -->
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Trạng thái phát hành</label>
+            <select name="status" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-bold focus:outline-none focus:border-[#121316]">
+              <option value="DangChieu">Đang chiếu (Now Showing)</option>
+              <option value="SapChieu">Sắp chiếu (Coming Soon)</option>
+            </select>
+          </div>
+
+          <!-- Phân loại độ tuổi -->
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Giới hạn độ tuổi</label>
+            <select name="ageRating" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-bold focus:outline-none focus:border-[#121316]">
+              <option value="P">P — Mọi lứa tuổi</option>
+              <option value="K">K — Dưới 13 tuổi có người lớn đi kèm</option>
+              <option value="T13">T13 — Khán giả từ 13 tuổi</option>
+              <option value="T16" selected>T16 — Khán giả từ 16 tuổi</option>
+              <option value="T18">T18 — Khán giả từ 18 tuổi</option>
+            </select>
+          </div>
+
+          <!-- Mô tả tóm tắt nội dung -->
+          <div class="sm:col-span-2">
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Tóm tắt nội dung phim</label>
+            <textarea name="description" rows="4" placeholder="Nội dung, cốt truyện chính..." class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] focus:outline-none focus:border-[#121316]"></textarea>
+          </div>
+
         </div>
-    </header>
+      </div>
 
-    <main class="p-8 flex-1 bg-[#f8f9fa]">
-        <form action="/admin/phim/them" method="POST"
-            class="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Showtime Schedule Generator -->
+      <div class="bg-white border border-[#E5E0D5] p-6 sm:p-8 space-y-4">
+        <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-3">
+          <h2 class="font-['Georgia'] text-sm font-bold text-[#121316] uppercase tracking-wider">
+            2. Xếp Lịch Chiếu Tại 3 Rạp Quy Nhơn
+          </h2>
+          <span class="text-[10px] font-['JetBrains_Mono'] text-[#10B981] font-bold">CHỐNG TRÙNG LỊCH</span>
+        </div>
 
-            <div class="lg:col-span-2 space-y-6">
-                <div class="bg-white p-8 rounded-[1.5rem] shadow-sm border border-slate-100">
-                    <h2 class="text-base font-black text-slate-900 mb-8">Thông tin cơ bản</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="md:col-span-2">
-                            <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Tên phim</label>
-                            <input name="title" required
-                                class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3.5 text-sm font-semibold"
-                                type="text" placeholder="Nhập tên phim..." />
-                        </div>
-
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Đạo diễn</label>
-                            <input name="director"
-                                class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3.5 text-sm font-semibold"
-                                type="text" placeholder="Tên đạo diễn..." />
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Thể loại</label>
-                            <input name="genre"
-                                class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3.5 text-sm font-semibold"
-                                type="text" placeholder="Hành động, Tình cảm..." />
-                        </div>
-
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Thời lượng
-                                (phút)</label>
-                            <input name="duration" required
-                                class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3.5 text-sm font-semibold"
-                                type="number" placeholder="120" />
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Ngày khởi
-                                    chiếu</label>
-                                <input name="releaseDate"
-                                    class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3.5 text-sm font-semibold uppercase"
-                                    type="date" />
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Ngày kết
-                                    thúc</label>
-                                <input name="endDate"
-                                    class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3.5 text-sm font-semibold uppercase"
-                                    type="date" />
-                            </div>
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Link Trailer
-                                (YouTube)</label>
-                            <input name="trailerUrl"
-                                class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3.5 text-sm font-semibold"
-                                type="url" placeholder="https://www.youtube.com/watch?v=..." />
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label class="block text-[11px] font-bold text-slate-700 mb-2 uppercase">Độ tuổi</label>
-                            <select name="ageRating"
-                                class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3.5 text-sm font-semibold">
-                                <option value="P">P - Mọi lứa tuổi</option>
-                                <option value="T13">T13 - 13 tuổi trở lên</option>
-                                <option value="T16">T16 - 16 tuổi trở lên</option>
-                                <option value="T18">T18 - 18 tuổi trở lên</option>
-                            </select>
-                        </div>
-
-                        <div class="md:col-span-2 pt-6 border-t border-slate-100">
-                            <div class="flex justify-between items-center mb-4">
-                                <div>
-                                    <h2 class="text-base font-black text-slate-900">Quản lý Lịch Chiếu</h2>
-                                    <p class="text-xs text-slate-500 font-medium">Thiết lập rạp, phòng và giờ chiếu chi
-                                        tiết</p>
-                                </div>
-                                <button type="button" onclick="addShowtimeBlock()"
-                                    class="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-100 flex items-center gap-1 transition-all">
-                                    <span class="material-symbols-outlined text-[16px]">add</span> THÊM LỊCH
-                                </button>
-                            </div>
-
-                            <div id="showtime-wrapper" class="space-y-4">
-                                <div
-                                    class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col gap-3 relative group">
-                                    <div class="grid grid-cols-2 gap-3">
-                                        <select name="cinema[]" required
-                                            class="bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:ring-red-500 focus:border-red-500">
-                                            <option value="Starlight Quy Nhơn">Starlight Quy Nhơn</option>
-                                            <option value="CGV Quy Nhơn">CGV Quy Nhơn</option>
-                                            <option value="Dcine Quy Nhơn">Dcine Quy Nhơn</option>
-                                        </select>
-                                        <select name="room[]" required
-                                            class="bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:ring-red-500 focus:border-red-500">
-                                            <option value="Phòng 01 (Thường)">Phòng 01 (Tiêu chuẩn)</option>
-                                            <option value="Phòng 02 (Thường)">Phòng 02 (Tiêu chuẩn)</option>
-                                            <option value="Phòng 03 (VIP)">Phòng 03 (Ghế VIP)</option>
-                                            <option value="Phòng 04 (Couple)">Phòng 04 (Ghế VIP)</option>
-                                            <option value="Phòng 05 (IMAX)">Phòng 05 (Màn hình IMAX)</option>
-                                        </select>
-                                    </div>
-                                    <div class="grid grid-cols-3 gap-3">
-                                        <input type="date" name="show_date[]" required
-                                            class="col-span-1 bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold uppercase focus:ring-red-500 focus:border-red-500" />
-                                        <input type="text" name="show_times[]"
-                                            placeholder="Giờ chiếu (VD: 19:00, 20:30)" required
-                                            class="col-span-2 bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:ring-red-500 focus:border-red-500" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white p-8 rounded-[1.5rem] shadow-sm border border-slate-100">
-                    <h2 class="text-base font-black text-slate-900 mb-4">Mô tả phim</h2>
-                    <textarea name="description" rows="5"
-                        class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3.5 text-sm font-semibold"
-                        placeholder="Nội dung phim..."></textarea>
-                </div>
+        <div class="space-y-4" id="showtimeRowsContainer">
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 p-4 bg-[#FAF8F5] border border-[#E5E0D5]">
+            <div>
+              <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1">Cụm rạp</label>
+              <select name="cinema" class="w-full bg-white border border-[#E5E0D5] p-2 text-xs text-[#121316] font-semibold">
+                <option value="CGV Kim Cúc Plaza">CGV Kim Cúc Plaza</option>
+                <option value="Starlight Nguyễn Kim">Starlight Nguyễn Kim</option>
+                <option value="Dcine Quy Nhơn">Dcine Phú Tài Center</option>
+              </select>
             </div>
-
-            <div class="lg:col-span-1 space-y-6">
-                <div class="bg-white p-6 rounded-[1.5rem] shadow-sm border border-slate-100">
-                    <h2 class="text-sm font-black text-slate-900 mb-4 uppercase">Link Poster Phim</h2>
-                    <input name="posterUrl" type="url" required
-                        class="w-full bg-[#f4f4f5] border-none rounded-xl px-4 py-3 text-xs font-semibold"
-                        placeholder="Dán URL ảnh vào đây..." />
-                </div>
-                <div class="bg-white p-6 rounded-[1.5rem] shadow-sm border border-slate-100">
-                    <h2 class="text-sm font-black text-slate-900 mb-4 uppercase">Trạng thái</h2>
-                    <div class="space-y-3">
-                        <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="radio" name="status" value="DangChieu" checked />
-                            <span class="text-sm font-bold">Đang chiếu</span>
-                        </label>
-                        <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="radio" name="status" value="SapChieu" />
-                            <span class="text-sm font-bold">Sắp chiếu</span>
-                        </label>
-                    </div>
-                </div>
-                <button type="submit"
-                    class="w-full py-4 bg-[#dc2626] text-white font-black rounded-xl shadow-lg hover:bg-red-700 transition-colors uppercase">
-                    Tạo Phim Mới
-                </button>
+            <div>
+              <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1">Phòng chiếu</label>
+              <select name="room" class="w-full bg-white border border-[#E5E0D5] p-2 text-xs text-[#121316] font-semibold">
+                <option value="Phòng 1 (IMAX)">Phòng 1 (IMAX)</option>
+                <option value="Phòng 2 (2D)">Phòng 2 (2D)</option>
+                <option value="Phòng 3 (VIP)">Phòng 3 (VIP)</option>
+              </select>
             </div>
-        </form>
-    </main>
-
-    <script>
-        // Hàm tạo thêm ô nhập Lịch Chiếu - Đã đồng bộ SELECT
-        function addShowtimeBlock() {
-            const wrapper = document.getElementById('showtime-wrapper');
-            const block = document.createElement('div');
-            block.className = 'bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col gap-3 relative group';
-            block.innerHTML = `
-            <button type="button" onclick="this.parentElement.remove()" class="absolute -top-3 -right-3 w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">X</button>
-            <div class="grid grid-cols-2 gap-3">
-                <select name="cinema[]" required class="bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:ring-red-500 focus:border-red-500">
-                    <option value="Starlight Quy Nhơn">Starlight Quy Nhơn</option>
-                    <option value="CGV Quy Nhơn">CGV Quy Nhơn</option>
-                    <option value="Dcine Quy Nhơn">Dcine Quy Nhơn</option>
-                </select>
-                <select name="room[]" required class="bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:ring-red-500 focus:border-red-500">
-                    <option value="Phòng 01 (Thường)">Phòng 01 (Tiêu chuẩn)</option>
-                    <option value="Phòng 02 (Thường)">Phòng 02 (Tiêu chuẩn)</option>
-                    <option value="Phòng 03 (VIP)">Phòng 03 (Ghế VIP)</option>
-                    <option value="Phòng 04 (Couple)">Phòng 04 (Ghế VIP)</option>
-                    <option value="Phòng 05 (IMAX)">Phòng 05 (Màn hình IMAX)</option>
-                </select>
+            <div>
+              <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1">Ngày chiếu</label>
+              <input type="date" name="show_date" value="2026-11-12" class="w-full bg-white border border-[#E5E0D5] p-2 text-xs font-['JetBrains_Mono']" />
             </div>
-            <div class="grid grid-cols-3 gap-3">
-                <input type="date" name="show_date[]" required class="col-span-1 bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold uppercase focus:ring-red-500 focus:border-red-500"/>
-                <input type="text" name="show_times[]" placeholder="Giờ chiếu (VD: 19:00, 20:30)" required class="col-span-2 bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold focus:ring-red-500 focus:border-red-500"/>
+            <div>
+              <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1">Các suất chiếu (cách dấu phẩy)</label>
+              <input type="text" name="show_times" placeholder="09:30, 13:15, 19:30" value="09:30, 13:15, 19:30" class="w-full bg-white border border-[#E5E0D5] p-2 text-xs font-['JetBrains_Mono'] font-bold text-[#121316]" />
             </div>
-        `;
-            wrapper.appendChild(block);
-        }
-    </script>
+          </div>
+        </div>
+      </div>
 
-    <%- include('partials/admin-footer') %>
+    </div>
+
+    <!-- RIGHT 4 COLS: POSTER & TRAILER MEDIA -->
+    <div class="lg:col-span-4 space-y-6">
+      
+      <div class="bg-white border border-[#E5E0D5] p-6 space-y-4">
+        <h3 class="font-['Georgia'] text-xs font-bold text-[#121316] uppercase tracking-wider pb-2 border-b border-[#E5E0D5]">
+          3. Hình Ảnh & Video Trailer
+        </h3>
+
+        <div>
+          <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
+            Đường dẫn Poster URL (Tỷ lệ 3:4) <span class="text-[#BA2D27]">*</span>
+          </label>
+          <input name="posterUrl" id="posterUrlInput" required placeholder="https://images.unsplash.com/..." class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] focus:outline-none focus:border-[#121316]" oninput="previewPoster(this.value)" />
+        </div>
+
+        <!-- Poster Preview Box -->
+        <div class="relative aspect-[3/4] bg-[#EFEBE3] border border-[#E5E0D5] overflow-hidden flex items-center justify-center">
+          <img id="posterPreviewImg" src="" alt="Xem trước Poster" class="w-full h-full object-cover hidden" />
+          <span id="posterPlaceholderText" class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">Xem trước poster</span>
+        </div>
+
+        <div>
+          <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
+            Đường dẫn Video Trailer (YouTube)
+          </label>
+          <input name="trailerUrl" placeholder="https://www.youtube.com/watch?v=..." class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] focus:outline-none focus:border-[#121316]" />
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <div class="bg-white border border-[#E5E0D5] p-6 space-y-3">
+        <button type="submit" class="btn-editorial-primary w-full py-3.5 text-xs font-bold uppercase tracking-wider block text-center !bg-[#BA2D27]">
+          LƯU VÀ XUẤT BẢN PHIM MỚI →
+        </button>
+        <a href="/admin/phim" class="btn-editorial-secondary w-full py-2.5 text-xs font-bold uppercase tracking-wider block text-center">
+          HỦY THAO TÁC
+        </a>
+      </div>
+
+    </div>
+
+  </form>
+
+</main>
+
+<script>
+  function previewPoster(url) {
+    const img = document.getElementById('posterPreviewImg');
+    const txt = document.getElementById('posterPlaceholderText');
+    if (url && url.startsWith('http')) {
+      img.src = url;
+      img.classList.remove('hidden');
+      txt.classList.add('hidden');
+    } else {
+      img.classList.add('hidden');
+      txt.classList.remove('hidden');
+    }
+  }
+</script>
+
+<%- include('partials/admin-footer') %>

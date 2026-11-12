@@ -1,57 +1,173 @@
 <%- include('partials/header') %>
 
-<main class="min-h-screen bg-[#f8fafc] py-16">
-    <div class="max-w-7xl mx-auto px-6 mb-16 text-center">
-        <h1 class="text-5xl font-[900] text-slate-900 mb-4 tracking-tight">KHO VOUCHER <span class="text-red-600 italic">CINEGO</span></h1>
-        <p class="text-slate-500 text-lg max-w-2xl mx-auto font-medium">Đừng để lãng phí cơ hội! Thu thập ngay những mã giảm giá cực hời để tận hưởng những bộ phim bom tấn.</p>
+<main class="min-h-screen py-12 pb-24 bg-[#FAF8F5]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-8">
+    
+    <!-- =========================================================================
+         1. EDITORIAL PROMOTION MASTHEAD
+         ========================================================================= -->
+    <div class="pb-8 border-b border-[#E5E0D5] mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div>
+        <span class="archival-index">ĐẶC QUYỀN & ƯU ĐÃI THÀNH VIÊN</span>
+        <h1 class="editorial-headline mt-1">Khuyến Mãi & Flash Sale Vé 19.000đ</h1>
+        <p class="text-xs text-[#7A7E8B] mt-1.5 font-light max-w-2xl leading-relaxed">
+          Danh mục voucher giảm giá, sự kiện săn vé đồng giá 19K theo khung giờ vàng và quà tặng dịch vụ bắp nước áp dụng tại 3 cụm rạp Quy Nhơn.
+        </p>
+      </div>
+
+      <div class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">
+        TRẠNG THÁI: <strong class="text-[#10B981]">ĐANG DIỄN RA</strong>
+      </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-        <% vouchers.forEach(function(voucher) { %>
-            <div class="group relative bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 flex flex-col transition-all hover:-translate-y-2">
-                <div class="h-32 bg-gradient-to-br from-red-600 to-red-800 p-6 flex flex-col justify-center relative">
-                    <div class="absolute -bottom-3 -left-3 w-6 h-6 bg-[#f8fafc] rounded-full"></div>
-                    <div class="absolute -bottom-3 -right-3 w-6 h-6 bg-[#f8fafc] rounded-full"></div>
-                    
-                    <h3 class="text-white text-3xl font-black italic tracking-tighter">
-                        <%= voucher.discountType === 'percentage' ? '-' + voucher.discountValue + '%' : '-' + (voucher.discountValue/1000) + 'K' %>
-                    </h3>
-                    <p class="text-red-100 text-[10px] font-bold uppercase tracking-widest opacity-80"><%= voucher.title %></p>
-                </div>
+    <!-- =========================================================================
+         2. FLASH SALE STAGE (LETTERPRESS HERO BANNER)
+         ========================================================================= -->
+    <div class="bg-white border-2 border-[#121316] p-8 sm:p-12 mb-14 shadow-lg">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        
+        <div class="lg:col-span-8 space-y-4">
+          <div class="flex items-center gap-2 font-['JetBrains_Mono'] text-xs text-[#BA2D27]">
+            <span class="w-2.5 h-2.5 rounded-full bg-[#BA2D27] animate-ping"></span>
+            <span class="font-bold uppercase tracking-wider">KHUNG GIỜ VÀNG: 12:00 — 14:00 & 20:00 — 22:00 HÀNG NGÀY</span>
+          </div>
 
-                <div class="p-8 flex-1 flex flex-col">
-                    <p class="text-slate-500 text-sm font-medium mb-6 leading-relaxed">
-                        <%= voucher.description %>
-                    </p>
-                    
-                    <div class="mt-auto">
-                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 group-hover:border-red-200 group-hover:bg-red-50 transition-colors">
-                            <span class="font-mono font-bold text-lg text-slate-700 tracking-wider uppercase"><%= voucher.code %></span>
-                            <button onclick="copyVoucher('<%= voucher.code %>', this)" class="bg-red-600 text-white text-[10px] font-bold px-4 py-2 rounded-xl shadow-lg shadow-red-200 hover:bg-red-700 active:scale-95 transition-all">
-                                COPY MÃ
-                            </button>
-                        </div>
-                        <p class="text-[10px] text-slate-400 font-bold mt-4 text-center uppercase tracking-widest">
-                            HSD: <%= voucher.expiryDate ? new Date(voucher.expiryDate).toLocaleDateString('vi-VN') : 'Vô thời hạn' %>
-                        </p>
-                    </div>
-                </div>
+          <h2 class="font-['Georgia'] text-3xl sm:text-5xl font-bold text-[#121316] leading-tight">
+            Săn Vé Xem Phim Đồng Giá 19.000đ
+          </h2>
+
+          <p class="text-xs text-[#474A54] leading-relaxed max-w-xl">
+            Giới hạn 100 vé mỗi ngày áp dụng cho mọi suất chiếu 2D tiêu chuẩn tại CGV Kim Cúc Plaza, Starlight Nguyễn Kim và Dcine Phú Tài Center. Mỗi tài khoản nhận tối đa 1 vé trong 1 đợt.
+          </p>
+
+          <div class="pt-3 flex flex-wrap items-center gap-4">
+            <div class="flex items-center bg-[#FAF8F5] border border-[#E5E0D5] px-4 py-2.5 gap-3 font-['JetBrains_Mono'] text-xs">
+              <span class="text-[#7A7E8B] uppercase">MÃ VOUCHER:</span>
+              <span class="text-[#BA2D27] font-black tracking-widest text-sm">FLASH19K</span>
+              <button type="button" onclick="copyVoucher('FLASH19K')" class="text-[#121316] hover:text-[#BA2D27] underline text-[11px] font-bold ml-2">
+                Sao Chép
+              </button>
             </div>
-        <% }) %>
+            <a href="/phim" class="btn-editorial-primary text-xs !py-3 !px-6">
+              Đặt Vé Áp Dụng Mã Ngay →
+            </a>
+          </div>
+        </div>
+
+        <div class="lg:col-span-4 flex flex-col items-start lg:items-end gap-3 font-['JetBrains_Mono']">
+          <span class="text-[10px] text-[#7A7E8B] uppercase tracking-widest">Thời gian đếm ngược đợt này:</span>
+          <div class="flex items-center gap-2">
+            <div class="flash-countdown-box" id="fs-hours">01</div>
+            <span class="text-[#121316] font-bold">:</span>
+            <div class="flash-countdown-box" id="fs-mins">24</div>
+            <span class="text-[#121316] font-bold">:</span>
+            <div class="flash-countdown-box" id="fs-secs">45</div>
+          </div>
+          <span class="text-[10px] text-[#10B981] font-semibold">● Còn 8/50 suất trưa hôm nay</span>
+        </div>
+
+      </div>
     </div>
+
+    <!-- =========================================================================
+         3. PERFORATED VOUCHERS GALLERY
+         ========================================================================= -->
+    <div class="space-y-6">
+      <div class="border-b border-[#E5E0D5] pb-4 flex items-center justify-between">
+        <div>
+          <span class="archival-index">KHO VOUCHER HIỆN CÓ</span>
+          <h3 class="font-['Georgia'] text-xl font-bold text-[#121316] mt-0.5">
+            Danh Mục Mã Giảm Giá Đang Khả Dụng
+          </h3>
+        </div>
+        <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">TẤT CẢ CỤM RẠP</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        <!-- Voucher Card 1 -->
+        <div class="ticket-pass ticket-pass-horizontal p-6 bg-white border border-[#E5E0D5] flex flex-col justify-between space-y-4 hover:border-[#121316] transition-all">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="px-2 py-0.5 bg-[#BA2D27] text-white text-[10px] font-['JetBrains_Mono'] font-bold">GIẢM 50K</span>
+              <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">ĐƠN TỪ 150K</span>
+            </div>
+            <h4 class="font-['Georgia'] text-2xl font-black text-[#121316]">CINEGO50</h4>
+            <p class="text-xs text-[#7A7E8B]">Giảm trực tiếp 50.000đ khi đặt từ 2 vé trở lên trên hệ thống.</p>
+          </div>
+          <div class="pt-4 border-t border-[#E5E0D5] flex items-center justify-between font-['JetBrains_Mono'] text-xs">
+            <span class="text-[#7A7E8B]">Hạn: 31/12/2026</span>
+            <button type="button" onclick="copyVoucher('CINEGO50')" class="btn-editorial-secondary text-xs !py-1.5 !px-3 font-bold">
+              Sao Chép
+            </button>
+          </div>
+        </div>
+
+        <!-- Voucher Card 2 -->
+        <div class="ticket-pass ticket-pass-horizontal p-6 bg-white border border-[#E5E0D5] flex flex-col justify-between space-y-4 hover:border-[#121316] transition-all">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="px-2 py-0.5 bg-[#A6853B] text-white text-[10px] font-['JetBrains_Mono'] font-bold">GIẢM 50% F&B</span>
+              <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">KHI MUA KÈM VÉ</span>
+            </div>
+            <h4 class="font-['Georgia'] text-2xl font-black text-[#121316]">FLASHCOMBO50</h4>
+            <p class="text-xs text-[#7A7E8B]">Giảm 50% cho tất cả các combo bắp ngọt, bắp phô mai và nước giải khát.</p>
+          </div>
+          <div class="pt-4 border-t border-[#E5E0D5] flex items-center justify-between font-['JetBrains_Mono'] text-xs">
+            <span class="text-[#7A7E8B]">Hạn: 28/11/2026</span>
+            <button type="button" onclick="copyVoucher('FLASHCOMBO50')" class="btn-editorial-secondary text-xs !py-1.5 !px-3 font-bold">
+              Sao Chép
+            </button>
+          </div>
+        </div>
+
+        <!-- Voucher Card 3 -->
+        <div class="ticket-pass ticket-pass-horizontal p-6 bg-white border border-[#E5E0D5] flex flex-col justify-between space-y-4 hover:border-[#121316] transition-all">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="px-2 py-0.5 bg-[#121316] text-white text-[10px] font-['JetBrains_Mono'] font-bold">HỘI VIÊN VIP</span>
+              <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">GIẢM 20%</span>
+            </div>
+            <h4 class="font-['Georgia'] text-2xl font-black text-[#121316]">VIPMEMBER</h4>
+            <p class="text-xs text-[#7A7E8B]">Đặc quyền thành viên CineGo Club hạng Vàng trở lên vào dịp cuối tuần.</p>
+          </div>
+          <div class="pt-4 border-t border-[#E5E0D5] flex items-center justify-between font-['JetBrains_Mono'] text-xs">
+            <span class="text-[#7A7E8B]">Hạn: 30/11/2026</span>
+            <button type="button" onclick="copyVoucher('VIPMEMBER')" class="btn-editorial-secondary text-xs !py-1.5 !px-3 font-bold">
+              Sao Chép
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
 </main>
 
 <script>
-    function copyVoucher(code, btn) {
-        navigator.clipboard.writeText(code);
-        const originalText = btn.innerText;
-        btn.innerText = 'ĐÃ COPY!';
-        btn.style.background = '#059669'; // Chuyển sang xanh lá khi thành công
-        setTimeout(() => {
-            btn.innerText = originalText;
-            btn.style.background = '#dc2626';
-        }, 2000);
-    }
+  function copyVoucher(code) {
+    navigator.clipboard.writeText(code).then(() => {
+      if (window.cinegoToast) {
+        window.cinegoToast.success('Đã sao chép mã ưu đãi: ' + code);
+      } else {
+        alert('Đã sao chép mã: ' + code);
+      }
+    });
+  }
+
+  // Live countdown simulator
+  let totalSeconds = 3600 * 1 + 24 * 60 + 45;
+  setInterval(() => {
+    totalSeconds--;
+    if (totalSeconds < 0) totalSeconds = 7200;
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    document.getElementById('fs-hours').innerText = h.toString().padStart(2, '0');
+    document.getElementById('fs-mins').innerText = m.toString().padStart(2, '0');
+    document.getElementById('fs-secs').innerText = s.toString().padStart(2, '0');
+  }, 1000);
 </script>
 
 <%- include('partials/footer') %>

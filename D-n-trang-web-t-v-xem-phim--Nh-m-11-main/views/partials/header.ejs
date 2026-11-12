@@ -1,127 +1,411 @@
 <!DOCTYPE html>
-<html class="light" lang="vi">
+<html lang="vi">
 <head>
   <meta charset="utf-8" />
-  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-  <title>CineGo - Hệ Thống Rạp Chiếu Phim</title>
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= typeof title !== 'undefined' ? title + ' — CineGo' : 'CineGo — Nền Tảng Giám Tuyển & Đặt Vé Điện Ảnh Quy Nhơn' %></title>
+  
+  <!-- Curatorial Typography: Georgia (Native Serif) + Plus Jakarta Sans + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  
+  <!-- Material Symbols Icons (Restrained, functional only) -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@200..600,0..1&display=swap" rel="stylesheet" />
+  
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            paper: {
+              DEFAULT: '#FAF8F5',
+              subtle: '#F3EFE6',
+              pure: '#FFFFFF',
+              dim: '#ECE7DD'
+            },
+            ink: {
+              primary: '#121316',
+              secondary: '#474A54',
+              muted: '#7A7E8B',
+              faint: '#A6AAB6'
+            },
+            cinnabar: {
+              DEFAULT: '#BA2D27',
+              dark: '#8E1F1A',
+              soft: '#F9EBEA'
+            },
+            brass: {
+              DEFAULT: '#A6853B',
+              soft: '#FBF6EB'
+            },
+            theater: {
+              DEFAULT: '#0E1015',
+              surface: '#151820',
+              elevated: '#1D212C'
+            }
+          },
+          fontFamily: {
+            sculpted: ['"Georgia"', 'serif'],
+            editorial: ['"Georgia"', 'serif'],
+            serif: ['"Georgia"', '"Times New Roman"', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- CineGo Contemporary Cinema Editorial CSS -->
+  <link rel="stylesheet" href="/css/cinego-editorial.css?v=6.0">
+  <link rel="stylesheet" href="/css/style.css?v=6.0">
 </head>
 
-<body class="bg-surface selection:bg-primary-container selection:text-white">
-  <nav class="sticky top-0 w-full z-50 glass-nav border-b border-red-100/10 shadow-sm">
-    <div class="flex justify-between items-center px-8 py-4 max-w-[1400px] mx-auto font-['Be_Vietnam_Pro'] text-sm font-medium tracking-wide uppercase">
-      
-      <a href="/" class="text-2xl font-black tracking-tighter text-red-700 shrink-0">CineGo</a>
-    
-      <div class="hidden md:flex items-center space-x-8 whitespace-nowrap" id="main-nav-menu">
-        <a class="nav-link text-slate-600 hover:text-red-500 transition-colors" href="/">Trang chủ</a>
-        <a class="nav-link text-slate-600 hover:text-red-500 transition-colors" href="/phim">Phim</a>
-        <a class="nav-link text-slate-600 hover:text-red-500 transition-colors" href="/he-thong-rap">Rạp</a>
-        <a class="nav-link text-slate-600 hover:text-red-500 transition-colors" href="/khuyen-mai">Ưu đãi</a>
-        <a class="nav-link text-slate-600 hover:text-red-500 transition-colors" href="/tai-khoan/ve-cua-toi">Vé của tôi</a>
+<body class="bg-[#FAF8F5] text-[#121316] font-['Plus_Jakarta_Sans'] antialiased min-h-screen flex flex-col selection:bg-[#BA2D27] selection:text-white">
+
+  <!-- =========================================================================
+       1. BROADSHEET TICKER STRIP (CHRONICLE DISPATCH)
+       ========================================================================= -->
+  <aside class="w-full bg-[#F3EFE6] border-b border-[#E5E0D5] text-[11px] font-['JetBrains_Mono'] py-2 px-6 sm:px-10 lg:px-14 text-[#7A7E8B]">
+    <div class="max-w-[1520px] mx-auto flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3 tracking-wider">
+        <span class="inline-block w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
+        <span class="text-[#121316] font-semibold">ĐIỆN ẢNH QUY NHƠN</span>
+        <span class="hidden md:inline text-[#CDC6B8]">/</span>
+        <span class="hidden md:inline">CGV KIM CÚC • STARLIGHT NGUYỄN KIM • DCINE QUY NHƠN</span>
       </div>
+      <div class="flex items-center gap-5 text-[#474A54]">
+        <span class="hidden sm:inline">HÔM NAY: 08:30 — 23:30</span>
+        <a href="/bap-nuoc" class="text-[#A6853B] hover:underline font-bold transition-colors">
+          Quầy Bắp Nước Online →
+        </a>
+        <a href="/khuyen-mai" class="text-[#BA2D27] hover:underline font-bold transition-colors">
+          Flash Sale Hôm Nay →
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- =========================================================================
+       2. EDITORIAL MASTHEAD NAVIGATION (EXPANSIVE WIDE HEADER)
+       ========================================================================= -->
+  <header class="sticky top-0 w-full z-40 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-[#E5E0D5] transition-all duration-200">
+    <div class="max-w-[1520px] mx-auto px-6 sm:px-10 lg:px-14 h-20 flex items-center justify-between gap-6">
       
-      <div class="flex items-center space-x-6">
-        <div class="relative hidden lg:flex items-center bg-slate-100 px-4 py-2 rounded-full border border-slate-200 focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-500 transition-all z-[100]">
-            <span class="material-symbols-outlined text-slate-400 text-lg mr-2">search</span>
-            <input id="searchInput" class="bg-transparent border-none focus:ring-0 text-sm w-56 text-slate-800 placeholder-slate-400 outline-none lowercase" placeholder="Tìm tên phim..." type="text" autocomplete="off" />
-            
-            <div id="searchResults" class="absolute top-[120%] right-0 w-[320px] bg-white rounded-xl shadow-2xl border border-slate-100 hidden flex-col max-h-[400px] overflow-y-auto overflow-x-hidden">
-            </div>
-        </div>
+      <!-- LOGO / MASTHEAD -->
+      <a href="/" class="flex flex-col group shrink-0" aria-label="CineGo Trang Chủ">
+        <span class="font-['Georgia'] font-bold text-2xl sm:text-3xl tracking-[0.16em] text-[#121316] group-hover:text-[#BA2D27] transition-colors leading-none">
+          CINEGO
+        </span>
+        <span class="font-['JetBrains_Mono'] text-[9px] tracking-[0.3em] text-[#7A7E8B] uppercase mt-1">
+          Cinema & Archive
+        </span>
+      </a>
+
+      <!-- CURATED NUMERICAL INDEX MENU -->
+      <nav class="hidden lg:flex items-center gap-7 text-[12px] font-bold tracking-wider uppercase text-[#474A54]" aria-label="Điều hướng chính">
+        <a href="/" class="hover:text-[#BA2D27] transition-colors flex items-center gap-1.5 py-2">
+          <span class="font-['JetBrains_Mono'] text-[10px] text-[#BA2D27]">01.</span> Trang Chủ
+        </a>
+        <a href="/phim" class="hover:text-[#BA2D27] transition-colors flex items-center gap-1.5 py-2">
+          <span class="font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B]">02.</span> Lịch Chiếu
+        </a>
+        <a href="/he-thong-rap" class="hover:text-[#BA2D27] transition-colors flex items-center gap-1.5 py-2">
+          <span class="font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B]">03.</span> 3 Cụm Rạp
+        </a>
+        <a href="/bap-nuoc" class="hover:text-[#BA2D27] transition-colors flex items-center gap-1.5 py-2">
+          <span class="font-['JetBrains_Mono'] text-[10px] text-[#A6853B]">04.</span> Bắp Nước & Combo
+        </a>
+        <a href="/khuyen-mai" class="hover:text-[#BA2D27] transition-colors flex items-center gap-1.5 py-2">
+          <span class="font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B]">05.</span> Ưu Đãi & Hội Viên
+        </a>
+      </nav>
+
+      <!-- RIGHT UTILITY CONTROLS -->
+      <div class="flex items-center gap-4 sm:gap-6">
         
-        <% if (user) { %>
-            <div class="flex items-center space-x-6 relative group cursor-pointer">
-                <a href="/tai-khoan" class="flex items-center space-x-2 text-red-600 font-bold whitespace-nowrap hover:text-red-800 transition-colors">
-                    <span class="material-symbols-outlined">account_circle</span>
-                    <span class="truncate max-w-[200px]">Chào, <%= user.hoTen %></span>
-                </a>
-                <a href="/dang-xuat" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md shrink-0">
-                    Đăng xuất
-                </a>
+        <!-- Search Trigger Button -->
+        <button type="button" 
+                onclick="toggleSearchModal(true)" 
+                class="flex items-center gap-2 text-[12px] font-['JetBrains_Mono'] text-[#474A54] hover:text-[#121316] py-2 px-3 border border-[#E5E0D5] hover:border-[#121316] transition-colors rounded-none"
+                aria-label="Tìm kiếm phim">
+          <span class="material-symbols-outlined text-base">search</span>
+          <span class="hidden md:inline uppercase text-[10px] tracking-wider">Tìm kiếm</span>
+        </button>
+
+        <!-- Quick Cinema Selector Pill -->
+        <div class="hidden xl:flex items-center">
+          <div class="relative inline-block text-left">
+            <button type="button" 
+                    onclick="document.getElementById('quick-cinema-menu').classList.toggle('hidden')"
+                    class="flex items-center gap-2 text-[11px] font-['JetBrains_Mono'] text-[#121316] bg-[#F3EFE6] px-3.5 py-2 border border-[#E5E0D5] hover:border-[#CDC6B8] transition-colors uppercase tracking-wider">
+              <span class="w-1.5 h-1.5 rounded-full bg-[#BA2D27]"></span>
+              <span id="header-cinema-label">CGV Kim Cúc</span>
+              <span class="material-symbols-outlined text-[14px]">expand_more</span>
+            </button>
+            <div id="quick-cinema-menu" class="hidden absolute right-0 mt-1 w-64 bg-white border border-[#E5E0D5] shadow-xl py-1 z-50 text-xs font-['Plus_Jakarta_Sans']">
+              <div class="px-3 py-1.5 text-[10px] font-['JetBrains_Mono'] uppercase tracking-widest text-[#7A7E8B] border-b border-[#E5E0D5]">
+                Chọn cụm rạp Quy Nhơn
+              </div>
+              <a href="/he-thong-rap#cgv" onclick="selectQuickCinema('CGV Kim Cúc')" class="block px-3 py-2 text-[#121316] hover:bg-[#FAF8F5] hover:text-[#BA2D27] font-medium">
+                CGV Kim Cúc Plaza
+              </a>
+              <a href="/he-thong-rap#starlight" onclick="selectQuickCinema('Starlight Quy Nhơn')" class="block px-3 py-2 text-[#121316] hover:bg-[#FAF8F5] hover:text-[#BA2D27] font-medium">
+                Starlight Nguyễn Kim
+              </a>
+              <a href="/he-thong-rap#dcine" onclick="selectQuickCinema('DCine Quy Nhơn')" class="block px-3 py-2 text-[#121316] hover:bg-[#FAF8F5] hover:text-[#BA2D27] font-medium">
+                DCine Quy Nhơn
+              </a>
             </div>
+          </div>
+        </div>
+
+        <!-- User Authentication State -->
+        <% if (typeof user !== 'undefined' && user) { %>
+          <!-- Logged In Menu -->
+          <div class="relative">
+            <button type="button" 
+                    onclick="document.getElementById('user-profile-menu').classList.toggle('hidden')" 
+                    class="flex items-center gap-2.5 py-1.5 px-3 border border-[#E5E0D5] hover:border-[#121316] bg-white transition-all">
+              <span class="w-7 h-7 bg-[#121316] text-[#FAF8F5] flex items-center justify-center font-['Georgia'] font-bold text-xs">
+                <%= (user.hoTen && user.hoTen.length > 0) ? user.hoTen.charAt(0).toUpperCase() : 'U' %>
+              </span>
+              <span class="hidden sm:inline font-bold text-xs text-[#121316] max-w-[120px] truncate">
+                <%= user.hoTen || 'Thành viên' %>
+              </span>
+              <span class="material-symbols-outlined text-[14px] text-[#7A7E8B]">expand_more</span>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div id="user-profile-menu" class="hidden absolute right-0 mt-2 w-56 bg-white border border-[#E5E0D5] shadow-xl py-2 z-50 text-xs font-['Plus_Jakarta_Sans']">
+              <div class="px-4 py-2 border-b border-[#E5E0D5]">
+                <div class="font-bold text-[#121316] truncate"><%= user.hoTen %></div>
+                <div class="text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B] truncate"><%= user.email %></div>
+                <div class="mt-1 inline-block px-1.5 py-0.5 text-[9px] font-['JetBrains_Mono'] uppercase tracking-widest bg-[#F3EFE6] text-[#BA2D27] font-bold">
+                  <%= user.vaiTro === 'admin' ? 'Quản trị viên' : 'Hội viên CineGo' %>
+                </div>
+              </div>
+
+              <% if (user.vaiTro === 'admin') { %>
+                <a href="/admin" class="flex items-center gap-2 px-4 py-2.5 text-[#BA2D27] hover:bg-[#FAF8F5] font-bold">
+                  <span class="material-symbols-outlined text-sm">dashboard</span>
+                  Bảng Quản Trị Hệ Thống
+                </a>
+              <% } %>
+
+              <a href="/tai-khoan/thong-tin" class="flex items-center gap-2 px-4 py-2 text-[#474A54] hover:bg-[#FAF8F5] hover:text-[#121316]">
+                <span class="material-symbols-outlined text-sm">person</span>
+                Hồ Sơ & Thể Loại Yêu Thích
+              </a>
+              <a href="/tai-khoan/ve-cua-toi" class="flex items-center gap-2 px-4 py-2 text-[#474A54] hover:bg-[#FAF8F5] hover:text-[#121316]">
+                <span class="material-symbols-outlined text-sm">confirmation_number</span>
+                Vé Của Tôi (E-Ticket)
+              </a>
+              <a href="/khuyen-mai" class="flex items-center gap-2 px-4 py-2 text-[#474A54] hover:bg-[#FAF8F5] hover:text-[#121316]">
+                <span class="material-symbols-outlined text-sm">loyalty</span>
+                Ví Voucher & Điểm Thưởng
+              </a>
+              <div class="border-t border-[#E5E0D5] my-1"></div>
+              <a href="/dang-xuat" class="flex items-center gap-2 px-4 py-2 text-[#BA2D27] hover:bg-[#FAF8F5] font-bold">
+                <span class="material-symbols-outlined text-sm">logout</span>
+                Đăng Xuất
+              </a>
+            </div>
+          </div>
         <% } else { %>
-            <a href="/dang-nhap" class="flex items-center space-x-2 text-slate-600 hover:text-red-600 transition-all duration-300 font-bold shrink-0 whitespace-nowrap">
-                <span class="material-symbols-outlined">login</span>
-                <span class="hidden sm:inline">Đăng nhập</span>
+          <!-- Guest Links -->
+          <div class="flex items-center gap-3">
+            <a href="/dang-nhap" class="text-xs font-bold uppercase tracking-wider text-[#121316] hover:text-[#BA2D27] transition-colors py-2 px-2">
+              Đăng Nhập
             </a>
+            <a href="/dang-ky" class="btn-editorial-primary text-xs !py-2 !px-3.5">
+              Đăng Ký
+            </a>
+          </div>
+        <% } %>
+
+        <!-- Mobile Drawer Menu Trigger -->
+        <button type="button" 
+                onclick="toggleMobileMenu(true)" 
+                class="lg:hidden p-2 text-[#121316] hover:text-[#BA2D27] border border-[#E5E0D5]" 
+                aria-label="Mở danh mục">
+          <span class="material-symbols-outlined text-2xl">menu</span>
+        </button>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       3. SEARCH OVERLAY MODAL (EDITORIAL DOSSIER SEARCH)
+       ========================================================================= -->
+  <div id="search-modal" class="hidden fixed inset-0 z-50 bg-[#121316]/80 backdrop-blur-sm flex items-start justify-center pt-16 px-4">
+    <div class="bg-[#FAF8F5] border border-[#E5E0D5] w-full max-w-2xl p-6 sm:p-8 shadow-2xl relative">
+      <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-4">
+        <span class="font-['Georgia'] text-xs uppercase tracking-[0.25em] text-[#7A7E8B]">Tra cứu tác phẩm điện ảnh</span>
+        <button type="button" onclick="toggleSearchModal(false)" class="text-[#7A7E8B] hover:text-[#121316]">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <form action="/tim-kiem" method="GET" class="mt-6">
+        <div class="relative flex items-center">
+          <span class="material-symbols-outlined absolute left-0 text-xl text-[#7A7E8B]">search</span>
+          <input type="text" 
+                 id="searchInput"
+                 name="keyword" 
+                 placeholder="Nhập tên phim, đạo diễn hoặc thể loại..." 
+                 autocomplete="off"
+                 class="w-full pl-8 pr-4 py-3 bg-transparent border-b-2 border-[#121316] text-lg sm:text-xl font-['Plus_Jakarta_Sans'] font-medium text-[#121316] placeholder:text-[#A6AAB6] focus:outline-none focus:border-[#BA2D27]" />
+        </div>
+      </form>
+
+      <!-- Instant Live Results Container -->
+      <div id="searchResults" class="hidden mt-4 max-h-80 overflow-y-auto divide-y divide-[#E5E0D5]"></div>
+
+      <div class="mt-6 flex flex-wrap gap-2 text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B]">
+        <span class="text-[#121316] font-bold">Gợi ý từ khóa:</span>
+        <a href="/tim-kiem?keyword=Dune" class="hover:text-[#BA2D27] underline">Dune 2</a>
+        <span>•</span>
+        <a href="/tim-kiem?keyword=Mai" class="hover:text-[#BA2D27] underline">Phim Mai</a>
+        <span>•</span>
+        <a href="/tim-kiem?keyword=Godzilla" class="hover:text-[#BA2D27] underline">Godzilla x Kong</a>
+        <span>•</span>
+        <a href="/phim?status=DangChieu" class="hover:text-[#BA2D27] underline">Phim Đang Chiếu</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       4. MOBILE SLIDING DRAWER
+       ========================================================================= -->
+  <div id="mobile-drawer" class="hidden fixed inset-0 z-50 bg-[#121316]/70 backdrop-blur-sm">
+    <div class="fixed top-0 right-0 w-full max-w-sm h-full bg-[#FAF8F5] border-l border-[#E5E0D5] p-6 flex flex-col justify-between overflow-y-auto">
+      <div>
+        <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-4">
+          <span class="font-['Georgia'] font-bold text-xl tracking-[0.16em] text-[#121316]">CINEGO</span>
+          <button type="button" onclick="toggleMobileMenu(false)" class="text-[#7A7E8B] hover:text-[#121316]">
+            <span class="material-symbols-outlined text-2xl">close</span>
+          </button>
+        </div>
+
+        <nav class="mt-8 flex flex-col gap-5 font-['Plus_Jakarta_Sans'] text-sm uppercase font-bold text-[#121316]">
+          <a href="/" class="flex items-center justify-between hover:text-[#BA2D27] pb-3 border-b border-[#E5E0D5]">
+            <span>01. Trang Chủ</span>
+            <span class="font-['JetBrains_Mono'] text-xs text-[#7A7E8B]">Home</span>
+          </a>
+          <a href="/phim" class="flex items-center justify-between hover:text-[#BA2D27] pb-3 border-b border-[#E5E0D5]">
+            <span>02. Lịch Chiếu Phim</span>
+            <span class="font-['JetBrains_Mono'] text-xs text-[#7A7E8B]">Movies</span>
+          </a>
+          <a href="/he-thong-rap" class="flex items-center justify-between hover:text-[#BA2D27] pb-3 border-b border-[#E5E0D5]">
+            <span>03. Hệ Thống 3 Cụm Rạp</span>
+            <span class="font-['JetBrains_Mono'] text-xs text-[#7A7E8B]">Quy Nhơn</span>
+          </a>
+          <a href="/bap-nuoc" class="flex items-center justify-between hover:text-[#BA2D27] pb-3 border-b border-[#E5E0D5]">
+            <span>04. Bắp Nước & Combo</span>
+            <span class="font-['JetBrains_Mono'] text-xs text-[#A6853B]">Concessions</span>
+          </a>
+          <a href="/khuyen-mai" class="flex items-center justify-between hover:text-[#BA2D27] pb-3 border-b border-[#E5E0D5]">
+            <span>05. Ưu Đãi & Hội Viên</span>
+            <span class="font-['JetBrains_Mono'] text-xs text-[#BA2D27]">Vouchers</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="mt-8 pt-6 border-t border-[#E5E0D5] space-y-4">
+        <% if (typeof user !== 'undefined' && user) { %>
+          <div class="text-xs">
+            <span class="text-[#7A7E8B] block">Đang đăng nhập:</span>
+            <span class="font-bold text-[#121316] text-sm"><%= user.hoTen %></span>
+          </div>
+          <a href="/tai-khoan/ve-cua-toi" class="btn-editorial-secondary w-full text-center">Vé Của Tôi</a>
+          <a href="/dang-xuat" class="btn-editorial-primary w-full text-center !bg-[#BA2D27]">Đăng Xuất</a>
+        <% } else { %>
+          <a href="/dang-nhap" class="btn-editorial-secondary w-full text-center">Đăng Nhập</a>
+          <a href="/dang-ky" class="btn-editorial-primary w-full text-center">Đăng Ký Tài Khoản</a>
         <% } %>
       </div>
     </div>
-  </nav>
+  </div>
 
+  <!-- Global scripts for Header UI -->
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const currentPath = window.location.pathname;
-        const links = document.querySelectorAll("#main-nav-menu .nav-link");
-        
-        links.forEach(link => {
-            const linkPath = link.getAttribute("href");
-            // Sửa lỗi: Luôn giữ 'border-b-2' và 'pb-1' dù là ẩn hay hiện để chiều cao link không đổi 
-            link.className = "nav-link text-slate-600 hover:text-red-500 transition-colors border-b-2 border-transparent pb-1";
-            
-            if (linkPath === currentPath || (linkPath !== "/" && linkPath !== "#" && currentPath.startsWith(linkPath))) {
-                link.className = "nav-link text-red-600 font-bold border-b-2 border-red-600 pb-1";
+    function toggleSearchModal(show) {
+      const modal = document.getElementById('search-modal');
+      if (modal) {
+        modal.classList.toggle('hidden', !show);
+        if (show) {
+          setTimeout(() => document.getElementById('searchInput')?.focus(), 100);
+        }
+      }
+    }
+
+    function toggleMobileMenu(show) {
+      const drawer = document.getElementById('mobile-drawer');
+      if (drawer) drawer.classList.toggle('hidden', !show);
+    }
+
+    function selectQuickCinema(cinemaName) {
+      const label = document.getElementById('header-cinema-label');
+      if (label) label.innerText = cinemaName;
+      document.getElementById('quick-cinema-menu')?.classList.add('hidden');
+    }
+
+    // Debounced Live Search Autocomplete
+    let searchDebounce = null;
+    document.getElementById('searchInput')?.addEventListener('input', function(e) {
+      clearTimeout(searchDebounce);
+      const val = e.target.value.trim();
+      const resultsBox = document.getElementById('searchResults');
+      if (!val || val.length < 2) {
+        if (resultsBox) resultsBox.classList.add('hidden');
+        return;
+      }
+
+      searchDebounce = setTimeout(async () => {
+        try {
+          const res = await fetch('/api/tim-kiem?tuKhoa=' + encodeURIComponent(val));
+          const list = await res.json();
+          if (resultsBox) {
+            resultsBox.innerHTML = '';
+            if (list.length === 0) {
+              resultsBox.innerHTML = '<div class="py-4 text-xs font-[\'JetBrains_Mono\'] text-[#7A7E8B]">Không tìm thấy tác phẩm phù hợp.</div>';
+            } else {
+              list.forEach(item => {
+                const row = document.createElement('a');
+                row.href = '/chi-tiet-phim/' + item._id;
+                row.className = 'flex items-center gap-3 py-3 hover:bg-[#F3EFE6] transition-colors';
+                row.innerHTML = `
+                  <img src="${item.posterUrl || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=100&q=80'}" class="w-10 h-14 object-cover border border-[#E5E0D5]" alt="${item.title}" />
+                  <div>
+                    <div class="font-bold text-sm text-[#121316] font-['Georgia']">${item.title}</div>
+                    <div class="text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B] mt-0.5">${item.ageRating || 'P'} • Đang Chiếu</div>
+                  </div>
+                `;
+                resultsBox.appendChild(row);
+              });
             }
-        });
+            resultsBox.classList.remove('hidden');
+          }
+        } catch(err) {
+          console.error(err);
+        }
+      }, 300);
+    });
 
-        // TÍNH NĂNG TÌM KIẾM TRỰC TIẾP
-        const searchInput = document.getElementById('searchInput');
-        const searchResults = document.getElementById('searchResults');
-        let timeout = null;
-
-        searchInput.addEventListener('input', function() {
-            clearTimeout(timeout); 
-            const tuKhoa = this.value.trim();
-
-            if (tuKhoa.length === 0) {
-                searchResults.classList.add('hidden'); 
-                searchResults.classList.remove('flex');
-                return;
-            }
-
-            timeout = setTimeout(() => {
-                fetch(`/api/tim-kiem?tuKhoa=${encodeURIComponent(tuKhoa)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        searchResults.innerHTML = ''; 
-                        if (data.length > 0) {
-                            data.forEach(phim => {
-                                const item = document.createElement('a');
-                                item.href = `/chi-tiet-phim/${phim._id}`; 
-                                item.className = 'flex items-center gap-4 p-3 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 cursor-pointer';
-                                item.innerHTML = `
-                                    <img src="${phim.posterUrl}" class="w-12 h-16 object-cover rounded-md shadow-sm border border-slate-200 shrink-0">
-                                    <div class="flex-1 min-w-0">
-                                        <h4 class="text-sm font-bold text-slate-800 line-clamp-1 lowercase capitalize">${phim.title}</h4>
-                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest border border-slate-200 px-1.5 py-0.5 rounded mt-1.5 inline-block bg-slate-50">${phim.ageRating || 'P'}</span>
-                                    </div>
-                                `;
-                                searchResults.appendChild(item);
-                            });
-                        } else {
-                            searchResults.innerHTML = `
-                                <div class="p-6 text-center text-sm text-slate-500 flex flex-col items-center">
-                                    <span class="material-symbols-outlined text-3xl text-slate-300 mb-2">search_off</span>
-                                    Không tìm thấy phim nào khớp với "${tuKhoa}"
-                                </div>
-                            `;
-                        }
-                        searchResults.classList.remove('hidden');
-                        searchResults.classList.add('flex');
-                    })
-                    .catch(err => console.error(err));
-            }, 300);
-        });
-
-        document.addEventListener('click', function(e) {
-            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-                searchResults.classList.add('hidden');
-                searchResults.classList.remove('flex');
-            }
-        });
+    // Close dropdowns on outside click
+    document.addEventListener('click', function(e) {
+      const qMenu = document.getElementById('quick-cinema-menu');
+      const uMenu = document.getElementById('user-profile-menu');
+      if (qMenu && !e.target.closest('#quick-cinema-menu') && !e.target.closest('button[onclick*="quick-cinema-menu"]')) {
+        qMenu.classList.add('hidden');
+      }
+      if (uMenu && !e.target.closest('#user-profile-menu') && !e.target.closest('button[onclick*="user-profile-menu"]')) {
+        uMenu.classList.add('hidden');
+      }
     });
   </script>

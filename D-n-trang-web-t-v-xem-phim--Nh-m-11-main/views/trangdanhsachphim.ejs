@@ -1,74 +1,218 @@
 <%- include('partials/header') %>
 
-  <main class="max-w-7xl mx-auto px-8 py-12 min-h-screen">
-    <div class="mb-12">
-      <h1 class="text-5xl font-extrabold text-on-surface-variant tracking-tight mb-4">Danh Sách Phim</h1>
-      <p class="text-on-surface-variant opacity-70 max-w-2xl text-lg">Khám phá những siêu phẩm điện ảnh mới nhất tại
-        CineGo. Trải nghiệm hình ảnh sống động và âm thanh đỉnh cao.</p>
-    </div>
-
-    <div class="flex items-center space-x-4 mb-10 border-b border-surface-variant/30 pb-4">
-      <a href="/phim?status=DangChieu" 
-         class="px-8 py-3 rounded-full font-bold transition-transform active:scale-95 inline-block <%= currentStatus === 'DangChieu' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-surface-container-lowest text-on-surface-variant border border-outline-variant/20 hover:bg-surface-container-low' %>">
-        Đang chiếu
-      </a>
-      <a href="/phim?status=SapChieu" 
-         class="px-8 py-3 rounded-full font-bold transition-transform active:scale-95 inline-block <%= currentStatus === 'SapChieu' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-surface-container-lowest text-on-surface-variant border border-outline-variant/20 hover:bg-surface-container-low' %>">
-        Sắp chiếu
-      </a>
-    </div>
-
-    <div class="w-full">
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          
-          <% if (movies && movies.length > 0) { %>
-              <% movies.forEach(function(phim) { %>
-                  <div class="bg-surface-container-lowest rounded-2xl overflow-hidden movie-card-hover transition-all duration-300 flex flex-col group border border-outline-variant/10 shadow-sm relative">
-                      
-                      <a href="/phim/<%= phim._id %>" class="absolute inset-0 z-10 hidden group-hover:block bg-black/10 transition-colors"></a>
-
-                      <div class="relative aspect-[2/3] overflow-hidden">
-                          <img alt="<%= phim.title %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="<%= phim.posterUrl %>" onerror="this.src='https://via.placeholder.com/400x600?text=CineGo'"/>
-                          <div class="absolute top-4 left-4 bg-primary text-white text-[10px] font-black px-2 py-1 rounded shadow-sm z-20">
-                              <%= phim.ageRating || 'P' %>
-                          </div>
-                      </div>
-                      <div class="p-5 flex flex-col flex-1 relative z-20">
-                          <a href="/phim/<%= phim._id %>" class="text-lg font-bold text-on-surface line-clamp-2 mb-2 hover:text-primary transition-colors" title="<%= phim.title %>">
-                              <%= phim.title %>
-                          </a>
-                          <div class="flex items-center text-on-surface-variant text-xs font-medium space-x-3 mb-6">
-                              <span class="flex items-center"><span class="material-symbols-outlined text-sm mr-1">schedule</span> <%= phim.duration %> phút</span>
-                              <span class="flex items-center"><span class="material-symbols-outlined text-sm mr-1">movie</span> <span class="truncate max-w-[100px]"><%= phim.genre %></span></span>
-                          </div>
-                          <div class="mt-auto flex gap-2">
-                              <% if (currentStatus === 'DangChieu') { %>
-                                  <a href="/dat-ve/<%= phim._id %>" class="flex-1 py-3 text-center bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary-container transition-colors shadow-sm block">ĐẶT VÉ</a>
-                              <% } %>
-                              <a href="/phim/<%= phim._id %>" class="flex-1 py-3 text-center bg-surface-container-low text-on-surface-variant text-xs font-bold rounded-lg hover:bg-surface-container-high transition-colors block">CHI TIẾT</a>
-                          </div>
-                      </div>
-                  </div>
-              <% }); %>
+<main class="min-h-screen max-w-7xl mx-auto px-4 sm:px-8 py-12">
+  
+  <!-- =========================================================================
+       1. EDITORIAL DIRECTORY MASTHEAD
+       ========================================================================= -->
+  <section class="border-b border-[#E5E0D5] pb-8 mb-10">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div class="space-y-2">
+        <span class="archival-index">MỤC LỤC ĐIỆN ẢNH / QUY NHƠN 2026</span>
+        <h1 class="editorial-headline-lg">
+          <% if (typeof currentStatus !== 'undefined' && currentStatus === 'TimKiem') { %>
+            Kết Quả Tìm Kiếm: <em class="italic text-[#BA2D27]">"<%= typeof tuKhoa !== 'undefined' ? tuKhoa : '' %>"</em>
+          <% } else if (typeof currentStatus !== 'undefined' && currentStatus === 'DangChieu') { %>
+            Tác Phẩm Đang Khởi Chiếu
+          <% } else if (typeof currentStatus !== 'undefined' && currentStatus === 'SapChieu') { %>
+            Tác Phẩm Sắp Khởi Chiếu
           <% } else { %>
-              <div class="col-span-full py-16 text-center text-on-surface-variant font-medium bg-surface-container-lowest rounded-2xl border border-outline-variant/10">
-                  <span class="material-symbols-outlined text-5xl mb-3 opacity-30">movie_off</span>
-                  <p>Chưa có phim nào trong danh mục này.</p>
-              </div>
+            Toàn Bộ Danh Mục Phim Chiếu Rạp
           <% } %>
-
+        </h1>
+        <p class="text-xs text-[#7A7E8B] max-w-xl">
+          Giám tuyển các tác phẩm điện ảnh xuất sắc đang và sắp được trình chiếu tại 3 cụm rạp: CGV Kim Cúc Plaza, Starlight Nguyễn Kim và Dcine Phú Tài Center.
+        </p>
       </div>
 
-      <div class="mt-16 flex justify-center items-center space-x-2">
-        <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant/30 hover:bg-surface-container-lowest transition-all text-on-surface-variant">
-          <span class="material-symbols-outlined">chevron_left</span>
-        </button>
-        <button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-white font-bold shadow-md">1</button>
-        <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant/30 hover:bg-surface-container-lowest transition-all text-on-surface-variant">
-          <span class="material-symbols-outlined">chevron_right</span>
-        </button>
+      <!-- Quick Count & Status -->
+      <div class="text-right font-['JetBrains_Mono'] text-xs text-[#7A7E8B]">
+        <span>TỔNG SỐ TÁC PHẨM:</span>
+        <span class="text-[#121316] font-bold text-lg block">
+          <%= (typeof movies !== 'undefined' && movies) ? movies.length : 0 %> PHIM
+        </span>
       </div>
     </div>
-  </main>
+  </section>
+
+  <!-- =========================================================================
+       2. EDITORIAL MULTI-FILTER TOOLBAR (SWISS DISCIPLINED)
+       ========================================================================= -->
+  <section class="bg-[#F3EFE6] border border-[#E5E0D5] p-4 sm:p-6 mb-12">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+      
+      <!-- Primary Status Filter Tabs -->
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="font-['Georgia'] text-xs font-bold uppercase tracking-wider text-[#121316] mr-2">
+          Trạng thái:
+        </span>
+        <a href="/phim?status=TatCa" 
+           class="px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors <%= (typeof currentStatus === 'undefined' || currentStatus === 'TatCa') ? 'bg-[#121316] text-white' : 'bg-white border border-[#E5E0D5] text-[#474A54] hover:text-[#121316]' %>">
+          Tất Cả
+        </a>
+        <a href="/phim?status=DangChieu" 
+           class="px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors <%= (typeof currentStatus !== 'undefined' && currentStatus === 'DangChieu') ? 'bg-[#121316] text-white' : 'bg-white border border-[#E5E0D5] text-[#474A54] hover:text-[#121316]' %>">
+          Đang Chiếu
+        </a>
+        <a href="/phim?status=SapChieu" 
+           class="px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors <%= (typeof currentStatus !== 'undefined' && currentStatus === 'SapChieu') ? 'bg-[#121316] text-white' : 'bg-white border border-[#E5E0D5] text-[#474A54] hover:text-[#121316]' %>">
+          Sắp Chiếu
+        </a>
+      </div>
+
+      <!-- Quick Genre & Age Filters -->
+      <div class="flex flex-wrap items-center gap-3 text-xs font-['JetBrains_Mono']">
+        
+        <!-- Genre Filter Dropdown -->
+        <div class="flex items-center gap-1.5">
+          <span class="text-[#7A7E8B]">Thể loại:</span>
+          <select id="genre-filter" onchange="applyClientFilters()" class="bg-white border border-[#E5E0D5] text-xs py-1.5 px-3 text-[#121316] font-medium focus:outline-none focus:border-[#121316]">
+            <option value="all">Tất cả thể loại</option>
+            <option value="Hành Động">Hành Động</option>
+            <option value="Khoa Học Viễn Tưởng">Khoa Học Viễn Tưởng</option>
+            <option value="Hoạt Hình">Hoạt Hình</option>
+            <option value="Tâm Lý">Tâm Lý</option>
+            <option value="Kinh Dị">Kinh Dị</option>
+          </select>
+        </div>
+
+        <!-- Age Rating Filter Dropdown -->
+        <div class="flex items-center gap-1.5">
+          <span class="text-[#7A7E8B]">Độ tuổi:</span>
+          <select id="age-filter" onchange="applyClientFilters()" class="bg-white border border-[#E5E0D5] text-xs py-1.5 px-3 text-[#121316] font-medium focus:outline-none focus:border-[#121316]">
+            <option value="all">Mọi độ tuổi</option>
+            <option value="P">P — Mọi khán giả</option>
+            <option value="K">K — Dưới 13 có người lớn</option>
+            <option value="T13">T13 — Từ 13 tuổi</option>
+            <option value="T16">T16 — Từ 16 tuổi</option>
+            <option value="T18">T18 — Từ 18 tuổi</option>
+          </select>
+        </div>
+
+        <!-- Cinema Filter Dropdown -->
+        <div class="flex items-center gap-1.5">
+          <span class="text-[#7A7E8B]">Cụm rạp:</span>
+          <select id="cinema-filter" onchange="applyClientFilters()" class="bg-white border border-[#E5E0D5] text-xs py-1.5 px-3 text-[#121316] font-medium focus:outline-none focus:border-[#121316]">
+            <option value="all">Tất cả 3 cụm rạp</option>
+            <option value="CGV">CGV Kim Cúc</option>
+            <option value="Starlight">Starlight Nguyễn Kim</option>
+            <option value="Dcine">Dcine Phú Tài</option>
+          </select>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       3. ASYMMETRIC MOVIE COLLECTION (EDITORIAL POSTER DOSSIERS)
+       ========================================================================= -->
+  <section id="movie-catalog-container">
+    <% if (typeof movies !== 'undefined' && movies.length > 0) { %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <% movies.forEach((movie, index) => { %>
+          <article class="movie-catalog-item bg-white border border-[#E5E0D5] p-4 flex flex-col justify-between group hover:border-[#121316] transition-all"
+                   data-genre="<%= movie.genre || '' %>"
+                   data-age="<%= movie.ageRating || 'P' %>"
+                   data-title="<%= movie.title || '' %>">
+            <div>
+              <!-- Poster Canvas -->
+              <div class="relative aspect-[3/4] bg-[#EFEBE3] overflow-hidden mb-4 border border-[#E5E0D5]">
+                <img src="<%= movie.posterUrl || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=600&q=80' %>" 
+                     alt="<%= movie.title %>" 
+                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                
+                <!-- Age Tag -->
+                <div class="absolute top-2.5 left-2.5 px-2 py-0.5 bg-[#121316] text-white font-['JetBrains_Mono'] text-[10px] font-bold">
+                  <%= movie.ageRating || 'P' %>
+                </div>
+
+                <!-- Status Badge -->
+                <% if (movie.status === 'DangChieu') { %>
+                  <div class="absolute top-2.5 right-2.5 px-2 py-0.5 bg-[#BA2D27] text-white font-['JetBrains_Mono'] text-[10px] font-bold uppercase tracking-wider">
+                    ĐANG CHIẾU
+                  </div>
+                <% } else { %>
+                  <div class="absolute top-2.5 right-2.5 px-2 py-0.5 bg-[#A6853B] text-white font-['JetBrains_Mono'] text-[10px] font-bold uppercase tracking-wider">
+                    SẮP CHIẾU
+                  </div>
+                <% } %>
+
+                <!-- Duration Pill -->
+                <div class="absolute bottom-2.5 right-2.5 px-2 py-0.5 bg-black/70 text-white font-['JetBrains_Mono'] text-[10px]">
+                  <%= movie.duration ? (movie.duration + ' PHÚT') : '120 PHÚT' %>
+                </div>
+              </div>
+
+              <!-- Metadata -->
+              <div class="space-y-1.5">
+                <div class="text-[10px] font-['JetBrains_Mono'] uppercase tracking-widest text-[#7A7E8B]">
+                  <%= movie.genre || 'Điện ảnh' %>
+                </div>
+                <h3 class="font-['Georgia'] text-2xl font-bold text-[#121316] leading-tight group-hover:text-[#BA2D27] transition-colors">
+                  <a href="/phim/<%= movie._id %>"><%= movie.title %></a>
+                </h3>
+                <div class="text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B]">
+                  Đạo diễn: <span class="text-[#121316]"><%= movie.director || 'Chưa cập nhật' %></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="pt-4 mt-4 border-t border-[#E5E0D5] flex items-center gap-2">
+              <a href="/dat-ve/<%= movie._id %>" class="btn-editorial-primary text-xs flex-1 !py-2 !px-3 text-center">
+                Đặt Vé
+              </a>
+              <a href="/phim/<%= movie._id %>" class="btn-editorial-secondary text-xs !py-2 !px-3 text-center" title="Chi tiết phim">
+                <span class="material-symbols-outlined text-base">info</span>
+              </a>
+            </div>
+
+          </article>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <!-- Empty State -->
+      <div class="text-center py-20 bg-white border border-[#E5E0D5] p-8 space-y-4">
+        <span class="material-symbols-outlined text-4xl text-[#7A7E8B]">movie_filter</span>
+        <h3 class="font-['Georgia'] text-xl font-bold text-[#121316]">
+          Không tìm thấy tác phẩm phù hợp
+        </h3>
+        <p class="text-xs text-[#7A7E8B] max-w-sm mx-auto">
+          Hiện tại chưa có phim phù hợp với tiêu chí lọc của bạn. Vui lòng chọn lại trạng thái hoặc tìm kiếm từ khóa khác.
+        </p>
+        <div class="pt-4">
+          <a href="/phim" class="btn-editorial-primary text-xs">
+            Xem Tất Cả Phim
+          </a>
+        </div>
+      </div>
+    <% } %>
+  </section>
+
+</main>
+
+<script>
+  function applyClientFilters() {
+    const genre = document.getElementById('genre-filter').value.toLowerCase();
+    const age = document.getElementById('age-filter').value;
+    const items = document.querySelectorAll('.movie-catalog-item');
+
+    items.forEach(item => {
+      const itemGenre = (item.dataset.genre || '').toLowerCase();
+      const itemAge = item.dataset.age || 'P';
+
+      let matchGenre = (genre === 'all') || itemGenre.includes(genre);
+      let matchAge = (age === 'all') || (itemAge === age);
+
+      if (matchGenre && matchAge) {
+        item.classList.remove('hidden');
+      } else {
+        item.classList.add('hidden');
+      }
+    });
+  }
+</script>
 
 <%- include('partials/footer') %>
