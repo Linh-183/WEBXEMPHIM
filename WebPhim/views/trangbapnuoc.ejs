@@ -612,7 +612,11 @@
     const phone = document.getElementById('custPhone').value.trim() || '0912345678';
     
     let total = 0;
-    concessionCart.forEach(i => total += (i.price * i.qty));
+    const comboSummaries = [];
+    concessionCart.forEach(i => {
+      total += (i.price * i.qty);
+      comboSummaries.push(`${i.name} (${i.flavor || 'Chuẩn vị'}) x${i.qty}`);
+    });
 
     const code = 'CG-CORN-' + Math.floor(1000 + Math.random() * 9000);
     document.getElementById('modalOrderCode').innerText = code;
@@ -620,6 +624,19 @@
     document.getElementById('modalCustName').innerText = name;
     document.getElementById('modalCustPhone').innerText = phone;
     document.getElementById('modalTotalPaid').innerText = total.toLocaleString('vi-VN') + ' đ';
+
+    // Đồng bộ đơn hàng bắp nước lên MongoDB Backend
+    fetch('/api/dat-bap-nuoc', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cinema: currentCinema,
+        custName: name,
+        custPhone: phone,
+        comboDetails: comboSummaries.join(', '),
+        totalAmount: total
+      })
+    }).catch(err => console.log('Concession notice:', err));
 
     document.getElementById('concessionModal').classList.remove('hidden');
   }

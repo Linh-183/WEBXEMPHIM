@@ -1,0 +1,60 @@
+<%- include('partials/header') %>
+
+<main class="min-h-screen py-20 flex items-center justify-center px-4 sm:px-6 bg-[#FAF8F5]">
+  <div class="w-full max-w-md p-8 sm:p-10 bg-white border border-[#E5E0D5] space-y-6 shadow-2xl">
+    
+    <div class="text-center space-y-2">
+      <span class="archival-index">BẢO MẬT & TÀI KHOẢN</span>
+      <h1 class="editorial-headline text-3xl font-bold">Thiết Lập Mật Khẩu Mới</h1>
+      <p class="text-xs text-[#7A7E8B] font-light">
+        Nhập mật khẩu bảo mật mới cho tài khoản của bạn. Mật khẩu cần có độ dài tối thiểu 6 ký tự.
+      </p>
+    </div>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="p-3.5 bg-[#FFF2F1] border-l-4 border-[#BA2D27] text-[#BA2D27] text-xs font-['Plus_Jakarta_Sans'] flex items-center gap-2 text-left">
+        <span class="material-symbols-outlined text-base">error</span>
+        <span><%= error %></span>
+      </div>
+    <% } %>
+
+    <form action="/dat-lai-mat-khau/<%= token %>" method="POST" class="space-y-4 text-xs font-['Plus_Jakarta_Sans']">
+      <div>
+        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-widest mb-1.5">
+          Mật khẩu mới <span class="text-[#BA2D27]">*</span>
+        </label>
+        <input type="password" 
+               name="newPassword" 
+               required 
+               minlength="6"
+               placeholder="Tối thiểu 6 ký tự..." 
+               class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-3 text-xs text-[#121316] font-medium focus:outline-none focus:border-[#121316]" />
+      </div>
+
+      <div>
+        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-widest mb-1.5">
+          Xác nhận mật khẩu mới <span class="text-[#BA2D27]">*</span>
+        </label>
+        <input type="password" 
+               name="confirmPassword" 
+               required 
+               minlength="6"
+               placeholder="Nhập lại mật khẩu mới..." 
+               class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-3 text-xs text-[#121316] font-medium focus:outline-none focus:border-[#121316]" />
+      </div>
+
+      <button type="submit" class="btn-editorial-primary w-full py-3.5 text-xs font-bold uppercase tracking-widest mt-2">
+        LƯU MẬT KHẨU MỚI & ĐĂNG NHẬP →
+      </button>
+    </form>
+
+    <div class="pt-6 border-t border-[#E5E0D5] text-center font-['JetBrains_Mono'] text-xs text-[#7A7E8B]">
+      <a href="/dang-nhap" class="text-[#121316] hover:text-[#BA2D27] underline font-bold">
+        ← Quay lại trang đăng nhập
+      </a>
+    </div>
+
+  </div>
+</main>
+
+<%- include('partials/footer') %>

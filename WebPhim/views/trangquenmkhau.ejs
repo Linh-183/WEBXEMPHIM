@@ -24,6 +24,21 @@
       </div>
     <% } %>
 
+    <% if (typeof resetLink !== 'undefined' && resetLink) { %>
+      <div class="p-4 bg-[#FAF8F5] border-2 border-[#121316] space-y-3 text-left">
+        <div class="flex items-center gap-2 font-['JetBrains_Mono'] text-[11px] font-bold text-[#BA2D27]">
+          <span class="w-2 h-2 rounded-full bg-[#BA2D27] animate-pulse"></span>
+          <span>LIÊN KẾT ĐẶT LẠI MẬT KHẨU (DEMO MODE)</span>
+        </div>
+        <p class="text-[11px] text-[#474A54]">
+          Mã xác thực token bảo mật 15 phút đã được khởi tạo thành công trong hệ thống.
+        </p>
+        <a href="<%= resetLink %>" class="btn-editorial-primary text-xs !py-2.5 !px-4 block text-center font-bold">
+          Bấm Vào Đây Để Đặt Lại Mật Khẩu Mới →
+        </a>
+      </div>
+    <% } %>
+
     <form action="/quen-mat-khau" method="POST" class="space-y-4 text-xs font-['Plus_Jakarta_Sans']">
       <div>
         <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-widest mb-1.5">

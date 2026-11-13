@@ -86,6 +86,7 @@ const pagesToTest = [
   { file: 'trangdangnhap.ejs', data: { user: null } },
   { file: 'trangdangky.ejs', data: { user: null } },
   { file: 'trangquenmkhau.ejs', data: { user: null } },
+  { file: 'trangdatlaimk.ejs', data: { user: null, token: 'demo-token-123456' } },
   { file: 'admin-dashboard.ejs', data: { user: mockUser, stats: { totalMovies: 4, totalTickets: 125, revenue: 12500000, newUsers: 48 }, topMovies: [{ title: 'Dune 2', posterUrl: mockMovie.posterUrl, totalSold: 85 }], recentTickets: [mockTicket], currentFilter: 'all' } },
   { file: 'admin-quanlyphim.ejs', data: { user: mockUser, movies: [mockMovie] } },
   { file: 'admin-themphim.ejs', data: { user: mockUser } },

@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const Movie = require('../models/Movie');
 const User = require('../models/User'); 
 const Ticket = require('../models/Ticket'); 
@@ -75,7 +76,8 @@ router.get('/tim-kiem', async (req, res) => {
     try {
         const keyword = (req.query.keyword || '').trim();
         const safeQuery = escapeRegex(keyword);
-        res.render('trangdanhsachphim', { movies: await Movie.find({ title: { $regex: safeQuery, $options: 'i' } }).sort({ createdAt: -1 }), currentStatus: 'TimKiem', tuKhoa: keyword });
+        const movies = await Movie.find({ title: { $regex: safeQuery, $options: 'i' } }).sort({ createdAt: -1 });
+        res.render('trangtimkiem', { movies, tuKhoa: keyword, user: req.session.user || null, title: `Tìm Kiếm: "${keyword}" — CineGo` });
     } catch (error) { res.status(500).send("Lỗi máy chủ khi tìm kiếm"); }
 });
 
@@ -295,10 +297,13 @@ router.post('/api/kiem-tra-voucher', checkLogin, async (req, res) => {
     } catch (error) { res.status(500).json({ success: false, message: "Lỗi hệ thống khi kiểm tra voucher" }); }
 });
 
-// [MỚI - GIAI ĐOẠN 4] Kiểm tra ghế đã bán và ghế đang giữ bằng MongoDB TTL
+// [MỚI - GIAI ĐOẠN 4] Kiểm tra ghế đã bán và ghế đang giữ bằng MongoDB TTL (Phòng thủ CastError)
 router.get('/api/ghe-da-dat', async (req, res) => {
     try {
         const { movieId, showDate, showTime, cinema, userId } = req.query; 
+        if (movieId && !isValidObjectId(movieId)) {
+            return res.json({ bookedSeats: [], tempLocked: [] });
+        }
         const tickets = await Ticket.find({ movie: movieId, cinema: cinema, showDate, showTime });
         let bookedSeats = [];
         tickets.forEach(t => bookedSeats.push(...t.seats));
@@ -310,6 +315,35 @@ router.get('/api/ghe-da-dat', async (req, res) => {
 
         res.json({ bookedSeats, tempLocked });
     } catch (error) { res.status(500).json({ error: "Lỗi tải sơ đồ ghế" }); }
+});
+
+// [MỚI] API ĐẶT BẮP NƯỚC RIÊNG LẺ (CONCESSIONS FAST-TRACK)
+router.post('/api/dat-bap-nuoc', async (req, res) => {
+    try {
+        const { cinema, custName, custPhone, comboDetails, totalAmount } = req.body;
+        const total = Number(totalAmount) || 0;
+        const currentCinema = cinema || 'CGV Kim Cúc Plaza';
+
+        if (req.session.user && req.session.user._id) {
+            await new Ticket({
+                user: req.session.user._id,
+                movie: null,
+                cinema: currentCinema,
+                showDate: new Date().toISOString().split('T')[0],
+                showTime: 'Fast-Track',
+                seats: ['Quầy F&B'],
+                comboDetails: comboDetails || 'Combo Bắp Nước Online',
+                comboTotal: total,
+                totalPrice: total,
+                paymentMethod: 'vietqr'
+            }).save();
+        }
+
+        res.json({ success: true, message: 'Đơn bắp nước đã được xác nhận thành công!' });
+    } catch (error) {
+        console.error("Lỗi đặt bắp nước:", error);
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 router.post('/api/khoa-ghe', async (req, res) => {
@@ -515,8 +549,14 @@ router.post('/quen-mat-khau', async (req, res) => {
 
         const user = await User.findOne({ email: email.toLowerCase().trim() });
         if (user) {
+            const token = crypto.randomBytes(24).toString('hex');
+            user.resetPasswordToken = token;
+            user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 phút hiệu lực
+            await user.save();
+
             res.render('trangquenmkhau', { 
-                success: `Hướng dẫn đặt lại mật khẩu đã được gửi đến hộp thư ${email}. Vui lòng kiểm tra email của bạn!`, 
+                success: `Mã bảo mật đặt lại mật khẩu đã được khởi tạo thành công (Hiệu lực 15 phút).`, 
+                resetLink: `/dat-lai-mat-khau/${token}`,
                 error: null, 
                 email 
             });
@@ -530,6 +570,81 @@ router.post('/quen-mat-khau', async (req, res) => {
     } catch (error) { 
         console.error("Lỗi quên mật khẩu:", error);
         res.render('trangquenmkhau', { error: 'Lỗi hệ thống: ' + error.message, success: null, email: req.body.email || '' }); 
+    }
+});
+
+// [MỚI] TRANG NHẬP MẬT KHẨU MỚI TỪ TOKEN BẢO MẬT
+router.get('/dat-lai-mat-khau/:token', async (req, res) => {
+    try {
+        const user = await User.findOne({
+            resetPasswordToken: req.params.token,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+        if (!user) {
+            return res.render('trangquenmkhau', {
+                error: 'Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn (quá 15 phút). Vui lòng gửi lại yêu cầu.',
+                success: null,
+                email: ''
+            });
+        }
+        res.render('trangdatlaimk', { token: req.params.token, error: null, title: 'Thiết Lập Mật Khẩu Mới — CineGo' });
+    } catch (error) {
+        console.error("Lỗi liên kết đặt lại mật khẩu:", error);
+        res.redirect('/quen-mat-khau');
+    }
+});
+
+// [MỚI] XÁC NHẬN LƯU MẬT KHẨU MỚI
+router.post('/dat-lai-mat-khau/:token', async (req, res) => {
+    try {
+        const { newPassword, confirmPassword } = req.body;
+        const user = await User.findOne({
+            resetPasswordToken: req.params.token,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.render('trangquenmkhau', {
+                error: 'Phiên đặt lại mật khẩu đã hết hạn. Vui lòng thực hiện lại yêu cầu.',
+                success: null,
+                email: ''
+            });
+        }
+
+        if (!newPassword || newPassword.length < 6) {
+            return res.render('trangdatlaimk', {
+                token: req.params.token,
+                error: 'Mật khẩu mới phải có tối thiểu 6 ký tự!',
+                title: 'Thiết Lập Mật Khẩu Mới — CineGo'
+            });
+        }
+
+        if (newPassword !== confirmPassword) {
+            return res.render('trangdatlaimk', {
+                token: req.params.token,
+                error: 'Mật khẩu mới và xác nhận mật khẩu không khớp!',
+                title: 'Thiết Lập Mật Khẩu Mới — CineGo'
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.matKhau = hashedPassword;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+
+        res.render('trangdangnhap', {
+            success: 'Đặt lại mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.',
+            error: null,
+            email: user.email
+        });
+    } catch (error) {
+        console.error("Lỗi lưu mật khẩu mới:", error);
+        res.render('trangdatlaimk', {
+            token: req.params.token,
+            error: 'Lỗi cập nhật mật khẩu: ' + error.message,
+            title: 'Thiết Lập Mật Khẩu Mới — CineGo'
+        });
     }
 });
 
