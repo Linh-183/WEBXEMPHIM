@@ -95,8 +95,32 @@ assert(adminMovieContent.includes('previewInlinePoster'), 'admin-quanlyphim has 
 assert(!adminMovieContent.includes('+ Thêm Phim Mới</span>'), 'admin-quanlyphim has NO duplicate plus sign in button');
 assert(!adminHeaderContent.includes('Thêm Phim Nhanh'), 'Admin sidebar has NO redundant Thêm Phim Nhanh link');
 
-// 5. CHECK VOUCHER WALLET & SAVING MECHANISM
-console.log('\n--- TEST GROUP 5: Voucher Wallet & Saving Mechanism ---');
+// 5. CHECK REMOVAL OF QUAN LY GIAO DICH & ZERO FAKE DATA
+console.log('\n--- TEST GROUP 5: Removal of Quan Ly Giao Dich & Real-Time Data ---');
+const adminBaoCaoContent = fs.readFileSync(path.join(__dirname, 'views/admin-baocaodoanhthu.ejs'), 'utf8');
+const adminSuatChieuContent = fs.readFileSync(path.join(__dirname, 'views/admin-quanlysuatchieu.ejs'), 'utf8');
+const cinemaModelContent = fs.readFileSync(path.join(__dirname, 'models/Cinema.js'), 'utf8');
+
+assert(!adminHeaderContent.includes('/admin/giao-dich'), 'Admin sidebar NO LONGER has Quản Lý Giao Dịch link');
+assert(!dashboardContent.includes('href="/admin/giao-dich"'), 'Admin dashboard NO LONGER links to /admin/giao-dich');
+assert(adminRouteContent.includes("res.redirect('/admin')"), '/admin/giao-dich route cleanly redirects to /admin');
+assert(!fs.existsSync(path.join(__dirname, 'views/admin-quanlygiaodich.ejs')), 'admin-quanlygiaodich.ejs file is completely removed');
+
+// Zero fake data in Báo Cáo
+assert(!adminBaoCaoContent.includes('42 suất'), 'Báo cáo doanh thu has NO fake 42 suất fallback');
+assert(!adminBaoCaoContent.includes('720 vé'), 'Báo cáo doanh thu has NO fake 720 vé fallback');
+assert(!adminBaoCaoContent.includes('+18.5% so với tháng trước'), 'Báo cáo doanh thu has NO fake +18.5% growth');
+assert(!adminRouteContent.includes('totalRevenue || 182450000'), 'Admin route has NO fake 182tr fallback');
+assert(!adminRouteContent.includes('totalFnb || 48200000'), 'Admin route has NO fake 48tr fallback');
+
+// Zero fake data in Suất Chiếu
+assert(!adminSuatChieuContent.includes('Dune: Hành Tinh Cát 2</td>'), 'Quản lý suất chiếu has NO hardcoded Dune 2');
+assert(!adminSuatChieuContent.includes('Mai (Trấn Thành Phim)</td>'), 'Quản lý suất chiếu has NO hardcoded Mai');
+assert(adminSuatChieuContent.includes('showtimesList'), 'Quản lý suất chiếu dynamically iterates showtimesList');
+assert(cinemaModelContent.includes('phone: { type: String, default: \'12345678\' }'), 'Cinema model default phone is 12345678');
+
+// 6. CHECK VOUCHER WALLET & SAVING MECHANISM
+console.log('\n--- TEST GROUP 6: Voucher Wallet & Saving Mechanism ---');
 const userModelContent = fs.readFileSync(path.join(__dirname, 'models/User.js'), 'utf8');
 const customerRouteContent = fs.readFileSync(path.join(__dirname, 'dieu-huong/khach-hang.js'), 'utf8');
 const profileContent = fs.readFileSync(path.join(__dirname, 'views/thongtincanhan.ejs'), 'utf8');
@@ -110,8 +134,8 @@ assert(!promoContent.includes('Sao Chép Mã'), 'Promotion page does not use cop
 assert(profileContent.includes('handleSaveToWallet'), 'Profile page has handleSaveToWallet');
 assert(profileContent.includes('removeVoucherFromWallet'), 'Profile page has removeVoucherFromWallet');
 
-// 6. SYNTAX CHECK ALL ROUTERS & MODELS
-console.log('\n--- TEST GROUP 6: JavaScript Syntax Validation ---');
+// 7. SYNTAX CHECK ALL ROUTERS & MODELS
+console.log('\n--- TEST GROUP 7: JavaScript Syntax Validation ---');
 const jsFilesToCheck = [
   'server.js',
   'dieu-huong/khach-hang.js',

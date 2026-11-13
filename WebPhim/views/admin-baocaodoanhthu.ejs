@@ -19,28 +19,30 @@
     </div>
   </div>
 
-  <!-- 3 Summary Metrics -->
+  <!-- 3 Summary Metrics (Thời gian thực) -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 font-['JetBrains_Mono']">
     <div class="bg-white border border-[#E5E0D5] p-6 space-y-1">
-      <span class="text-[10px] uppercase font-bold text-[#7A7E8B] block">Doanh thu tháng này</span>
+      <span class="text-[10px] uppercase font-bold text-[#7A7E8B] block">Doanh thu thời gian thực</span>
       <strong class="text-3xl font-black text-[#10B981] font-['Georgia'] block">
-        <%= (typeof totalRevenue !== 'undefined' ? totalRevenue : 182450000).toLocaleString('vi-VN') %> đ
+        <%= (typeof totalRevenue !== 'undefined' ? totalRevenue : 0).toLocaleString('vi-VN') %> đ
       </strong>
-      <span class="text-[11px] text-[#10B981] block font-semibold">+18.5% so với tháng trước</span>
+      <span class="text-[11px] text-[#10B981] font-semibold flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span> Trực tiếp từ đơn vé hệ thống
+      </span>
     </div>
     <div class="bg-white border border-[#E5E0D5] p-6 space-y-1">
       <span class="text-[10px] uppercase font-bold text-[#7A7E8B] block">Doanh thu Combo F&B</span>
       <strong class="text-3xl font-black text-[#A6853B] font-['Georgia'] block">
-        <%= (typeof totalFnb !== 'undefined' ? totalFnb : 48200000).toLocaleString('vi-VN') %> đ
+        <%= (typeof totalFnb !== 'undefined' ? totalFnb : 0).toLocaleString('vi-VN') %> đ
       </strong>
-      <span class="text-[11px] text-[#7A7E8B] block font-medium">Chiếm <%= typeof totalRevenue !== 'undefined' && totalRevenue > 0 ? Math.round((totalFnb / totalRevenue) * 100) : 26 %>% tổng doanh thu</span>
+      <span class="text-[11px] text-[#7A7E8B] block font-medium">Chiếm <%= typeof totalRevenue !== 'undefined' && totalRevenue > 0 ? Math.round((totalFnb / totalRevenue) * 100) : 0 %>% tổng doanh thu</span>
     </div>
     <div class="bg-white border border-[#E5E0D5] p-6 space-y-1">
       <span class="text-[10px] uppercase font-bold text-[#7A7E8B] block">Giá trị trung bình đơn (AOV)</span>
       <strong class="text-3xl font-black text-[#121316] font-['Georgia'] block">
-        <%= (typeof aov !== 'undefined' ? aov : 195000).toLocaleString('vi-VN') %> đ
+        <%= (typeof aov !== 'undefined' ? aov : 0).toLocaleString('vi-VN') %> đ
       </strong>
-      <span class="text-[11px] text-[#BA2D27] block font-medium">Tỷ suất trung bình 1.8 vé / đơn</span>
+      <span class="text-[11px] text-[#BA2D27] block font-medium">Tỷ suất trung bình <%= typeof avgSeatsPerOrder !== 'undefined' ? avgSeatsPerOrder : 0 %> vé / đơn</span>
     </div>
   </div>
 
@@ -50,7 +52,7 @@
       <h3 class="font-['Georgia'] text-xs font-bold text-[#121316] uppercase tracking-wider">
         Doanh Số Chi Tiết Theo 3 Cụm Rạp Quy Nhơn
       </h3>
-      <span class="text-xs text-[#7A7E8B]">Tháng 11/2026</span>
+      <span class="text-xs text-[#7A7E8B]">Tháng <%= (new Date().getMonth() + 1) %>/<%= new Date().getFullYear() %></span>
     </div>
 
     <table class="w-full text-left text-xs font-['Plus_Jakarta_Sans'] border-collapse">
@@ -72,39 +74,17 @@
               <td class="py-3.5 px-4 font-bold text-[#121316]"><%= item.name %></td>
               <td class="py-3.5 px-4"><%= item.showCount %> suất</td>
               <td class="py-3.5 px-4 font-bold text-[#121316]"><%= item.ticketCount %> vé</td>
-              <td class="py-3.5 px-4 text-[#10B981] font-bold"><%= item.occupancyRate %>%</td>
-              <td class="py-3.5 px-4"><%= Number(item.ticketRevenue).toLocaleString('vi-VN') %> đ</td>
-              <td class="py-3.5 px-4"><%= Number(item.fnbRevenue).toLocaleString('vi-VN') %> đ</td>
-              <td class="py-3.5 px-4 text-right font-bold text-[#BA2D27]"><%= Number(item.totalRevenue).toLocaleString('vi-VN') %> đ</td>
+              <td class="py-3.5 px-4 <%= item.occupancyRate > 0 ? 'text-[#10B981]' : 'text-[#7A7E8B]' %> font-bold"><%= item.occupancyRate %>%</td>
+              <td class="py-3.5 px-4"><%= Number(item.ticketRevenue || 0).toLocaleString('vi-VN') %> đ</td>
+              <td class="py-3.5 px-4"><%= Number(item.fnbRevenue || 0).toLocaleString('vi-VN') %> đ</td>
+              <td class="py-3.5 px-4 text-right font-bold text-[#BA2D27]"><%= Number(item.totalRevenue || 0).toLocaleString('vi-VN') %> đ</td>
             </tr>
           <% }); %>
         <% } else { %>
-          <tr class="hover:bg-[#FAF8F5]">
-            <td class="py-3.5 px-4 font-bold text-[#121316]">CGV Kim Cúc Plaza</td>
-            <td class="py-3.5 px-4">42 suất</td>
-            <td class="py-3.5 px-4 font-bold text-[#121316]">720 vé</td>
-            <td class="py-3.5 px-4 text-[#10B981] font-bold">78.5%</td>
-            <td class="py-3.5 px-4">84.500.000 đ</td>
-            <td class="py-3.5 px-4">24.100.000 đ</td>
-            <td class="py-3.5 px-4 text-right font-bold text-[#BA2D27]">108.600.000 đ</td>
-          </tr>
-          <tr class="hover:bg-[#FAF8F5]">
-            <td class="py-3.5 px-4 font-bold text-[#121316]">Starlight Nguyễn Kim</td>
-            <td class="py-3.5 px-4">35 suất</td>
-            <td class="py-3.5 px-4 font-bold text-[#121316]">480 vé</td>
-            <td class="py-3.5 px-4 text-[#121316] font-bold">64.0%</td>
-            <td class="py-3.5 px-4">45.600.000 đ</td>
-            <td class="py-3.5 px-4">14.800.000 đ</td>
-            <td class="py-3.5 px-4 text-right font-bold text-[#BA2D27]">60.400.000 đ</td>
-          </tr>
-          <tr class="hover:bg-[#FAF8F5]">
-            <td class="py-3.5 px-4 font-bold text-[#121316]">DCine Quy Nhơn</td>
-            <td class="py-3.5 px-4">28 suất</td>
-            <td class="py-3.5 px-4 font-bold text-[#121316]">290 vé</td>
-            <td class="py-3.5 px-4 text-[#A6853B] font-bold">72.5%</td>
-            <td class="py-3.5 px-4">32.200.000 đ</td>
-            <td class="py-3.5 px-4">9.300.000 đ</td>
-            <td class="py-3.5 px-4 text-right font-bold text-[#BA2D27]">41.500.000 đ</td>
+          <tr>
+            <td colspan="7" class="py-8 text-center text-[#7A7E8B] font-['Plus_Jakarta_Sans']">
+              Chưa có dữ liệu giao dịch phát sinh cho các cụm rạp trong cơ sở dữ liệu.
+            </td>
           </tr>
         <% } %>
       </tbody>

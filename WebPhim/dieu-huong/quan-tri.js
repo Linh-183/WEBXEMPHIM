@@ -366,36 +366,63 @@ router.post('/flash-sale/delete/:id', async (req, res, next) => {
 // [MỚI - GIAI ĐOẠN 1] KÍCH HOẠT ĐẦY ĐỦ CÁC ROUTE ADMIN CÒN THIẾU
 // =========================================================================
 
-// 1. Báo cáo Doanh thu & Hiệu suất rạp
+// 1. Báo cáo Doanh thu & Hiệu suất rạp (Dữ liệu thời gian thực từ MongoDB)
 router.get('/bao-cao', async (req, res) => {
     try {
-        const tickets = await Ticket.find().populate('movie').lean();
+        const [tickets, movies] = await Promise.all([
+            Ticket.find().populate('movie').lean(),
+            Movie.find().lean()
+        ]);
+
         const totalRevenue = tickets.reduce((sum, t) => sum + (t.totalPrice || 0), 0);
         const totalFnb = tickets.reduce((sum, t) => sum + (t.comboTotal || 0), 0);
-        const aov = tickets.length > 0 ? Math.round(totalRevenue / tickets.length) : 195000;
+        const totalSeatsSold = tickets.reduce((sum, t) => sum + (t.seats && Array.isArray(t.seats) ? t.seats.length : 1), 0);
+        const aov = tickets.length > 0 ? Math.round(totalRevenue / tickets.length) : 0;
+        const avgSeatsPerOrder = tickets.length > 0 ? (totalSeatsSold / tickets.length).toFixed(1) : '0';
 
         const cinemaNames = ['CGV Kim Cúc Plaza', 'Starlight Nguyễn Kim', 'DCine Quy Nhơn'];
         const cinemaReports = cinemaNames.map(name => {
+            // Đếm số suất chiếu thực tế từ danh sách phim trong MongoDB
+            let showCount = 0;
+            movies.forEach(m => {
+                if (m.showtimes && Array.isArray(m.showtimes)) {
+                    m.showtimes.forEach(st => {
+                        if (st.cinema === name) {
+                            showCount += (st.times && Array.isArray(st.times) ? st.times.length : 1);
+                        }
+                    });
+                }
+            });
+
             const list = tickets.filter(t => t.cinema === name);
             const tRevenue = list.reduce((s, t) => s + (t.totalPrice || 0), 0);
             const fnbRevenue = list.reduce((s, t) => s + (t.comboTotal || 0), 0);
-            const ticketCount = list.reduce((s, t) => s + (t.seats ? t.seats.length : 0), 0);
+            const ticketRevenue = Math.max(0, tRevenue - fnbRevenue);
+            const ticketCount = list.reduce((s, t) => s + (t.seats && Array.isArray(t.seats) ? t.seats.length : 1), 0);
+
+            // Tỷ lệ lấp đầy tính theo số vé bán / sức chứa các suất chiếu (ước tính 70 ghế/suất)
+            const roomCapacity = showCount > 0 ? showCount * 70 : (ticketCount > 0 ? ticketCount : 70);
+            const occupancyRate = (ticketCount > 0 && roomCapacity > 0)
+                ? Math.min(100, Math.round((ticketCount / roomCapacity) * 100))
+                : 0;
+
             return {
                 name,
-                showCount: Math.max(list.length, 12),
-                ticketCount: ticketCount || 120,
-                occupancyRate: Math.min(95, Math.max(55, Math.round(ticketCount * 1.5))),
-                ticketRevenue: tRevenue - fnbRevenue > 0 ? tRevenue - fnbRevenue : 35000000,
-                fnbRevenue: fnbRevenue > 0 ? fnbRevenue : 9500000,
-                totalRevenue: tRevenue > 0 ? tRevenue : 44500000
+                showCount,
+                ticketCount,
+                occupancyRate,
+                ticketRevenue,
+                fnbRevenue,
+                totalRevenue: tRevenue
             };
         });
 
         res.render('admin-baocaodoanhthu', {
             user: req.session.user,
-            totalRevenue: totalRevenue || 182450000,
-            totalFnb: totalFnb || 48200000,
+            totalRevenue,
+            totalFnb,
             aov,
+            avgSeatsPerOrder,
             cinemaReports
         });
     } catch (error) {
@@ -404,26 +431,39 @@ router.get('/bao-cao', async (req, res) => {
     }
 });
 
-// 2. Quản lý Giao dịch & Đơn vé
-router.get('/giao-dich', async (req, res) => {
-    try {
-        const tickets = await Ticket.find()
-            .sort({ _id: -1 })
-            .populate('movie')
-            .populate('user')
-            .lean();
-        res.render('admin-quanlygiaodich', { user: req.session.user, tickets });
-    } catch (error) {
-        console.error("Lỗi Giao Dịch:", error);
-        res.status(500).send("Lỗi tải trang quản lý giao dịch");
-    }
+// 2. Quản lý Giao dịch & Đơn vé (Đã bỏ theo yêu cầu, tự động chuyển hướng về Dashboard Tổng Quan)
+router.get('/giao-dich', (req, res) => {
+    res.redirect('/admin');
 });
 
-// 3. Quản lý Lịch chiếu & Chống xung đột
+// 3. Quản lý Lịch chiếu & Chống xung đột (Dữ liệu thời gian thực từ MongoDB)
 router.get('/suat-chieu', async (req, res) => {
     try {
         const movies = await Movie.find().lean();
-        res.render('admin-quanlysuatchieu', { user: req.session.user, movies });
+        const showtimesList = [];
+        movies.forEach(m => {
+            if (m.showtimes && Array.isArray(m.showtimes)) {
+                m.showtimes.forEach(st => {
+                    const timesArr = Array.isArray(st.times) ? st.times : [st.times].filter(Boolean);
+                    if (timesArr.length > 0) {
+                        showtimesList.push({
+                            movieTitle: m.title,
+                            cinema: st.cinema,
+                            room: st.room,
+                            date: st.date,
+                            times: timesArr.join(', '),
+                            duration: m.duration || 120
+                        });
+                    }
+                });
+            }
+        });
+
+        res.render('admin-quanlysuatchieu', {
+            user: req.session.user,
+            movies,
+            showtimesList
+        });
     } catch (error) {
         console.error("Lỗi Suất Chiếu:", error);
         res.status(500).send("Lỗi tải trang quản lý suất chiếu");

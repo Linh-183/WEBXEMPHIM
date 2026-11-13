@@ -114,14 +114,13 @@ const pagesToTest = [
   { file: 'admin-themphim.ejs', data: { user: mockUser } },
   { file: 'admin-suaphim.ejs', data: { user: mockUser, phim: mockMovie } },
   { file: 'admin-quanlyrap.ejs', data: { user: mockUser, cinemas: [mockCinema] } },
-  { file: 'admin-quanlysuatchieu.ejs', data: { user: mockUser } },
+  { file: 'admin-quanlysuatchieu.ejs', data: { user: mockUser, movies: [mockMovie], showtimesList: [{ movieTitle: 'Dune 2', cinema: 'CGV Kim Cúc Plaza', room: 'Phòng 1 (IMAX)', date: '2026-11-13', times: '09:30, 13:15' }] } },
   { file: 'admin-sodoghe.ejs', data: { user: mockUser } },
   { file: 'admin-quanlycombo.ejs', data: { user: mockUser } },
   { file: 'admin-khuyenmai.ejs (voucher tab)', target: 'admin-khuyenmai.ejs', data: { user: mockUser, vouchers: [mockVoucher], flashSales: [mockFlashSale], movies: [mockMovie], tab: 'voucher' } },
   { file: 'admin-khuyenmai.ejs (flashsale tab)', target: 'admin-khuyenmai.ejs', data: { user: mockUser, vouchers: [mockVoucher], flashSales: [mockFlashSale], movies: [mockMovie], tab: 'flashsale' } },
   { file: 'admin-quanlynguoidung.ejs', data: { user: mockUser, users: [mockUser] } },
-  { file: 'admin-quanlygiaodich.ejs', data: { user: mockUser } },
-  { file: 'admin-baocaodoanhthu.ejs', data: { user: mockUser } }
+  { file: 'admin-baocaodoanhthu.ejs', data: { user: mockUser, totalRevenue: 12500000, totalFnb: 3500000, aov: 250000, avgSeatsPerOrder: '2.0', cinemaReports: [{ name: 'CGV Kim Cúc Plaza', showCount: 5, ticketCount: 20, occupancyRate: 28, ticketRevenue: 9000000, fnbRevenue: 3500000, totalRevenue: 12500000 }] } }
 ];
 
 let errors = 0;

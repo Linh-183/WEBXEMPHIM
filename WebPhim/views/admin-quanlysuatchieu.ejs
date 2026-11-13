@@ -9,9 +9,9 @@
       <p class="text-xs text-[#7A7E8B] mt-0.5 font-light">Tự động tính giờ kết thúc (+15 phút dọn phòng) và phát hiện lịch trùng trong cùng phòng chiếu.</p>
     </div>
 
-    <a href="/admin/phim/them" class="btn-editorial-primary text-xs !py-3 !px-5 flex items-center gap-2">
-      <span class="material-symbols-outlined text-base">add</span>
-      <span>Xếp Lịch Chiếu Mới</span>
+    <a href="/admin/phim" class="btn-editorial-primary text-xs !py-3 !px-5 flex items-center gap-2">
+      <span class="material-symbols-outlined text-base">movie</span>
+      <span>Quản Lý & Xếp Lịch Phim</span>
     </a>
   </div>
 
@@ -59,9 +59,11 @@
   <div class="bg-white border border-[#E5E0D5] overflow-x-auto shadow-sm">
     <div class="p-4 border-b border-[#E5E0D5] flex items-center justify-between">
       <h3 class="font-['Georgia'] text-xs font-bold text-[#121316] uppercase tracking-wider">
-        Danh Sách Lịch Chiếu Đang Áp Dụng Hôm Nay
+        Danh Sách Lịch Chiếu Đang Áp Dụng (Cơ Sở Dữ Liệu Thời Gian Thực)
       </h3>
-      <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">12/11/2026</span>
+      <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">
+        <%= new Date().toLocaleDateString('vi-VN') %>
+      </span>
     </div>
 
     <table class="w-full text-left text-xs font-['Plus_Jakarta_Sans'] border-collapse">
@@ -70,33 +72,34 @@
           <th class="py-3.5 px-4">Tác Phẩm</th>
           <th class="py-3.5 px-4">Cụm Rạp</th>
           <th class="py-3.5 px-4">Phòng Chiếu</th>
+          <th class="py-3.5 px-4">Ngày Chiếu</th>
           <th class="py-3.5 px-4">Khung Giờ Chiếu</th>
           <th class="py-3.5 px-4">Trạng Thái Xung Đột</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-[#E5E0D5]">
-        <tr class="hover:bg-[#FAF8F5]">
-          <td class="py-3.5 px-4 font-bold text-[#121316]">Dune: Hành Tinh Cát 2</td>
-          <td class="py-3.5 px-4 text-[#474A54]">CGV Kim Cúc Plaza</td>
-          <td class="py-3.5 px-4 font-['JetBrains_Mono']">Phòng 1 (IMAX)</td>
-          <td class="py-3.5 px-4 font-['JetBrains_Mono'] font-bold text-[#121316]">09:30, 13:15, 19:30</td>
-          <td class="py-3.5 px-4">
-            <span class="px-2 py-0.5 bg-[#E8F8F0] text-[#10B981] font-['JetBrains_Mono'] text-[10px] font-bold uppercase">
-              ✓ KHÔNG XUNG ĐỘT
-            </span>
-          </td>
-        </tr>
-        <tr class="hover:bg-[#FAF8F5]">
-          <td class="py-3.5 px-4 font-bold text-[#121316]">Mai (Trấn Thành Phim)</td>
-          <td class="py-3.5 px-4 text-[#474A54]">Starlight Nguyễn Kim</td>
-          <td class="py-3.5 px-4 font-['JetBrains_Mono']">Phòng 2 (2D)</td>
-          <td class="py-3.5 px-4 font-['JetBrains_Mono'] font-bold text-[#121316]">10:00, 14:00, 18:00</td>
-          <td class="py-3.5 px-4">
-            <span class="px-2 py-0.5 bg-[#E8F8F0] text-[#10B981] font-['JetBrains_Mono'] text-[10px] font-bold uppercase">
-              ✓ KHÔNG XUNG ĐỘT
-            </span>
-          </td>
-        </tr>
+        <% if (typeof showtimesList !== 'undefined' && showtimesList && showtimesList.length > 0) { %>
+          <% showtimesList.forEach(function(sc) { %>
+            <tr class="hover:bg-[#FAF8F5]">
+              <td class="py-3.5 px-4 font-bold text-[#121316]"><%= sc.movieTitle %></td>
+              <td class="py-3.5 px-4 text-[#474A54]"><%= sc.cinema %></td>
+              <td class="py-3.5 px-4 font-['JetBrains_Mono']"><%= sc.room %></td>
+              <td class="py-3.5 px-4 font-['JetBrains_Mono'] text-[#7A7E8B]"><%= sc.date || 'Theo lịch' %></td>
+              <td class="py-3.5 px-4 font-['JetBrains_Mono'] font-bold text-[#121316]"><%= sc.times %></td>
+              <td class="py-3.5 px-4">
+                <span class="px-2 py-0.5 bg-[#E8F8F0] text-[#10B981] font-['JetBrains_Mono'] text-[10px] font-bold uppercase inline-flex items-center gap-1">
+                  ✓ KHÔNG XUNG ĐỘT
+                </span>
+              </td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="6" class="py-8 text-center text-[#7A7E8B] font-['Plus_Jakarta_Sans']">
+              Chưa có lịch chiếu nào được lưu trong cơ sở dữ liệu. Nhấn <a href="/admin/phim" class="text-[#BA2D27] underline font-bold">Danh Mục Phim</a> để thêm phim và xếp lịch chiếu thực tế.
+            </td>
+          </tr>
+        <% } %>
       </tbody>
     </table>
   </div>
