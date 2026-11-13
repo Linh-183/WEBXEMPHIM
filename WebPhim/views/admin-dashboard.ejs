@@ -48,8 +48,8 @@
           <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">đ</span>
         </span>
         <div class="flex items-center gap-1.5 text-[11px] font-['JetBrains_Mono'] text-[#10B981] font-semibold mt-2">
-          <span>▲ +14.8%</span>
-          <span class="text-[#7A7E8B] font-normal">so với tuần trước</span>
+          <span>● Cập nhật</span>
+          <span class="text-[#7A7E8B] font-normal">theo dữ liệu vé bán</span>
         </div>
       </div>
     </div>
@@ -68,8 +68,8 @@
           <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">vé</span>
         </span>
         <div class="flex items-center gap-1.5 text-[11px] font-['JetBrains_Mono'] text-[#BA2D27] font-semibold mt-2">
-          <span>● 78%</span>
-          <span class="text-[#7A7E8B] font-normal">tỷ lệ lấp đầy ghế</span>
+          <span>● Vé rạp</span>
+          <span class="text-[#7A7E8B] font-normal">đã xuất thành công</span>
         </div>
       </div>
     </div>
@@ -84,7 +84,7 @@
       </div>
       <div>
         <span class="font-['Plus_Jakarta_Sans'] text-2xl sm:text-3xl font-extrabold text-[#121316] tracking-tight block">
-          <%= (typeof stats !== 'undefined' && stats.totalMovies ? stats.totalMovies : 4) %>
+          <%= (typeof stats !== 'undefined' && typeof stats.totalMovies === 'number') ? stats.totalMovies : 0 %>
           <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">phim</span>
         </span>
         <div class="flex items-center gap-1.5 text-[11px] font-['JetBrains_Mono'] text-[#3B82F6] font-semibold mt-2">
@@ -108,8 +108,8 @@
           <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">khách</span>
         </span>
         <div class="flex items-center gap-1.5 text-[11px] font-['JetBrains_Mono'] text-[#A6853B] font-semibold mt-2">
-          <span>▲ +8.2%</span>
-          <span class="text-[#7A7E8B] font-normal">tăng trưởng hội viên</span>
+          <span>● Tài khoản</span>
+          <span class="text-[#7A7E8B] font-normal">đã đăng ký hệ thống</span>
         </div>
       </div>
     </div>
@@ -161,17 +161,22 @@
       </div>
 
       <!-- Custom Cinema Legend -->
+      <%
+        const shareCgv = (typeof cinemaShare !== 'undefined' && cinemaShare.cgv) ? cinemaShare.cgv : 0;
+        const shareStarlight = (typeof cinemaShare !== 'undefined' && cinemaShare.starlight) ? cinemaShare.starlight : 0;
+        const shareDcine = (typeof cinemaShare !== 'undefined' && cinemaShare.dcine) ? cinemaShare.dcine : 0;
+      %>
       <div class="grid grid-cols-3 gap-2 pt-4 border-t border-[#E5E0D5] text-center font-['JetBrains_Mono'] text-xs">
         <div class="p-2 bg-[#FAF8F5] border border-[#E5E0D5]">
-          <span class="text-[#BA2D27] font-bold block text-sm">48%</span>
+          <span class="text-[#BA2D27] font-bold block text-sm"><%= shareCgv %>%</span>
           <span class="text-[10px] text-[#7A7E8B] block mt-0.5">CGV Kim Cúc</span>
         </div>
         <div class="p-2 bg-[#FAF8F5] border border-[#E5E0D5]">
-          <span class="text-[#A6853B] font-bold block text-sm">32%</span>
+          <span class="text-[#A6853B] font-bold block text-sm"><%= shareStarlight %>%</span>
           <span class="text-[10px] text-[#7A7E8B] block mt-0.5">Starlight</span>
         </div>
         <div class="p-2 bg-[#FAF8F5] border border-[#E5E0D5]">
-          <span class="text-[#3B82F6] font-bold block text-sm">20%</span>
+          <span class="text-[#3B82F6] font-bold block text-sm"><%= shareDcine %>%</span>
           <span class="text-[10px] text-[#7A7E8B] block mt-0.5">DCine Quy Nhơn</span>
         </div>
       </div>
@@ -209,35 +214,19 @@
                 </div>
                 <div class="min-w-0">
                   <h3 class="font-bold text-xs text-[#121316] truncate"><%= m.title %></h3>
-                  <span class="text-[10px] text-[#7A7E8B] block mt-0.5">Khởi chiếu gần nhất</span>
+                  <span class="text-[10px] text-[#7A7E8B] block mt-0.5"><%= m.genre || 'Phim Chiếu Rạp' %></span>
                 </div>
               </div>
               <div class="text-right shrink-0 font-['JetBrains_Mono']">
-                <span class="text-xs font-bold text-[#121316] block"><%= (m.totalSold || 45) %> vé</span>
-                <span class="text-[10px] text-[#10B981] font-semibold">92% lấp đầy</span>
+                <span class="text-xs font-bold text-[#121316] block"><%= (m.totalSold || 0) %> vé</span>
+                <span class="text-[10px] text-[#10B981] font-semibold">Theo dữ liệu thật</span>
               </div>
             </div>
           <% }); %>
         <% } else { %>
-          <div class="p-3 bg-[#FAF8F5] border border-[#E5E0D5] flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-              <span class="font-['JetBrains_Mono'] text-base font-bold text-[#BA2D27]">01</span>
-              <div>
-                <h3 class="font-bold text-xs text-[#121316]">Dune: Hành Tinh Cát 2</h3>
-                <span class="text-[10px] text-[#7A7E8B]">Khoa học viễn tưởng</span>
-              </div>
-            </div>
-            <span class="text-xs font-bold text-[#121316] font-['JetBrains_Mono']">85 vé</span>
-          </div>
-          <div class="p-3 bg-[#FAF8F5] border border-[#E5E0D5] flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-              <span class="font-['JetBrains_Mono'] text-base font-bold text-[#BA2D27]">02</span>
-              <div>
-                <h3 class="font-bold text-xs text-[#121316]">Oppenheimer</h3>
-                <span class="text-[10px] text-[#7A7E8B]">Tiểu sử, Kịch tính</span>
-              </div>
-            </div>
-            <span class="text-xs font-bold text-[#121316] font-['JetBrains_Mono']">64 vé</span>
+          <div class="p-6 text-center bg-[#FAF8F5] border border-[#E5E0D5] space-y-2 text-[#7A7E8B] font-['JetBrains_Mono'] text-xs">
+            <span class="material-symbols-outlined text-2xl text-[#7A7E8B]">movie</span>
+            <p>Chưa có tác phẩm nào phát sinh vé đặt. Dữ liệu sẽ tự động tổng hợp từ các giao dịch thực tế của khách hàng.</p>
           </div>
         <% } %>
       </div>
@@ -267,20 +256,24 @@
           </thead>
           <tbody class="divide-y divide-[#E5E0D5]">
             <% if (typeof recentTickets !== 'undefined' && recentTickets.length > 0) { %>
-              <% recentTickets.slice(0, 5).forEach(t => { %>
+              <% recentTickets.slice(0, 6).forEach(t => { %>
                 <tr class="hover:bg-[#FAF8F5] transition-colors">
                   <td class="py-3 px-3 font-['JetBrains_Mono'] font-bold text-[#BA2D27]">
-                    #<%= t.ticketCode || t._id.toString().slice(-6).toUpperCase() %>
+                    #<%= t._id ? t._id.toString().slice(-6).toUpperCase() : 'CINE' %>
                   </td>
                   <td class="py-3 px-3">
-                    <span class="font-semibold text-[#121316] block"><%= t.movieId ? t.movieId.title : 'Tác phẩm điện ảnh' %></span>
-                    <span class="text-[10px] text-[#7A7E8B] font-['JetBrains_Mono'] block"><%= t.cinema || 'CGV Kim Cúc' %></span>
+                    <span class="font-semibold text-[#121316] block">
+                      <%= (t.movie && t.movie.title) ? t.movie.title : ((t.movieId && t.movieId.title) ? t.movieId.title : (t.comboDetails || 'Vé Xem Phim')) %>
+                    </span>
+                    <span class="text-[10px] text-[#7A7E8B] font-['JetBrains_Mono'] block">
+                      <%= t.cinema || 'CineGo Quy Nhơn' %>
+                    </span>
                   </td>
                   <td class="py-3 px-3 font-['JetBrains_Mono'] font-bold text-[#121316]">
-                    <%= Array.isArray(t.seats) ? t.seats.join(', ') : t.seats %>
+                    <%= Array.isArray(t.seats) ? t.seats.join(', ') : (t.seats || 'Ghế đã chọn') %>
                   </td>
                   <td class="py-3 px-3 text-right font-['JetBrains_Mono'] font-bold text-[#121316]">
-                    <%= (t.total || 0).toLocaleString('vi-VN') %> đ
+                    <%= ((typeof t.totalPrice !== 'undefined' && t.totalPrice !== null) ? t.totalPrice : (t.total || 0)).toLocaleString('vi-VN') %> đ
                   </td>
                   <td class="py-3 px-3 text-center font-['JetBrains_Mono'] text-[10px]">
                     <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold rounded">
@@ -292,7 +285,7 @@
             <% } else { %>
               <tr>
                 <td colspan="5" class="py-6 text-center text-[#7A7E8B] font-['JetBrains_Mono']">
-                  Chưa có giao dịch phát sinh trong phiên làm việc này.
+                  Chưa có giao dịch phát sinh trong hệ thống.
                 </td>
               </tr>
             <% } %>
@@ -306,21 +299,25 @@
 </main>
 
 <!-- =========================================================================
-     CHART.JS SCRIPTS INITIALIZATION
+     CHART.JS SCRIPTS INITIALIZATION (DỮ LIỆU THỰC TẾ TỪ CƠ SỞ DỮ LIỆU)
      ========================================================================= -->
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // 1. REVENUE & TICKETS 7-DAY TREND CHART
+    // 1. REVENUE & TICKETS 7-DAY TREND CHART (DỮ LIỆU THỰC TẾ)
     const ctxTrend = document.getElementById('revenueTrendChart');
+    const realLabels = <%- JSON.stringify(typeof chartLabels !== 'undefined' ? chartLabels : ['7 ngày trước', '6 ngày', '5 ngày', '4 ngày', '3 ngày', 'Hôm qua', 'Hôm nay']) %>;
+    const realRevenue = <%- JSON.stringify(typeof chartRevenueData !== 'undefined' ? chartRevenueData : [0, 0, 0, 0, 0, 0, 0]) %>;
+    const realTickets = <%- JSON.stringify(typeof chartTicketsData !== 'undefined' ? chartTicketsData : [0, 0, 0, 0, 0, 0, 0]) %>;
+
     if (ctxTrend) {
       new Chart(ctxTrend, {
         type: 'line',
         data: {
-          labels: ['T2', 'T3', 'T4 (Flash)', 'T5', 'T6', 'T7 (Cuối tuần)', 'CN'],
+          labels: realLabels,
           datasets: [
             {
               label: 'Doanh thu (triệu đồng)',
-              data: [8.5, 9.2, 14.8, 11.0, 18.5, 24.6, 22.1],
+              data: realRevenue,
               borderColor: '#BA2D27',
               backgroundColor: 'rgba(186, 45, 39, 0.08)',
               borderWidth: 2.5,
@@ -332,7 +329,7 @@
             },
             {
               label: 'Số vé bán ra',
-              data: [95, 105, 175, 125, 210, 280, 255],
+              data: realTickets,
               borderColor: '#A6853B',
               backgroundColor: 'rgba(166, 133, 59, 0.12)',
               borderWidth: 2,
@@ -363,6 +360,7 @@
               type: 'linear',
               display: true,
               position: 'left',
+              beginAtZero: true,
               grid: { color: 'rgba(0,0,0,0.05)' },
               ticks: {
                 font: { family: 'JetBrains Mono', size: 10 },
@@ -374,6 +372,7 @@
               type: 'linear',
               display: true,
               position: 'right',
+              beginAtZero: true,
               grid: { drawOnChartArea: false },
               ticks: {
                 font: { family: 'JetBrains Mono', size: 10 },
@@ -386,16 +385,20 @@
       });
     }
 
-    // 2. CINEMA REVENUE SHARE DOUGHNUT CHART
+    // 2. CINEMA REVENUE SHARE DOUGHNUT CHART (DỮ LIỆU THỰC TẾ)
     const ctxShare = document.getElementById('cinemaShareChart');
+    const shareObj = <%- JSON.stringify(typeof cinemaShare !== 'undefined' ? cinemaShare : { cgv: 0, starlight: 0, dcine: 0 }) %>;
+    const shareData = [shareObj.cgv || 0, shareObj.starlight || 0, shareObj.dcine || 0];
+    const hasData = (shareData[0] + shareData[1] + shareData[2]) > 0;
+
     if (ctxShare) {
       new Chart(ctxShare, {
         type: 'doughnut',
         data: {
           labels: ['CGV Kim Cúc Plaza', 'Starlight Nguyễn Kim', 'DCine Quy Nhơn'],
           datasets: [{
-            data: [48, 32, 20],
-            backgroundColor: ['#BA2D27', '#A6853B', '#3B82F6'],
+            data: hasData ? shareData : [1, 1, 1],
+            backgroundColor: hasData ? ['#BA2D27', '#A6853B', '#3B82F6'] : ['#E5E0D5', '#ECE7DD', '#DFDAD0'],
             borderWidth: 2,
             borderColor: '#FFFFFF',
             hoverOffset: 6
@@ -411,7 +414,7 @@
             tooltip: {
               callbacks: {
                 label: function(context) {
-                  return ' ' + context.label + ': ' + context.parsed + '% thị phần';
+                  return hasData ? (' ' + context.label + ': ' + context.parsed + '% thị phần') : ' Chưa có dữ liệu giao dịch';
                 }
               }
             }

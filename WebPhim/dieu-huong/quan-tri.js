@@ -38,8 +38,8 @@ router.get('/', async (req, res) => {
             }).length;
         }
 
-        // 3. TÍNH DOANH THU & VÉ BÁN (TỐI ƯU TRUY VẤN CÓ ĐIỀU KIỆN)
-        const allTickets = await Ticket.find({}, 'seats totalPrice _id movie createdAt').lean();
+        // 3. TÍNH DOANH THU & VÉ BÁN (TỪ CƠ SỞ DỮ LIỆU THỰC TẾ)
+        const allTickets = await Ticket.find({}, 'seats totalPrice cinema _id movie createdAt').populate('movie', 'title').lean();
         
         let filteredTickets = allTickets;
         if (filter !== 'all') {
@@ -52,29 +52,77 @@ router.get('/', async (req, res) => {
         const totalTickets = filteredTickets.reduce((sum, t) => sum + (t.seats ? t.seats.length : 0), 0);
         const revenueNumber = filteredTickets.reduce((sum, t) => sum + (t.totalPrice || 0), 0);
 
-        // 4. TOP PHIM BÁN CHẠY (BATCH QUERY CHỐNG N+1 QUERY)
+        // 4. TOP PHIM BÁN CHẠY (CHỈ LẤY PHIM CÓ PHÁT SINH VÉ THẬT)
         const movieSales = {};
         filteredTickets.forEach(t => {
             if (t.seats && t.seats.length > 0 && t.movie) {
-                const movieId = t.movie.toString();
+                const movieId = (t.movie._id || t.movie).toString();
                 if (!movieSales[movieId]) movieSales[movieId] = 0;
                 movieSales[movieId] += t.seats.length;
             }
         });
         
-        const sortedMovieEntries = Object.entries(movieSales).sort((a, b) => b[1] - a[1]).slice(0, 3);
+        const sortedMovieEntries = Object.entries(movieSales).sort((a, b) => b[1] - a[1]).slice(0, 5);
         const topMovieIds = sortedMovieEntries.map(([id]) => id);
-        const foundMovies = await Movie.find({ _id: { $in: topMovieIds } }).select('title posterUrl').lean();
+        const foundMovies = await Movie.find({ _id: { $in: topMovieIds } }).select('title posterUrl genre').lean();
         const movieMap = new Map(foundMovies.map(m => [m._id.toString(), m]));
 
         const topMovies = [];
         for (let [id, sold] of sortedMovieEntries) {
             const m = movieMap.get(id);
-            if (m) topMovies.push({ title: m.title, posterUrl: m.posterUrl, totalSold: sold });
+            if (m) topMovies.push({ title: m.title, posterUrl: m.posterUrl, genre: m.genre, totalSold: sold });
         }
 
-        // 5. GIAO DỊCH MỚI NHẤT (THAY THẾ CHO BIỂU ĐỒ)
-        // Lấy 6 vé vừa được đặt gần đây nhất, nối bảng để lấy tên user và tên phim
+        // 5. TÍNH TOÁN DỮ LIỆU BIỂU ĐỒ 7 NGÀY GẦN NHẤT TỪ DB THỰC TẾ (KHÔNG DÙNG DỮ LIỆU ẢO)
+        const chartLabels = [];
+        const chartRevenueData = [];
+        const chartTicketsData = [];
+        
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const dateStr = `${d.getDate()}/${d.getMonth() + 1}`;
+            chartLabels.push(dateStr);
+
+            const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0).getTime();
+            const dayEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999).getTime();
+
+            const dayTickets = allTickets.filter(t => {
+                const time = t.createdAt ? new Date(t.createdAt).getTime() : t._id.getTimestamp().getTime();
+                return time >= dayStart && time <= dayEnd;
+            });
+
+            const dayRev = dayTickets.reduce((sum, t) => sum + (t.totalPrice || 0), 0);
+            const daySeats = dayTickets.reduce((sum, t) => sum + (t.seats ? t.seats.length : 0), 0);
+
+            // Đổi ra triệu đồng
+            chartRevenueData.push(Number((dayRev / 1000000).toFixed(2)));
+            chartTicketsData.push(daySeats);
+        }
+
+        // 6. TÍNH TOÁN TỶ TRỌNG DOANH THU 3 CỤM RẠP THỰC TẾ
+        let cgvRev = 0;
+        let starlightRev = 0;
+        let dcineRev = 0;
+
+        filteredTickets.forEach(t => {
+            const cName = (t.cinema || '').toLowerCase();
+            const price = t.totalPrice || 0;
+            if (cName.includes('cgv')) cgvRev += price;
+            else if (cName.includes('starlight')) starlightRev += price;
+            else if (cName.includes('dcine') || cName.includes('d-cine')) dcineRev += price;
+            else cgvRev += price;
+        });
+
+        const totalCinemaRev = cgvRev + starlightRev + dcineRev;
+        let cinemaShare = { cgv: 0, starlight: 0, dcine: 0 };
+        if (totalCinemaRev > 0) {
+            cinemaShare.cgv = Math.round((cgvRev / totalCinemaRev) * 100);
+            cinemaShare.starlight = Math.round((starlightRev / totalCinemaRev) * 100);
+            cinemaShare.dcine = 100 - cinemaShare.cgv - cinemaShare.starlight;
+        }
+
+        // 7. GIAO DỊCH MỚI NHẤT (POPULATE CHUẨN XÁC VỚI TICKET SCHEMA)
         const recentTickets = await Ticket.find()
             .sort({ _id: -1 })
             .limit(6)
@@ -92,7 +140,11 @@ router.get('/', async (req, res) => {
                 newUsers: newUsersCount 
             }, 
             topMovies,
-            recentTickets, // Dữ liệu bảng giao dịch mới
+            recentTickets,
+            chartLabels,
+            chartRevenueData,
+            chartTicketsData,
+            cinemaShare,
             currentFilter: filter 
         });
 

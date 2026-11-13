@@ -109,7 +109,7 @@ const pagesToTest = [
   { file: 'trangdangky.ejs', data: { user: null } },
   { file: 'trangquenmkhau.ejs', data: { user: null } },
   { file: 'trangdatlaimk.ejs', data: { user: null, token: 'demo-token-123456' } },
-  { file: 'admin-dashboard.ejs', data: { user: mockUser, stats: { totalMovies: 4, totalTickets: 125, revenue: 12500000, newUsers: 48 }, topMovies: [{ title: 'Dune 2', posterUrl: mockMovie.posterUrl, totalSold: 85 }], recentTickets: [mockTicket], currentFilter: 'all' } },
+  { file: 'admin-dashboard.ejs', data: { user: mockUser, stats: { totalMovies: 4, totalTickets: 125, revenue: 12500000, newUsers: 48 }, topMovies: [{ title: 'Dune 2', posterUrl: mockMovie.posterUrl, totalSold: 85 }], recentTickets: [mockTicket], chartLabels: ['7/11', '8/11', '9/11', '10/11', '11/11', '12/11', '13/11'], chartRevenueData: [1.2, 2.5, 3.1, 1.8, 4.0, 5.2, 6.1], chartTicketsData: [15, 28, 35, 20, 45, 55, 68], cinemaShare: { cgv: 50, starlight: 30, dcine: 20 }, currentFilter: 'all' } },
   { file: 'admin-quanlyphim.ejs', data: { user: mockUser, movies: [mockMovie] } },
   { file: 'admin-themphim.ejs', data: { user: mockUser } },
   { file: 'admin-suaphim.ejs', data: { user: mockUser, phim: mockMovie } },
