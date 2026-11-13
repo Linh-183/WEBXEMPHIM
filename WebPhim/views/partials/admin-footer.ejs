@@ -14,5 +14,17 @@
 
   </div><!-- End Main Content Wrapper -->
 
+  <!-- Toast Notification System Anchor for Admin -->
+  <div id="cinego-toast-container" class="fixed bottom-6 right-6 z-[99999] flex flex-col gap-2.5 pointer-events-none max-w-sm sm:max-w-md w-full px-4 sm:px-0"
+    <% if (typeof flashError !== 'undefined' && flashError) { %> data-flash-error="<%= flashError %>"<% } %>
+    <% if (typeof flashSuccess !== 'undefined' && flashSuccess) { %> data-flash-success="<%= flashSuccess %>"<% } %>
+    <% if (typeof flashWarning !== 'undefined' && flashWarning) { %> data-flash-warning="<%= flashWarning %>"<% } %>
+    <% if (typeof flashInfo !== 'undefined' && flashInfo) { %> data-flash-info="<%= flashInfo %>"<% } %>
+    <% if (typeof error !== 'undefined' && error) { %> data-view-error="<%= error %>"<% } %>
+    <% if (typeof success !== 'undefined' && success) { %> data-view-success="<%= success %>"<% } %>
+  ></div>
+
+  <!-- Admin Toast Script -->
+  <script src="/js/cinego-toast.js?v=6.0"></script>
 </body>
 </html>

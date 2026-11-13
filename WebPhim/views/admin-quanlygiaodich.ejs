@@ -118,11 +118,16 @@
   }
 
   function showTicketDetail(code, name, movie, seats, price) {
-    alert('CHI TIẾT ĐƠN VÉ #' + code + '\n' +
-          'Khách hàng: ' + name + '\n' +
-          'Phim: ' + movie + '\n' +
-          'Ghế ngồi: ' + seats + '\n' +
-          'Tổng thanh toán: ' + price);
+    const detailMsg = `Đơn vé #${code} • Khách: ${name} • Phim: ${movie} • Ghế: ${seats} • Tổng: ${price}`;
+    if (window.cinegoToast) {
+      window.cinegoToast.info(detailMsg, 'CHI TIẾT ĐƠN VÉ');
+    } else {
+      alert('CHI TIẾT ĐƠN VÉ #' + code + '\n' +
+            'Khách hàng: ' + name + '\n' +
+            'Phim: ' + movie + '\n' +
+            'Ghế ngồi: ' + seats + '\n' +
+            'Tổng thanh toán: ' + price);
+    }
   }
 
   function filterAdminTx() {

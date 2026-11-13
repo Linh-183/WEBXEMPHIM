@@ -10,7 +10,7 @@
       <p class="text-xs text-[#7A7E8B] mt-0.5 font-light">Giám sát công suất phòng chiếu, tỷ lệ lấp đầy ghế và cấu hình sơ đồ phòng.</p>
     </div>
 
-    <button type="button" onclick="alert('Tính năng thiết kế sơ đồ phòng chiếu đang mở ở chế độ cấu hình.');" class="btn-editorial-primary text-xs !py-3 !px-5 flex items-center gap-2">
+    <button type="button" onclick="if (window.cinegoToast) window.cinegoToast.info('Tính năng thiết kế sơ đồ phòng chiếu đang mở ở chế độ cấu hình.'); else alert('Tính năng thiết kế sơ đồ phòng chiếu đang mở ở chế độ cấu hình.');" class="btn-editorial-primary text-xs !py-3 !px-5 flex items-center gap-2">
       <span class="material-symbols-outlined text-base">grid_view</span>
       <span>Thiết Kế Sơ Đồ Ghế</span>
     </button>

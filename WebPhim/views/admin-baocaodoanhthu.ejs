@@ -10,7 +10,7 @@
     </div>
 
     <div class="flex items-center gap-2 font-['JetBrains_Mono']">
-      <button type="button" onclick="alert('Đang trích xuất file Excel (XLSX)...')" class="btn-editorial-secondary text-xs !py-2.5 !px-4 flex items-center gap-1.5">
+      <button type="button" onclick="if (window.cinegoToast) window.cinegoToast.info('Đang trích xuất file Excel (XLSX) báo cáo doanh thu...'); else alert('Đang trích xuất file Excel (XLSX)...')" class="btn-editorial-secondary text-xs !py-2.5 !px-4 flex items-center gap-1.5">
         <span class="material-symbols-outlined text-base">table_view</span> Xuất Excel
       </button>
       <button type="button" onclick="window.print()" class="btn-editorial-primary text-xs !py-2.5 !px-4 flex items-center gap-1.5">

@@ -121,7 +121,7 @@ router.post('/tai-khoan/ve-cua-toi/xoa/:id', checkLogin, async (req, res) => {
         }
         
         await Ticket.findByIdAndDelete(req.params.id);
-        res.redirect('/tai-khoan/ve-cua-toi');
+        res.redirect('/tai-khoan/ve-cua-toi?success=' + encodeURIComponent('Đã xóa vé khỏi lịch sử thành công.'));
     } catch (error) { 
         res.redirect('/tai-khoan/ve-cua-toi?error=' + encodeURIComponent(error.message)); 
     }
@@ -768,8 +768,8 @@ router.post('/dang-nhap', async (req, res) => {
         req.session.user = user;
         req.session.save((err) => {
             if (err) console.error("Session save error:", err);
-            // Cả tài khoản thường và Admin khi đăng nhập đều về trang chủ (Admin có nút Quản Trị trên Header)
-            res.redirect('/');
+            // Cả tài khoản thường và Admin khi đăng nhập đều về trang chủ với thông báo thành công
+            res.redirect('/?success=' + encodeURIComponent('Đăng nhập thành công! Chào mừng ' + (user.hoTen || 'bạn') + ' trở lại CineGo.'));
         });
     } catch (error) { 
         console.error("Lỗi đăng nhập:", error);
@@ -781,7 +781,7 @@ router.get('/dang-xuat', (req, res) => {
     req.session.destroy((err) => {
         if (err) console.error("Lỗi hủy session khi đăng xuất:", err);
         res.clearCookie('connect.sid');
-        res.redirect('/');
+        res.redirect('/?info=' + encodeURIComponent('Đã đăng xuất tài khoản an toàn.'));
     });
 });
 

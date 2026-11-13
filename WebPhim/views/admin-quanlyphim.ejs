@@ -8,12 +8,12 @@
   
   <!-- Flash Messages -->
   <% if (typeof success !== 'undefined' && success) { %>
-    <div class="p-4 bg-[#EAFaf1] border-l-4 border-[#10B981] text-[#10B981] text-xs font-['JetBrains_Mono'] flex items-center justify-between shadow-sm">
+    <div data-toast-success="<%= success %>" class="p-4 bg-[#EAFaf1] border-l-4 border-[#10B981] text-[#10B981] text-xs font-['JetBrains_Mono'] flex items-center justify-between shadow-sm">
       <span>✓ <%= success %></span>
     </div>
   <% } %>
   <% if (typeof error !== 'undefined' && error) { %>
-    <div class="p-4 bg-[#F9EBEA] border-l-4 border-[#BA2D27] text-[#BA2D27] text-xs font-['JetBrains_Mono'] flex items-center justify-between shadow-sm">
+    <div data-toast-error="<%= error %>" class="p-4 bg-[#F9EBEA] border-l-4 border-[#BA2D27] text-[#BA2D27] text-xs font-['JetBrains_Mono'] flex items-center justify-between shadow-sm">
       <span>⚠ <%= error %></span>
     </div>
   <% } %>

@@ -159,7 +159,12 @@ router.get('/nguoi-dung', async (req, res) => {
 });
 
 router.post('/nguoi-dung/xoa/:id', async (req, res) => {
-    try { await User.findByIdAndDelete(req.params.id); res.redirect('/admin/nguoi-dung'); } catch (error) { res.status(500).send("Lỗi xóa người dùng"); }
+    try { 
+        await User.findByIdAndDelete(req.params.id); 
+        res.redirect('/admin/nguoi-dung?success=' + encodeURIComponent('Đã xóa người dùng khỏi hệ thống thành công!')); 
+    } catch (error) { 
+        res.redirect('/admin/nguoi-dung?error=' + encodeURIComponent('Lỗi xóa người dùng: ' + error.message)); 
+    }
 });
 
 router.get('/phim', async (req, res) => {
@@ -251,12 +256,19 @@ router.post('/phim/sua/:id', async (req, res) => {
             title, description, posterUrl, ageRating, duration: Number(duration) || 0, genre, director, status, releaseDate: releaseDate ? new Date(releaseDate) : null, showtimes
         }, { runValidators: true });
 
-        res.redirect('/admin/phim'); 
-    } catch (error) { res.status(500).send(`Chi tiết lỗi kỹ thuật: ${error.message}`); }
+        res.redirect('/admin/phim?success=' + encodeURIComponent(`Đã cập nhật thông tin tác phẩm "${title}" thành công!`)); 
+    } catch (error) { 
+        res.redirect('/admin/phim?error=' + encodeURIComponent(`Chi tiết lỗi kỹ thuật: ${error.message}`)); 
+    }
 });
 
 router.post('/phim/xoa/:id', async (req, res) => {
-    try { await Movie.findByIdAndDelete(req.params.id); res.redirect('/admin/phim'); } catch (error) { res.send('Lỗi xóa phim!'); }
+    try { 
+        await Movie.findByIdAndDelete(req.params.id); 
+        res.redirect('/admin/phim?success=' + encodeURIComponent('Đã xóa phim khỏi danh mục hệ thống thành công!')); 
+    } catch (error) { 
+        res.redirect('/admin/phim?error=' + encodeURIComponent('Lỗi xóa phim: ' + error.message)); 
+    }
 });
 
 router.get('/quan-ly-rap', async (req, res, next) => {
@@ -319,8 +331,10 @@ router.post('/vouchers/add', async (req, res) => {
         let val = discountType === 'fixed' ? Number(discountValue) * 1000 : Number(discountValue);
         let min = Number(minOrderValue) * 1000, max = Number(maxDiscountValue) * 1000;
         await Voucher.create({ code: code.toUpperCase(), discountValue: val, minOrderValue: min, maxDiscountValue: max, title, description, discountType, imageUrl, expiryDate: expiryDate ? new Date(expiryDate) : null });
-        res.redirect('/admin/khuyen-mai?tab=voucher');
-    } catch (error) { res.status(500).send("Lỗi thêm voucher"); }
+        res.redirect('/admin/khuyen-mai?tab=voucher&success=' + encodeURIComponent(`Đã tạo mã voucher "${code.toUpperCase()}" thành công!`));
+    } catch (error) { 
+        res.redirect('/admin/khuyen-mai?tab=voucher&error=' + encodeURIComponent('Lỗi thêm voucher: ' + error.message)); 
+    }
 });
 
 router.post('/vouchers/sua/:id', async (req, res) => {
@@ -329,15 +343,19 @@ router.post('/vouchers/sua/:id', async (req, res) => {
         let val = discountType === 'fixed' ? Number(discountValue) * 1000 : Number(discountValue);
         let min = Number(minOrderValue) * 1000, max = Number(maxDiscountValue) * 1000;
         await Voucher.findByIdAndUpdate(req.params.id, { code: code.toUpperCase(), discountValue: val, minOrderValue: min, maxDiscountValue: max, title, description, discountType, imageUrl, expiryDate: expiryDate ? new Date(expiryDate) : null });
-        res.redirect('/admin/khuyen-mai?tab=voucher');
-    } catch (error) { res.status(500).send("Lỗi cập nhật voucher"); }
+        res.redirect('/admin/khuyen-mai?tab=voucher&success=' + encodeURIComponent(`Đã cập nhật thông tin voucher "${code.toUpperCase()}"!`));
+    } catch (error) { 
+        res.redirect('/admin/khuyen-mai?tab=voucher&error=' + encodeURIComponent('Lỗi cập nhật voucher: ' + error.message)); 
+    }
 });
 
 router.post('/vouchers/delete/:id', async (req, res) => {
     try { 
         await Voucher.findByIdAndDelete(req.params.id); 
-        res.redirect('/admin/khuyen-mai?tab=voucher'); 
-    } catch (error) { res.status(500).send("Lỗi xóa voucher"); }
+        res.redirect('/admin/khuyen-mai?tab=voucher&success=' + encodeURIComponent('Đã xóa voucher khỏi hệ thống!')); 
+    } catch (error) { 
+        res.redirect('/admin/khuyen-mai?tab=voucher&error=' + encodeURIComponent('Lỗi xóa voucher: ' + error.message)); 
+    }
 });
 
 // [MỚI] QUẢN LÝ CÁC ĐỢT SĂN VÉ FLASH SALE (CHỦ ĐỘNG BẬT/TẮT TẠI ADMIN)
@@ -358,8 +376,10 @@ router.post('/flash-sale/add', async (req, res, next) => {
             description: description ? description.trim() : '',
             isActive: true
         });
-        res.redirect('/admin/khuyen-mai?tab=flashsale');
-    } catch (error) { next(error); }
+        res.redirect('/admin/khuyen-mai?tab=flashsale&success=' + encodeURIComponent('Đã tạo chương trình Flash Sale thành công!'));
+    } catch (error) { 
+        res.redirect('/admin/khuyen-mai?tab=flashsale&error=' + encodeURIComponent('Lỗi tạo Flash Sale: ' + error.message)); 
+    }
 });
 
 router.post('/flash-sale/toggle/:id', async (req, res, next) => {
@@ -369,15 +389,19 @@ router.post('/flash-sale/toggle/:id', async (req, res, next) => {
             fs.isActive = !fs.isActive;
             await fs.save();
         }
-        res.redirect('/admin/khuyen-mai?tab=flashsale');
-    } catch (error) { next(error); }
+        res.redirect('/admin/khuyen-mai?tab=flashsale&success=' + encodeURIComponent('Đã cập nhật trạng thái hoạt động của Flash Sale!'));
+    } catch (error) { 
+        res.redirect('/admin/khuyen-mai?tab=flashsale&error=' + encodeURIComponent('Lỗi cập nhật Flash Sale: ' + error.message)); 
+    }
 });
 
 router.post('/flash-sale/delete/:id', async (req, res, next) => {
     try {
         await FlashSale.findByIdAndDelete(req.params.id);
-        res.redirect('/admin/khuyen-mai?tab=flashsale');
-    } catch (error) { next(error); }
+        res.redirect('/admin/khuyen-mai?tab=flashsale&success=' + encodeURIComponent('Đã xóa chương trình Flash Sale thành công!'));
+    } catch (error) { 
+        res.redirect('/admin/khuyen-mai?tab=flashsale&error=' + encodeURIComponent('Lỗi xóa Flash Sale: ' + error.message)); 
+    }
 });
 
 // =========================================================================
@@ -468,10 +492,10 @@ router.get('/giao-dich', async (req, res) => {
 router.post('/giao-dich/xoa/:id', async (req, res) => {
     try {
         await Ticket.findByIdAndDelete(req.params.id);
-        res.redirect('/admin/giao-dich');
+        res.redirect('/admin/giao-dich?success=' + encodeURIComponent('Đã xóa đơn vé giao dịch thành công!'));
     } catch (error) {
         console.error("Lỗi xóa đơn vé:", error);
-        res.redirect('/admin/giao-dich');
+        res.redirect('/admin/giao-dich?error=' + encodeURIComponent('Lỗi khi xóa đơn vé: ' + error.message));
     }
 });
 
@@ -600,10 +624,10 @@ router.post('/combo/them', async (req, res) => {
             badge: badge || '',
             flavors: flavorList
         });
-        res.redirect('/admin/combo');
+        res.redirect('/admin/combo?success=' + encodeURIComponent(`Đã thêm combo "${name}" mới thành công!`));
     } catch (error) {
         console.error("Lỗi thêm combo:", error);
-        res.status(500).send("Lỗi thêm combo bắp nước: " + error.message);
+        res.redirect('/admin/combo?error=' + encodeURIComponent('Lỗi thêm combo: ' + error.message));
     }
 });
 
@@ -623,10 +647,10 @@ router.post('/combo/sua/:id', async (req, res) => {
             flavors: flavorList,
             isActive: isActive === 'false' ? false : true
         });
-        res.redirect('/admin/combo');
+        res.redirect('/admin/combo?success=' + encodeURIComponent(`Đã cập nhật combo "${name}" thành công!`));
     } catch (error) {
         console.error("Lỗi sửa combo:", error);
-        res.status(500).send("Lỗi cập nhật combo bắp nước");
+        res.redirect('/admin/combo?error=' + encodeURIComponent('Lỗi cập nhật combo: ' + error.message));
     }
 });
 
@@ -634,10 +658,10 @@ router.post('/combo/sua/:id', async (req, res) => {
 router.post('/combo/xoa/:id', async (req, res) => {
     try {
         await FoodCombo.findByIdAndDelete(req.params.id);
-        res.redirect('/admin/combo');
+        res.redirect('/admin/combo?success=' + encodeURIComponent('Đã xóa combo bắp nước khỏi thực đơn!'));
     } catch (error) {
         console.error("Lỗi xóa combo:", error);
-        res.status(500).send("Lỗi xóa combo bắp nước");
+        res.redirect('/admin/combo?error=' + encodeURIComponent('Lỗi xóa combo: ' + error.message));
     }
 });
 

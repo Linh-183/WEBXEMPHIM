@@ -12,13 +12,13 @@
     </div>
 
     <% if (typeof error !== 'undefined' && error) { %>
-      <div class="p-3.5 bg-[#FFF2F1] border-l-4 border-[#BA2D27] text-[#BA2D27] text-xs font-['Plus_Jakarta_Sans'] flex items-center gap-2 text-left">
+      <div data-toast-error="<%= error %>" class="p-3.5 bg-[#FFF2F1] border-l-4 border-[#BA2D27] text-[#BA2D27] text-xs font-['Plus_Jakarta_Sans'] flex items-center gap-2 text-left">
         <span class="material-symbols-outlined text-base">error</span>
         <span><%= error %></span>
       </div>
     <% } %>
     <% if (typeof success !== 'undefined' && success) { %>
-      <div class="p-3.5 bg-[#E8F8F0] border-l-4 border-[#10B981] text-[#10B981] text-xs font-['Plus_Jakarta_Sans'] flex items-center gap-2 text-left">
+      <div data-toast-success="<%= success %>" class="p-3.5 bg-[#E8F8F0] border-l-4 border-[#10B981] text-[#10B981] text-xs font-['Plus_Jakarta_Sans'] flex items-center gap-2 text-left">
         <span class="material-symbols-outlined text-base">check_circle</span>
         <span><%= success %></span>
       </div>

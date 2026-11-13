@@ -43,11 +43,15 @@ app.use(session({
     }
 }));
 
-// Middleware chuyển dữ liệu người dùng từ Session sang biến cục bộ của Views
-// Giúp mọi file .ejs đều có thể gọi biến <%= user.hoTen %> mà không cần truyền thủ công ở từng route
+// Middleware chuyển dữ liệu người dùng và thông báo toàn cục sang biến cục bộ của Views
+// Giúp mọi file .ejs đều có thể tự động kích hoạt hệ thống CineGo Toast góc phải màn hình
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
     res.locals.currentPath = req.path || '/';
+    res.locals.flashError = req.query.error || null;
+    res.locals.flashSuccess = req.query.success || null;
+    res.locals.flashWarning = req.query.warning || null;
+    res.locals.flashInfo = req.query.info || null;
     next();
 });
 

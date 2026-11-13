@@ -1,5 +1,9 @@
 <%- include('partials/header') %>
 
+<% if (typeof error !== 'undefined' && error) { %>
+  <div data-toast-error="<%= error %>"></div>
+<% } %>
+
 <main class="min-h-screen py-10 pb-44 bg-[#FAF8F5]">
   <div class="max-w-[1440px] mx-auto px-4 sm:px-8">
     
@@ -522,7 +526,8 @@
           seatTotal -= price;
         } else {
           if (selectedSeats.length >= 8) {
-            alert('Bạn chỉ có thể chọn tối đa 8 ghế trong một lần đặt vé.');
+            if (window.cinegoToast) window.cinegoToast.warning('Bạn chỉ có thể chọn tối đa 8 ghế trong một lần đặt vé.');
+            else alert('Bạn chỉ có thể chọn tối đa 8 ghế trong một lần đặt vé.');
             return;
           }
           seat.classList.add('seat-selected');

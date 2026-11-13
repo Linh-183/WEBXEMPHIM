@@ -46,7 +46,7 @@
       </div>
 
       <% if (typeof error !== 'undefined' && error) { %>
-        <div class="p-3.5 bg-[#FFF2F1] border-l-4 border-[#BA2D27] text-[#BA2D27] text-xs font-['Plus_Jakarta_Sans'] flex items-center gap-2">
+        <div data-toast-error="<%= error %>" class="p-3.5 bg-[#FFF2F1] border-l-4 border-[#BA2D27] text-[#BA2D27] text-xs font-['Plus_Jakarta_Sans'] flex items-center gap-2">
           <span class="material-symbols-outlined text-base">error</span>
           <span><%= error %></span>
         </div>

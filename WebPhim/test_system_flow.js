@@ -175,6 +175,37 @@ jsFilesToCheck.forEach(f => {
   }
 });
 
+// 8. TOAST NOTIFICATION SYSTEM VERIFICATION (Member & Admin Bottom-Right Toast)
+console.log('\n--- TEST GROUP 8: Toast Notification System Verification ---');
+const toastJsPath = path.join(__dirname, 'public/js/cinego-toast.js');
+assert(fs.existsSync(toastJsPath), 'public/js/cinego-toast.js exists');
+
+const toastJsContent = fs.readFileSync(toastJsPath, 'utf8');
+assert(toastJsContent.includes('cinegoToast'), 'cinego-toast.js exports window.cinegoToast');
+assert(toastJsContent.includes('fixed bottom-6 right-6'), 'cinego-toast.js positions container at fixed bottom-6 right-6');
+assert(toastJsContent.includes('window.alert'), 'cinego-toast.js intercepts window.alert');
+
+const custFooter = fs.readFileSync(path.join(__dirname, 'views/partials/footer.ejs'), 'utf8');
+assert(custFooter.includes('id="cinego-toast-container"'), 'Customer footer has #cinego-toast-container');
+assert(custFooter.includes('fixed bottom-6 right-6'), 'Customer toast container is positioned bottom-6 right-6');
+assert(custFooter.includes('cinego-toast.js'), 'Customer footer loads cinego-toast.js');
+
+const admFooter = fs.readFileSync(path.join(__dirname, 'views/partials/admin-footer.ejs'), 'utf8');
+assert(admFooter.includes('id="cinego-toast-container"'), 'Admin footer has #cinego-toast-container');
+assert(admFooter.includes('fixed bottom-6 right-6'), 'Admin toast container is positioned bottom-6 right-6');
+assert(admFooter.includes('cinego-toast.js'), 'Admin footer loads cinego-toast.js');
+
+const regContent = fs.readFileSync(path.join(__dirname, 'views/trangdangky.ejs'), 'utf8');
+assert(regContent.includes('data-toast-error'), 'Registration view has data-toast-error attribute');
+
+const loginContent = fs.readFileSync(path.join(__dirname, 'views/trangdangnhap.ejs'), 'utf8');
+assert(loginContent.includes('data-toast-error'), 'Login view has data-toast-error attribute');
+assert(loginContent.includes('data-toast-success'), 'Login view has data-toast-success attribute');
+
+const serverContent = fs.readFileSync(path.join(__dirname, 'server.js'), 'utf8');
+assert(serverContent.includes('res.locals.flashError'), 'server.js injects res.locals.flashError');
+assert(serverContent.includes('res.locals.flashSuccess'), 'server.js injects res.locals.flashSuccess');
+
 console.log('\n====================================================');
 console.log(`TOTAL TESTS: ${totalTests} | PASSED: ${passedTests} | FAILED: ${failedTests}`);
 console.log('====================================================');

@@ -71,7 +71,7 @@
     </div>
 
     <div class="flex justify-end gap-3 font-['JetBrains_Mono']">
-      <button type="button" onclick="alert('Đã lưu cấu hình sơ đồ phòng chiếu thành công!')" class="btn-editorial-primary text-xs !py-3 !px-8">
+      <button type="button" onclick="if (window.cinegoToast) window.cinegoToast.success('Đã lưu cấu hình sơ đồ phòng chiếu thành công!'); else alert('Đã lưu cấu hình sơ đồ phòng chiếu thành công!')" class="btn-editorial-primary text-xs !py-3 !px-8">
         LƯU CẤU HÌNH SƠ ĐỒ GHẾ →
       </button>
     </div>
