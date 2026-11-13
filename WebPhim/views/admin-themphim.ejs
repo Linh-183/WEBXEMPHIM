@@ -100,30 +100,30 @@
         </div>
 
         <div class="space-y-4" id="showtimeRowsContainer">
-          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 p-4 bg-[#FAF8F5] border border-[#E5E0D5]">
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 p-4 bg-[#FAF8F5] border border-[#E5E0D5] items-end">
             <div>
-              <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1">Cụm rạp</label>
-              <select name="cinema" class="w-full bg-white border border-[#E5E0D5] p-2 text-xs text-[#121316] font-semibold">
+              <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1.5 whitespace-nowrap truncate" title="Cụm rạp">Cụm rạp</label>
+              <select name="cinema" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs text-[#121316] font-semibold focus:outline-none focus:border-[#121316]">
                 <option value="CGV Kim Cúc Plaza">CGV Kim Cúc Plaza</option>
                 <option value="Starlight Nguyễn Kim">Starlight Nguyễn Kim</option>
                 <option value="Dcine Quy Nhơn">Dcine Phú Tài Center</option>
               </select>
             </div>
             <div>
-              <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1">Phòng chiếu</label>
-              <select name="room" class="w-full bg-white border border-[#E5E0D5] p-2 text-xs text-[#121316] font-semibold">
+              <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1.5 whitespace-nowrap truncate" title="Phòng chiếu">Phòng chiếu</label>
+              <select name="room" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs text-[#121316] font-semibold focus:outline-none focus:border-[#121316]">
                 <option value="Phòng 1 (IMAX)">Phòng 1 (IMAX)</option>
                 <option value="Phòng 2 (2D)">Phòng 2 (2D)</option>
                 <option value="Phòng 3 (VIP)">Phòng 3 (VIP)</option>
               </select>
             </div>
             <div>
-              <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1">Ngày chiếu</label>
-              <input type="date" name="show_date" value="<%= new Date().toISOString().split('T')[0] %>" class="w-full bg-white border border-[#E5E0D5] p-2 text-xs font-['JetBrains_Mono']" />
+              <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1.5 whitespace-nowrap truncate" title="Ngày chiếu">Ngày chiếu</label>
+              <input type="date" name="show_date" value="<%= new Date().toISOString().split('T')[0] %>" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs font-['JetBrains_Mono'] focus:outline-none focus:border-[#121316]" />
             </div>
             <div>
-              <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1">Các suất chiếu (cách dấu phẩy)</label>
-              <input type="text" name="show_times" placeholder="09:30, 13:15, 19:30" value="09:30, 13:15, 19:30" class="w-full bg-white border border-[#E5E0D5] p-2 text-xs font-['JetBrains_Mono'] font-bold text-[#121316]" />
+              <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1.5 whitespace-nowrap truncate" title="Các suất chiếu cách nhau bởi dấu phẩy (VD: 09:30, 13:15, 19:30)">Các suất chiếu</label>
+              <input type="text" name="show_times" placeholder="09:30, 13:15, 19:30" value="09:30, 13:15, 19:30" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs font-['JetBrains_Mono'] font-bold text-[#121316] focus:outline-none focus:border-[#121316]" />
             </div>
           </div>
         </div>

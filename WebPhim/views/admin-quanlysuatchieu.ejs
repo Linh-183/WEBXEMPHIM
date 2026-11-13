@@ -25,10 +25,10 @@
       <span class="text-[10px] font-['JetBrains_Mono'] text-[#10B981] font-bold">ALGORITHM V2.0</span>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs font-['Plus_Jakarta_Sans']">
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs font-['Plus_Jakarta_Sans'] items-end">
       <div>
-        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase mb-1">Rạp & Phòng</label>
-        <select id="scRoom" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] p-2.5 text-xs text-[#121316] font-semibold focus:outline-none">
+        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase mb-1.5 whitespace-nowrap truncate">Rạp & Phòng</label>
+        <select id="scRoom" class="w-full h-10 bg-[#FAF8F5] border border-[#E5E0D5] px-3 text-xs text-[#121316] font-semibold focus:outline-none focus:border-[#121316]">
           <option value="cgv-r1">CGV Kim Cúc - Cinema 1 (IMAX)</option>
           <option value="starlight-r1">Starlight Nguyễn Kim - Phòng 1</option>
           <option value="dcine-r1">Dcine Phú Tài - Hall A</option>
@@ -36,17 +36,18 @@
       </div>
 
       <div>
-        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase mb-1">Thời lượng phim</label>
-        <input type="number" id="scDuration" value="120" placeholder="120 phút" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] p-2.5 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none" />
+        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase mb-1.5 whitespace-nowrap truncate">Thời lượng phim</label>
+        <input type="number" id="scDuration" value="120" placeholder="120 phút" class="w-full h-10 bg-[#FAF8F5] border border-[#E5E0D5] px-3 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
       </div>
 
       <div>
-        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase mb-1">Giờ bắt đầu chiếu</label>
-        <input type="time" id="scStartTime" value="19:30" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] p-2.5 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none" />
+        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase mb-1.5 whitespace-nowrap truncate">Giờ bắt đầu chiếu</label>
+        <input type="time" id="scStartTime" value="19:30" class="w-full h-10 bg-[#FAF8F5] border border-[#E5E0D5] px-3 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
       </div>
 
-      <div class="flex items-end">
-        <button type="button" onclick="testConflictCheck()" class="w-full btn-editorial-primary text-xs !py-3 font-bold">
+      <div>
+        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-transparent select-none mb-1.5 hidden sm:block">Thao tác</label>
+        <button type="button" onclick="testConflictCheck()" class="w-full h-10 btn-editorial-primary text-xs font-bold flex items-center justify-center">
           Tính Giờ Kết Thúc & Check
         </button>
       </div>
