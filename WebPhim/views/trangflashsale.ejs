@@ -40,7 +40,7 @@
                 <span class="font-bold">ĐANG MỞ BÁN: <%= new Date(sale.startTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'}) %> — <%= new Date(sale.endTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'}) %></span>
               </div>
 
-              <h2 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-3xl sm:text-5xl font-bold text-[#121316] leading-tight">
+              <h2 class="font-serif text-3xl sm:text-5xl font-bold text-[#121316] leading-tight">
                 <%= sale.title %>
               </h2>
 
@@ -99,7 +99,7 @@
           <span class="material-symbols-outlined text-3xl">bolt</span>
         </div>
         <div class="space-y-1 max-w-md mx-auto">
-          <h2 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-xl font-bold text-[#121316]">
+          <h2 class="font-serif text-xl font-bold text-[#121316]">
             Hiện Chưa Có Đợt Flash Sale Nào Đang Mở Bán
           </h2>
           <p class="text-xs text-[#7A7E8B]">
@@ -116,7 +116,7 @@
 
     <!-- Upcoming Slots Schedule -->
     <div class="space-y-4">
-      <h3 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-base font-bold text-[#121316] uppercase tracking-wider pb-2 border-b border-[#E5E0D5]">
+      <h3 class="font-serif text-base font-bold text-[#121316] uppercase tracking-wider pb-2 border-b border-[#E5E0D5]">
         Lịch Các Đợt Flash Sale Tiếp Theo
       </h3>
 
@@ -132,7 +132,7 @@
                   <%= new Date(sale.startTime).toLocaleString('vi-VN', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'}) %>
                 </span>
               </div>
-              <h4 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-2xl font-bold text-[#121316]">
+              <h4 class="font-serif text-2xl font-bold text-[#121316]">
                 <%= sale.title %> — Chỉ <%= (sale.salePrice || 19000).toLocaleString('vi-VN') %>đ
               </h4>
               <p class="text-xs text-[#7A7E8B]"><%= sale.description || 'Ưu đãi đặc biệt áp dụng tại 3 cụm rạp Quy Nhơn.' %></p>

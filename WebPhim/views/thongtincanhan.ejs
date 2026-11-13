@@ -80,14 +80,14 @@
         <!-- Embossed Member Card -->
         <div class="bg-white border-2 border-[#121316] p-6 relative overflow-hidden shadow-lg">
           <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-4 mb-4">
-            <span class="font-['Playfair_Display','Merriweather',Georgia,serif] font-black text-lg tracking-[0.2em] text-[#121316]">CINEGO CLUB</span>
+            <span class="font-serif font-black text-lg tracking-[0.2em] text-[#121316]">CINEGO CLUB</span>
             <span class="font-['JetBrains_Mono'] text-[9px] uppercase tracking-widest px-2.5 py-0.5 text-white font-bold" style="background-color: <%= tierColor %>;">
               <%= tierBadge %>
             </span>
           </div>
 
           <div class="flex items-center gap-4 py-2">
-            <div class="w-14 h-14 bg-[#121316] text-[#FAF8F5] font-['Playfair_Display','Merriweather',Georgia,serif] font-bold text-2xl flex items-center justify-center shrink-0">
+            <div class="w-14 h-14 bg-[#121316] text-[#FAF8F5] font-serif font-bold text-2xl flex items-center justify-center shrink-0">
               <%= (user && (user.hoTen || user.name)) ? (user.hoTen || user.name).charAt(0).toUpperCase() : 'U' %>
             </div>
             <div class="overflow-hidden">
@@ -221,7 +221,7 @@
         <!-- SECTION A: PROFILE EDIT FORM & FAVORITE GENRES -->
         <div id="section-profile" class="bg-white border border-[#E5E0D5] p-6 sm:p-8 space-y-6">
           <div class="border-b border-[#E5E0D5] pb-4 flex items-center justify-between">
-            <h2 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-base font-bold text-[#121316] uppercase tracking-wider">
+            <h2 class="font-serif text-base font-bold text-[#121316] uppercase tracking-wider">
               1. Cập Nhật Thông Tin Cá Nhân
             </h2>
             <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">THÔNG TIN XÁC THỰC</span>
@@ -336,7 +336,7 @@
           <div class="border-b border-[#E5E0D5] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <span class="archival-index">VÍ ƯU ĐÃI THÀNH VIÊN</span>
-              <h2 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-base font-bold text-[#121316] uppercase tracking-wider mt-0.5">
+              <h2 class="font-serif text-base font-bold text-[#121316] uppercase tracking-wider mt-0.5">
                 2. Ví Voucher Cá Nhân
               </h2>
             </div>
@@ -369,7 +369,7 @@
                 <div id="voucher-card-<%= v._id %>" class="wallet-voucher-card ticket-pass ticket-pass-horizontal p-5 bg-[#FAF8F5] border border-[#E5E0D5] flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div>
                     <div class="flex items-center gap-2">
-                      <span class="font-['Playfair_Display','Merriweather',Georgia,serif] font-black text-lg text-[#121316]"><%= v.code %></span>
+                      <span class="font-serif font-black text-lg text-[#121316]"><%= v.code %></span>
                       <span class="px-1.5 py-0.5 bg-[#BA2D27] text-white text-[9px] font-['JetBrains_Mono'] font-bold uppercase">
                         <%= v.discountType === 'percentage' ? ('GIẢM ' + v.discountValue + '%') : ('GIẢM ' + (v.discountValue / 1000) + 'K') %>
                       </span>
@@ -397,7 +397,7 @@
               <div id="wallet-empty-state" class="p-8 text-center bg-[#FAF8F5] border border-[#E5E0D5] space-y-3">
                 <span class="material-symbols-outlined text-3xl text-[#7A7E8B]">account_balance_wallet</span>
                 <div class="space-y-1">
-                  <h4 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-base font-bold text-[#121316]">Ví Voucher Cá Nhân Đang Trống</h4>
+                  <h4 class="font-serif text-base font-bold text-[#121316]">Ví Voucher Cá Nhân Đang Trống</h4>
                   <p class="text-xs text-[#7A7E8B] max-w-md mx-auto">
                     Bạn chưa lưu mã ưu đãi nào vào ví. Hãy nhập mã ở trên hoặc ghé trang Khuyến Mãi để lưu các voucher đang phát hành!
                   </p>
@@ -415,7 +415,7 @@
         <!-- SECTION C: PASSWORD CHANGE FORM -->
         <div id="section-security" class="bg-white border border-[#E5E0D5] p-6 sm:p-8 space-y-6">
           <div class="border-b border-[#E5E0D5] pb-4 flex items-center justify-between">
-            <h2 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-base font-bold text-[#121316] uppercase tracking-wider">
+            <h2 class="font-serif text-base font-bold text-[#121316] uppercase tracking-wider">
               3. Đổi Mật Khẩu Bảo Mật
             </h2>
             <span class="text-[10px] font-['JetBrains_Mono'] text-[#BA2D27] font-bold">MẬT KHẨU TỐI THIỂU 6 KÝ TỰ</span>

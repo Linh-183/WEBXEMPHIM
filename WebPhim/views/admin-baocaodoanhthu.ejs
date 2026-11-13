@@ -23,7 +23,7 @@
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 font-['JetBrains_Mono']">
     <div class="bg-white border border-[#E5E0D5] p-6 space-y-1">
       <span class="text-[10px] uppercase font-bold text-[#7A7E8B] block">Doanh thu thời gian thực</span>
-      <strong class="text-3xl font-black text-[#10B981] font-['Playfair_Display','Merriweather',serif] block">
+      <strong class="text-3xl font-black text-[#10B981] font-mono block">
         <%= (typeof totalRevenue !== 'undefined' ? totalRevenue : 0).toLocaleString('vi-VN') %> đ
       </strong>
       <span class="text-[11px] text-[#10B981] font-semibold flex items-center gap-1.5">
@@ -32,7 +32,7 @@
     </div>
     <div class="bg-white border border-[#E5E0D5] p-6 space-y-1">
       <span class="text-[10px] uppercase font-bold text-[#7A7E8B] block">Doanh thu Combo F&B</span>
-      <strong class="text-3xl font-black text-[#A6853B] font-['Playfair_Display','Merriweather',serif] block">
+      <strong class="text-3xl font-black text-[#A6853B] font-mono block">
         <%= (typeof totalFnb !== 'undefined' ? totalFnb : 0).toLocaleString('vi-VN') %> đ
       </strong>
       <span class="text-[11px] text-[#7A7E8B] block font-medium">
@@ -41,7 +41,7 @@
     </div>
     <div class="bg-white border border-[#E5E0D5] p-6 space-y-1">
       <span class="text-[10px] uppercase font-bold text-[#7A7E8B] block">Giá trị trung bình đơn (AOV)</span>
-      <strong class="text-3xl font-black text-[#121316] font-['Playfair_Display','Merriweather',serif] block">
+      <strong class="text-3xl font-black text-[#121316] font-mono block">
         <%= (typeof aov !== 'undefined' ? aov : 0).toLocaleString('vi-VN') %> đ
       </strong>
       <span class="text-[11px] text-[#BA2D27] block font-medium">
@@ -53,7 +53,7 @@
   <!-- Revenue Breakdown Table by Cinema -->
   <div class="bg-white border border-[#E5E0D5] overflow-x-auto shadow-sm">
     <div class="p-4 border-b border-[#E5E0D5] flex items-center justify-between font-['JetBrains_Mono']">
-      <h3 class="font-['Playfair_Display','Merriweather',serif] text-xs font-bold text-[#121316] uppercase tracking-wider">
+      <h3 class="font-bold text-xs text-[#121316] uppercase tracking-wider">
         Doanh Số Chi Tiết Theo 3 Cụm Rạp Quy Nhơn
       </h3>
       <span class="text-xs text-[#7A7E8B]">Tháng <%= (new Date().getMonth() + 1) %>/<%= new Date().getFullYear() %></span>

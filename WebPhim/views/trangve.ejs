@@ -18,7 +18,7 @@
       <!-- Pass Header -->
       <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-4">
         <div>
-          <span class="font-['Georgia'] font-black text-xl tracking-[0.2em] text-[#121316]">CINEGO</span>
+          <span class="font-serif font-black text-xl tracking-[0.2em] text-[#121316]">CINEGO</span>
           <span class="block font-['JetBrains_Mono'] text-[9px] text-[#7A7E8B] uppercase tracking-wider">Digital Admission Pass</span>
         </div>
         <div class="text-right font-['JetBrains_Mono']">
@@ -35,7 +35,7 @@
           <%= (typeof ticket !== 'undefined' && ticket && ticket.movie && ticket.movie.ageRating) ? ticket.movie.ageRating : 'P' %>
         </span>
         <% const currentTicket = (typeof ticket !== 'undefined' && ticket) ? ticket : null; %>
-        <h2 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-3xl sm:text-4xl font-bold text-[#121316] leading-tight" id="ticketMovieTitle">
+        <h2 class="font-serif text-3xl sm:text-4xl font-bold text-[#121316] leading-tight" id="ticketMovieTitle">
           <%= (currentTicket && currentTicket.movie && currentTicket.movie.title) ? currentTicket.movie.title : (currentTicket && currentTicket.comboDetails ? 'CineGo Concessions Pass' : 'Vé Xem Phim CineGo') %>
         </h2>
         <span class="font-['JetBrains_Mono'] text-xs text-[#7A7E8B] block mt-1">
