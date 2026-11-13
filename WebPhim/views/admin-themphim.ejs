@@ -20,7 +20,7 @@
       
       <!-- Basic Movie Information Card -->
       <div class="bg-white border border-[#E5E0D5] p-6 sm:p-8 space-y-5">
-        <h2 class="font-['Georgia'] text-sm font-bold text-[#121316] uppercase tracking-wider pb-3 border-b border-[#E5E0D5]">
+        <h2 class="font-bold text-xs text-[#121316] uppercase tracking-wider pb-3 border-b border-[#E5E0D5]">
           1. Thông Tin Cơ Bản Của Phim
         </h2>
 
@@ -93,7 +93,7 @@
       <!-- Showtime Schedule Generator -->
       <div class="bg-white border border-[#E5E0D5] p-6 sm:p-8 space-y-4">
         <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-3">
-          <h2 class="font-['Georgia'] text-sm font-bold text-[#121316] uppercase tracking-wider">
+          <h2 class="font-bold text-xs text-[#121316] uppercase tracking-wider">
             2. Xếp Lịch Chiếu Tại 3 Rạp Quy Nhơn
           </h2>
           <span class="text-[10px] font-['JetBrains_Mono'] text-[#10B981] font-bold">CHỐNG TRÙNG LỊCH</span>
@@ -119,7 +119,7 @@
             </div>
             <div>
               <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1">Ngày chiếu</label>
-              <input type="date" name="show_date" value="2026-11-12" class="w-full bg-white border border-[#E5E0D5] p-2 text-xs font-['JetBrains_Mono']" />
+              <input type="date" name="show_date" value="<%= new Date().toISOString().split('T')[0] %>" class="w-full bg-white border border-[#E5E0D5] p-2 text-xs font-['JetBrains_Mono']" />
             </div>
             <div>
               <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1">Các suất chiếu (cách dấu phẩy)</label>
@@ -135,7 +135,7 @@
     <div class="lg:col-span-4 space-y-6">
       
       <div class="bg-white border border-[#E5E0D5] p-6 space-y-4">
-        <h3 class="font-['Georgia'] text-xs font-bold text-[#121316] uppercase tracking-wider pb-2 border-b border-[#E5E0D5]">
+        <h3 class="font-bold text-xs text-[#121316] uppercase tracking-wider pb-2 border-b border-[#E5E0D5]">
           3. Hình Ảnh & Video Trailer
         </h3>
 

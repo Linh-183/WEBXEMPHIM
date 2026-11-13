@@ -183,11 +183,15 @@ router.get('/phim/them', (req, res) => res.redirect('/admin/phim?action=them'));
 router.post('/phim/them', async (req, res) => {
     try {
         const { title, genre, duration, director, releaseDate, posterUrl, trailerUrl, ageRating, status, description, cinema, room, show_date, show_times } = req.body;
+        if (!title || !title.trim()) {
+            return res.redirect('/admin/phim?action=them&error=' + encodeURIComponent('Vui lòng nhập tên phim!'));
+        }
+
         let formattedShowtimes = [];
         if (Array.isArray(show_date)) {
             for (let i = 0; i < show_date.length; i++) {
                 const cVal = Array.isArray(cinema) ? (cinema[i] || 'CGV Kim Cúc Plaza') : (cinema || 'CGV Kim Cúc Plaza');
-                const rVal = Array.isArray(room) ? (room[i] || 'Phòng 1') : (room || 'Phòng 1');
+                const rVal = Array.isArray(room) ? (room[i] || 'Phòng 1 (IMAX)') : (room || 'Phòng 1 (IMAX)');
                 if (show_date[i] && show_times && show_times[i]) {
                     formattedShowtimes.push({
                         cinema: cVal,
@@ -200,14 +204,34 @@ router.post('/phim/them', async (req, res) => {
         } else if (show_date && show_times) {
             formattedShowtimes.push({
                 cinema: cinema || 'CGV Kim Cúc Plaza',
-                room: room || 'Phòng 1',
+                room: room || 'Phòng 1 (IMAX)',
                 date: show_date,
                 times: show_times.split(',').map(t => t.trim()).filter(Boolean)
             });
         }
-        await new Movie({ title, genre, duration, director, releaseDate, posterUrl, trailerUrl, ageRating, status, description, showtimes: formattedShowtimes }).save();
-        res.redirect('/admin/phim?success=' + encodeURIComponent(`Đã thêm phim "${title}" vào hệ thống thành công!`));
-    } catch (error) { res.status(500).send('Lỗi thêm phim: ' + error.message); }
+
+        const safeReleaseDate = (releaseDate && !isNaN(new Date(releaseDate).getTime())) ? new Date(releaseDate) : new Date();
+        const safeDuration = Number(duration) || 120;
+
+        await new Movie({ 
+            title: title.trim(), 
+            genre: genre ? genre.trim() : 'Điện ảnh', 
+            duration: safeDuration, 
+            director: director ? director.trim() : '', 
+            releaseDate: safeReleaseDate, 
+            posterUrl: posterUrl ? posterUrl.trim() : 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80', 
+            trailerUrl: trailerUrl ? trailerUrl.trim() : '', 
+            ageRating: ageRating || 'T16', 
+            status: status || 'DangChieu', 
+            description: description ? description.trim() : '', 
+            showtimes: formattedShowtimes 
+        }).save();
+
+        res.redirect('/admin/phim?success=' + encodeURIComponent(`Đã thêm phim "${title.trim()}" vào hệ thống thành công!`));
+    } catch (error) { 
+        console.error("Lỗi thêm phim:", error);
+        res.redirect('/admin/phim?action=them&error=' + encodeURIComponent('Lỗi thêm phim: ' + error.message)); 
+    }
 });
 
 router.get('/phim/sua/:id', async (req, res) => {

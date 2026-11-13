@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><%= typeof title !== 'undefined' ? title + ' — CineGo Admin' : 'CineGo Quản Trị Hệ Thống Điện Ảnh' %></title>
   
-  <!-- Curatorial Typography & Monospace -->
+  <!-- Curatorial Typography & Monospace (Hỗ trợ 100% tiếng Việt có dấu, chống vỡ font) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   
   <!-- Material Symbols Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@200..600,0..1&display=swap" rel="stylesheet" />
@@ -32,9 +32,10 @@
             cinnabar: '#BA2D27'
           },
           fontFamily: {
-            sculpted: ['"Georgia"', 'serif'],
-            serif: ['"Georgia"', '"Times New Roman"', 'serif'],
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            sculpted: ['"Playfair Display"', '"Merriweather"', '"Be Vietnam Pro"', 'serif'],
+            editorial: ['"Playfair Display"', '"Merriweather"', '"Be Vietnam Pro"', 'serif'],
+            serif: ['"Playfair Display"', '"Merriweather"', '"Be Vietnam Pro"', 'serif'],
+            sans: ['"Plus Jakarta Sans"', '"Be Vietnam Pro"', 'sans-serif'],
             mono: ['"JetBrains Mono"', 'monospace']
           }
         }
