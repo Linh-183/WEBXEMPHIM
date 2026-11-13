@@ -266,23 +266,40 @@
             <div class="flex gap-2">
               <input type="text" 
                      id="voucherCodeInput" 
-                     placeholder="Nhập mã voucher (Ví dụ: FLASH19K, CINEGO50)..." 
+                     placeholder="Nhập mã voucher (Ví dụ: CINEGO50)..." 
                      class="flex-1 bg-[#FAF8F5] border border-[#E5E0D5] px-4 py-3 text-xs uppercase font-['JetBrains_Mono'] text-[#121316] focus:outline-none focus:border-[#121316]" />
               <button type="button" 
-                      id="btnApplyVoucher" 
-                      onclick="checkAndApplyVoucher()" 
-                      class="btn-editorial-primary text-xs !py-2.5 !px-6">
+                       id="btnApplyVoucher" 
+                       onclick="checkAndApplyVoucher()" 
+                       class="btn-editorial-primary text-xs !py-2.5 !px-6">
                 Áp Dụng
               </button>
             </div>
 
-            <!-- Quick Voucher Pills -->
-            <div class="flex flex-wrap items-center gap-2 pt-2 text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B]">
-              <span class="text-[#121316] font-bold">Mã gợi ý:</span>
-              <button type="button" onclick="fillVoucher('FLASH19K')" class="px-2 py-0.5 bg-[#F3EFE6] border border-[#E5E0D5] text-[#BA2D27] hover:border-[#BA2D27] font-bold">FLASH19K</button>
-              <button type="button" onclick="fillVoucher('FLASHCOMBO50')" class="px-2 py-0.5 bg-[#F3EFE6] border border-[#E5E0D5] text-[#A6853B] hover:border-[#A6853B] font-bold">FLASHCOMBO50</button>
-              <button type="button" onclick="fillVoucher('CINEGO50')" class="px-2 py-0.5 bg-[#F3EFE6] border border-[#E5E0D5] text-[#121316] hover:border-[#121316]">CINEGO50</button>
-            </div>
+            <!-- Quick Voucher Pills from User Wallet / Active Vouchers -->
+            <% 
+              const walletList = (typeof savedVouchers !== 'undefined' && Array.isArray(savedVouchers)) 
+                ? savedVouchers 
+                : ((typeof user !== 'undefined' && user && Array.isArray(user.vouchers) && user.vouchers.length > 0 && user.vouchers[0]._id) ? user.vouchers : []); 
+            %>
+            <% if (walletList.length > 0) { %>
+              <div class="space-y-1.5 pt-2">
+                <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B] uppercase font-bold">Mã trong ví của bạn (Click để chọn nhanh):</span>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <% walletList.forEach(wv => { %>
+                    <button type="button" 
+                            onclick="fillVoucher('<%= wv.code %>')" 
+                            class="px-2.5 py-1 bg-[#FAF8F5] border border-[#BA2D27] text-[#BA2D27] hover:bg-[#BA2D27] hover:text-white text-[11px] font-['JetBrains_Mono'] font-bold transition-colors">
+                      🎟 <%= wv.code %> (<%= wv.discountType === 'percentage' ? ('-' + wv.discountValue + '%') : ('-' + (wv.discountValue/1000) + 'K') %>)
+                    </button>
+                  <% }); %>
+                </div>
+              </div>
+            <% } else { %>
+              <div class="pt-1 text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B]">
+                Ví voucher chưa có mã. <a href="/khuyen-mai" target="_blank" class="text-[#BA2D27] underline font-bold">Khám phá & lưu mã tại mục Khuyến Mãi →</a>
+              </div>
+            <% } %>
 
             <div id="voucherFeedback" class="hidden p-3 text-xs font-['JetBrains_Mono'] font-semibold"></div>
           </div>
@@ -517,19 +534,9 @@
         feedback.innerText = '✕ ' + (data.message || 'Mã không hợp lệ!');
       }
     } catch (e) {
-      // Offline fallback simulator for mock vouchers
-      if (code.toUpperCase() === 'FLASH19K') {
-        const discount = Math.max(0, baseTotal - 19000);
-        applySimulatedDiscount(discount, 'Áp dụng thành công vé Flash Sale 19.000đ!');
-      } else if (code.toUpperCase() === 'CINEGO50') {
-        applySimulatedDiscount(50000, 'Áp dụng thành công Voucher 50.000đ!');
-      } else if (code.toUpperCase() === 'FLASHCOMBO50') {
-        applySimulatedDiscount(45000, 'Giảm 50% Combo Bắp Nước thành công!');
-      } else {
-        feedback.classList.remove('hidden');
-        feedback.className = 'p-3 bg-red-50 text-red-700 border border-red-200 text-xs font-["JetBrains_Mono"]';
-        feedback.innerText = '✕ Mã ưu đãi không tồn tại hoặc đã hết hạn!';
-      }
+      feedback.classList.remove('hidden');
+      feedback.className = 'p-3 bg-red-50 text-red-700 border border-red-200 text-xs font-["JetBrains_Mono"]';
+      feedback.innerText = '✕ Lỗi kết nối hoặc mã ưu đãi không hợp lệ!';
     }
   }
 

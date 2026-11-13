@@ -168,8 +168,15 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
             }
         }
 
+        let savedVouchers = [];
+        if (req.session.user && req.session.user._id) {
+            const currentUserWithVouchers = await User.findById(req.session.user._id).populate('vouchers');
+            if (currentUserWithVouchers && currentUserWithVouchers.vouchers) {
+                savedVouchers = currentUserWithVouchers.vouchers;
+            }
+        }
         const vouchers = await Voucher.find({ $or: [{ expiryDate: { $gte: new Date() } }, { expiryDate: null }] });
-        res.render('trangthanhtoan', { phim, cinema: selectedCinema, showDate, showTime, seats: seatList, total: Number(total), comboDetails, comboTotal: Number(comboTotal), vouchers });
+        res.render('trangthanhtoan', { phim, cinema: selectedCinema, showDate, showTime, seats: seatList, total: Number(total), comboDetails, comboTotal: Number(comboTotal), vouchers, savedVouchers });
     } catch(error) { 
         console.error("Lỗi thanh toán:", error);
         res.status(500).send("Lỗi thanh toán: " + error.message); 
@@ -386,6 +393,99 @@ router.post('/api/kiem-tra-voucher', checkLogin, async (req, res) => {
     } catch (error) { res.status(500).json({ success: false, message: "Lỗi hệ thống khi kiểm tra voucher" }); }
 });
 
+// [MỚI] API LƯU VOUCHER VÀO VÍ CÁ NHÂN CỦA KHÁCH HÀNG
+router.post('/api/luu-voucher', async (req, res) => {
+    try {
+        if (!req.session.user || !req.session.user._id) {
+            return res.status(401).json({ success: false, message: "Vui lòng đăng nhập để lưu mã ưu đãi vào ví cá nhân!" });
+        }
+
+        const { code, voucherId } = req.body;
+        let voucher = null;
+        if (voucherId && isValidObjectId(voucherId)) {
+            voucher = await Voucher.findById(voucherId);
+        } else if (code) {
+            voucher = await Voucher.findOne({ code: code.trim().toUpperCase() });
+        }
+
+        if (!voucher) {
+            return res.status(404).json({ success: false, message: "Mã khuyến mãi không tồn tại trên hệ thống!" });
+        }
+
+        if (voucher.expiryDate && new Date(voucher.expiryDate) < new Date()) {
+            return res.json({ success: false, message: "Mã khuyến mãi này đã hết hạn sử dụng!" });
+        }
+
+        const user = await User.findById(req.session.user._id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy thông tin tài khoản!" });
+        }
+
+        if (!user.vouchers) user.vouchers = [];
+
+        // Kiểm tra xem đã lưu voucher này chưa
+        const isAlreadySaved = user.vouchers.some(vId => vId.toString() === voucher._id.toString());
+        if (isAlreadySaved) {
+            return res.json({ success: false, message: `Mã ${voucher.code} đã có trong ví của bạn rồi!` });
+        }
+
+        user.vouchers.push(voucher._id);
+        await user.save();
+        req.session.user.vouchers = user.vouchers;
+
+        res.json({ 
+            success: true, 
+            message: `Đã lưu mã ${voucher.code} vào ví cá nhân thành công!`,
+            voucher: {
+                _id: voucher._id,
+                code: voucher.code,
+                title: voucher.title,
+                discountType: voucher.discountType,
+                discountValue: voucher.discountValue
+            }
+        });
+    } catch (error) {
+        console.error("Lỗi lưu voucher vào ví:", error);
+        res.status(500).json({ success: false, message: "Lỗi hệ thống khi lưu voucher: " + error.message });
+    }
+});
+
+// [MỚI] API BỎ LƯU VOUCHER KHỎI VÍ
+router.post('/api/xoa-voucher-vi', async (req, res) => {
+    try {
+        if (!req.session.user || !req.session.user._id) {
+            return res.status(401).json({ success: false, message: "Vui lòng đăng nhập!" });
+        }
+
+        const { voucherId, code } = req.body;
+        const user = await User.findById(req.session.user._id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "Tài khoản không tồn tại!" });
+        }
+
+        if (!user.vouchers || user.vouchers.length === 0) {
+            return res.json({ success: true, message: "Ví hiện không có mã này." });
+        }
+
+        let targetId = voucherId;
+        if (!targetId && code) {
+            const v = await Voucher.findOne({ code: code.trim().toUpperCase() });
+            if (v) targetId = v._id.toString();
+        }
+
+        if (targetId) {
+            user.vouchers = user.vouchers.filter(id => id.toString() !== targetId.toString());
+            await user.save();
+            req.session.user.vouchers = user.vouchers;
+        }
+
+        res.json({ success: true, message: "Đã bỏ lưu voucher khỏi ví thành công!" });
+    } catch (error) {
+        console.error("Lỗi bỏ lưu voucher:", error);
+        res.status(500).json({ success: false, message: "Lỗi khi bỏ lưu voucher: " + error.message });
+    }
+});
+
 // [MỚI - GIAI ĐOẠN 4] Kiểm tra ghế đã bán và ghế đang giữ bằng MongoDB TTL (Phòng thủ CastError)
 router.get('/api/ghe-da-dat', async (req, res) => {
     try {
@@ -477,12 +577,13 @@ router.get('/tai-khoan/ve-cua-toi', checkLogin, async (req, res) => {
 
 router.get('/tai-khoan/thong-tin', checkLogin, async (req, res) => {
     try {
-        const thongTinUser = await User.findById(req.session.user._id);
+        const thongTinUser = await User.findById(req.session.user._id).populate('vouchers');
         if (!thongTinUser) return res.redirect('/dang-nhap');
         const vouchers = await Voucher.find({ $or: [{ expiryDate: { $gte: new Date() } }, { expiryDate: null }] }).sort({ createdAt: -1 });
         res.render('thongtincanhan', { 
             user: thongTinUser, 
             vouchers: vouchers || [], 
+            savedVouchers: thongTinUser.vouchers || [],
             error: req.query.error || null, 
             success: req.query.success || null 
         });
@@ -519,19 +620,30 @@ router.post('/tai-khoan/cap-nhat', checkLogin, async (req, res) => {
 router.post('/tai-khoan/doi-mat-khau', checkLogin, async (req, res, next) => {
     try {
         const { currentPassword, newPassword, confirmPassword } = req.body;
-        const user = await User.findById(req.session.user._id);
+        const user = await User.findById(req.session.user._id).populate('vouchers');
         
         if (!user) return res.redirect('/dang-nhap');
 
+        const renderError = async (errMsg) => {
+            const vouchers = await Voucher.find({ $or: [{ expiryDate: { $gte: new Date() } }, { expiryDate: null }] }).sort({ createdAt: -1 });
+            return res.render('thongtincanhan', { 
+                user, 
+                vouchers: vouchers || [], 
+                savedVouchers: user.vouchers || [],
+                error: errMsg, 
+                success: null 
+            });
+        };
+
         const isMatch = await bcrypt.compare(currentPassword, user.matKhau);
-        if (!isMatch) return res.render('thongtincanhan', { user, error: 'Mật khẩu hiện tại không chính xác! Vui lòng thử lại.', success: null });
+        if (!isMatch) return renderError('Mật khẩu hiện tại không chính xác! Vui lòng thử lại.');
 
         if (newPassword !== confirmPassword) {
-            return res.render('thongtincanhan', { user, error: 'Mật khẩu mới và xác nhận không khớp!', success: null });
+            return renderError('Mật khẩu mới và xác nhận không khớp!');
         }
 
         if (newPassword.length < 6) {
-            return res.render('thongtincanhan', { user, error: 'Mật khẩu mới phải có tối thiểu 6 ký tự!', success: null });
+            return renderError('Mật khẩu mới phải có tối thiểu 6 ký tự!');
         }
 
         const salt = await bcrypt.genSalt(10);

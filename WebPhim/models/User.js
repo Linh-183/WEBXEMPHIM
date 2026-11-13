@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema({
     diemTichLuy: { type: Number, default: 0 },
     hangHoiVien: { type: String, default: 'Dong', enum: ['Dong', 'Bac', 'Vang', 'KimCuong'] },
     favoriteGenres: [{ type: String }],
+    vouchers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Voucher' }], // Danh sách voucher đã lưu vào ví
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date }
 }, { timestamps: true });

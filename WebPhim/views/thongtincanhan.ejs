@@ -42,7 +42,10 @@
     progressPercent = Math.min(100, Math.round(((points - 100) / 200) * 100));
   }
 
-  const userVouchers = (typeof vouchers !== 'undefined' && Array.isArray(vouchers)) ? vouchers : [];
+  const savedVouchersList = (typeof savedVouchers !== 'undefined' && Array.isArray(savedVouchers)) 
+    ? savedVouchers 
+    : ((user && Array.isArray(user.vouchers) && user.vouchers.length > 0 && user.vouchers[0]._id) ? user.vouchers : []);
+  const allVouchers = (typeof vouchers !== 'undefined' && Array.isArray(vouchers)) ? vouchers : [];
   const userGenres = (user && Array.isArray(user.favoriteGenres)) ? user.favoriteGenres : [];
 %>
 
@@ -190,7 +193,7 @@
             <span>→</span>
           </a>
           <a href="#voucher-tab" onclick="switchTab('vouchers')" class="flex items-center justify-between p-2.5 hover:bg-[#F3EFE6] text-[#474A54] hover:text-[#121316]">
-            <span>Ví Voucher (<span class="text-[#BA2D27] font-bold"><%= userVouchers.length %> mã</span>)</span>
+            <span>Ví Voucher (<span id="sidebar-voucher-count" class="text-[#BA2D27] font-bold"><%= savedVouchersList.length %> mã</span>)</span>
             <span>→</span>
           </a>
           <a href="#security-tab" onclick="switchTab('security')" class="flex items-center justify-between p-2.5 hover:bg-[#F3EFE6] text-[#474A54] hover:text-[#121316]">
@@ -328,21 +331,42 @@
           </form>
         </div>
 
-        <!-- SECTION B: VOUCHER WALLET (Đọc trực tiếp từ DB, không mock sẵn 3 mã) -->
+        <!-- SECTION B: VÍ VOUCHER CÁ NHÂN -->
         <div id="section-vouchers" class="bg-white border border-[#E5E0D5] p-6 sm:p-8 space-y-6">
-          <div class="border-b border-[#E5E0D5] pb-4 flex items-center justify-between">
-            <h2 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-base font-bold text-[#121316] uppercase tracking-wider">
-              2. Ví Voucher Khả Dụng Trong Hệ Thống
-            </h2>
+          <div class="border-b border-[#E5E0D5] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <span class="archival-index">VÍ ƯU ĐÃI THÀNH VIÊN</span>
+              <h2 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-base font-bold text-[#121316] uppercase tracking-wider mt-0.5">
+                2. Ví Voucher Cá Nhân
+              </h2>
+            </div>
             <div class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">
-              TỔNG SỐ: <strong class="text-[#BA2D27]"><%= userVouchers.length %> MÃ</strong>
+              ĐANG SỞ HỮU: <strong class="text-[#BA2D27]" id="total-wallet-vouchers"><%= savedVouchersList.length %> MÃ</strong>
             </div>
           </div>
 
+          <!-- Form Lưu Mã Voucher Vào Ví -->
+          <div class="p-4 bg-[#FAF8F5] border border-[#E5E0D5] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="font-bold text-xs text-[#121316]">Thu Thập Thêm Voucher</div>
+              <p class="text-[11px] text-[#7A7E8B]">Nhập mã ưu đãi để lưu trực tiếp vào ví cá nhân của bạn</p>
+            </div>
+            <form onsubmit="handleSaveToWallet(event)" class="flex items-center gap-2 w-full sm:w-auto">
+              <input type="text" 
+                     id="inputWalletVoucherCode" 
+                     required 
+                     placeholder="Nhập mã voucher..." 
+                     class="w-full sm:w-48 bg-white border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] uppercase font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
+              <button type="submit" class="btn-editorial-primary text-xs !py-2 !px-4 whitespace-nowrap">
+                Lưu Vào Ví
+              </button>
+            </form>
+          </div>
+
           <div class="space-y-4" id="wallet-vouchers-container">
-            <% if (userVouchers.length > 0) { %>
-              <% userVouchers.forEach(v => { %>
-                <div class="wallet-voucher-card ticket-pass ticket-pass-horizontal p-5 bg-[#FAF8F5] border border-[#E5E0D5] flex flex-col sm:flex-row items-center justify-between gap-4">
+            <% if (savedVouchersList.length > 0) { %>
+              <% savedVouchersList.forEach(v => { %>
+                <div id="voucher-card-<%= v._id %>" class="wallet-voucher-card ticket-pass ticket-pass-horizontal p-5 bg-[#FAF8F5] border border-[#E5E0D5] flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div>
                     <div class="flex items-center gap-2">
                       <span class="font-['Playfair_Display','Merriweather',Georgia,serif] font-black text-lg text-[#121316]"><%= v.code %></span>
@@ -358,24 +382,29 @@
                       <% } %>
                     </div>
                   </div>
-                  <button type="button" onclick="copyVoucher('<%= v.code %>')" class="btn-editorial-secondary text-xs !py-2 !px-4 shrink-0 font-['JetBrains_Mono']">
-                    Sao Chép Mã
-                  </button>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <a href="/phim" class="btn-editorial-primary text-xs !py-1.5 !px-3 font-['JetBrains_Mono']">
+                      Đặt Vé Dùng Ngay →
+                    </a>
+                    <button type="button" onclick="removeVoucherFromWallet('<%= v._id %>', '<%= v.code %>')" class="border border-[#E5E0D5] bg-white hover:border-[#BA2D27] hover:text-[#BA2D27] text-xs !py-1.5 !px-3 font-['JetBrains_Mono'] transition-colors">
+                      Bỏ Lưu
+                    </button>
+                  </div>
                 </div>
               <% }); %>
             <% } else { %>
-              <!-- Empty State khi tài khoản mới hoặc hệ thống chưa có voucher -->
-              <div class="p-8 text-center bg-[#FAF8F5] border border-[#E5E0D5] space-y-3">
-                <span class="material-symbols-outlined text-3xl text-[#7A7E8B]">loyalty</span>
+              <!-- Empty State khi tài khoản mới hoặc ví trống -->
+              <div id="wallet-empty-state" class="p-8 text-center bg-[#FAF8F5] border border-[#E5E0D5] space-y-3">
+                <span class="material-symbols-outlined text-3xl text-[#7A7E8B]">account_balance_wallet</span>
                 <div class="space-y-1">
-                  <h4 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-base font-bold text-[#121316]">Ví Voucher Hiện Đang Trống</h4>
+                  <h4 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-base font-bold text-[#121316]">Ví Voucher Cá Nhân Đang Trống</h4>
                   <p class="text-xs text-[#7A7E8B] max-w-md mx-auto">
-                    Bạn chưa có mã ưu đãi nào trong ví. Hãy tham gia tích điểm khi xem phim hoặc săn vé tại mục Khuyến Mãi / Flash Sale!
+                    Bạn chưa lưu mã ưu đãi nào vào ví. Hãy nhập mã ở trên hoặc ghé trang Khuyến Mãi để lưu các voucher đang phát hành!
                   </p>
                 </div>
                 <div class="pt-2">
                   <a href="/khuyen-mai" class="btn-editorial-primary text-xs !py-2 !px-4 inline-block">
-                    Khám Phá Ưu Đãi & Flash Sale →
+                    Khám Phá Voucher Khuyến Mãi →
                   </a>
                 </div>
               </div>
@@ -478,6 +507,60 @@
     input.value = selected.join(',');
     const countLabel = document.getElementById('genreCountLabel');
     if (countLabel) countLabel.innerText = 'Đã chọn: ' + selected.length + '/3';
+  }
+
+  function handleSaveToWallet(e) {
+    e.preventDefault();
+    const input = document.getElementById('inputWalletVoucherCode');
+    const code = input.value.trim();
+    if (!code) return;
+
+    fetch('/api/luu-voucher', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        if (window.cinegoToast) window.cinegoToast.success(data.message);
+        else alert(data.message);
+        setTimeout(() => window.location.reload(), 800);
+      } else {
+        if (window.cinegoToast) window.cinegoToast.warning(data.message);
+        else alert(data.message);
+      }
+    })
+    .catch(err => {
+      if (window.cinegoToast) window.cinegoToast.error('Không thể lưu voucher: ' + err.message);
+      else alert('Lỗi kết nối');
+    });
+  }
+
+  function removeVoucherFromWallet(voucherId, code) {
+    if (!confirm('Bạn có chắc chắn muốn bỏ lưu voucher ' + code + ' khỏi ví cá nhân?')) return;
+    
+    fetch('/api/xoa-voucher-vi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ voucherId })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        if (window.cinegoToast) window.cinegoToast.success(data.message);
+        else alert(data.message);
+        const card = document.getElementById('voucher-card-' + voucherId);
+        if (card) card.remove();
+        setTimeout(() => window.location.reload(), 600);
+      } else {
+        if (window.cinegoToast) window.cinegoToast.error(data.message);
+        else alert(data.message);
+      }
+    })
+    .catch(err => {
+      if (window.cinegoToast) window.cinegoToast.error('Lỗi khi bỏ lưu voucher: ' + err.message);
+    });
   }
 
   function copyVoucher(code) {

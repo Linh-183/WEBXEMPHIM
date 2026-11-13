@@ -47,6 +47,7 @@ app.use(session({
 // Giúp mọi file .ejs đều có thể gọi biến <%= user.hoTen %> mà không cần truyền thủ công ở từng route
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
+    res.locals.currentPath = req.path || '/';
     next();
 });
 
