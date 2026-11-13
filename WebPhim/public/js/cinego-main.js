@@ -8,52 +8,19 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileMenu();
 });
 
-// Toast Notification System
-window.cinegoToast = {
-  show(message, type = 'info', duration = 3500) {
-    let container = document.getElementById('cinego-toast-container');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'cinego-toast-container';
-      container.className = 'fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none';
-      document.body.appendChild(container);
-    }
-
-    const toast = document.createElement('div');
-    toast.className = `pointer-events-auto flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl text-sm font-bold transition-all duration-300 transform translate-y-4 opacity-0 max-w-sm ${
-      type === 'success' ? 'bg-emerald-600 text-white border border-emerald-400/40' :
-      type === 'error' ? 'bg-red-600 text-white border border-red-400/40' :
-      type === 'warning' ? 'bg-amber-600 text-white border border-amber-400/40' :
-      'bg-slate-800 text-white border border-slate-700'
-    }`;
-
-    const icon = type === 'success' ? 'check_circle' :
-                 type === 'error' ? 'error' :
-                 type === 'warning' ? 'warning' : 'info';
-
-    toast.innerHTML = `
-      <span class="material-symbols-outlined text-[20px] shrink-0">${icon}</span>
-      <div class="flex-1 leading-snug">${message}</div>
-      <button onclick="this.parentElement.remove()" class="text-white/60 hover:text-white shrink-0 ml-1">
-        <span class="material-symbols-outlined text-[16px]">close</span>
-      </button>
-    `;
-
-    container.appendChild(toast);
-    requestAnimationFrame(() => {
-      toast.classList.remove('translate-y-4', 'opacity-0');
-    });
-
-    setTimeout(() => {
-      toast.classList.add('opacity-0', 'translate-y-2');
-      setTimeout(() => toast.remove(), 300);
-    }, duration);
-  },
-  success(msg) { this.show(msg, 'success'); },
-  error(msg) { this.show(msg, 'error'); },
-  warning(msg) { this.show(msg, 'warning'); },
-  info(msg) { this.show(msg, 'info'); }
-};
+// Toast Notification System: Tích hợp và ưu tiên module chuẩn CineGo Toast (/js/cinego-toast.js)
+if (!window.cinegoToast) {
+  window.cinegoToast = {
+    show(message, type = 'info', duration = 3500) {
+      if (window.showToast) return window.showToast(message, type);
+      console.info('[CineGo Toast]:', message);
+    },
+    success(msg) { this.show(msg, 'success'); },
+    error(msg) { this.show(msg, 'error'); },
+    warning(msg) { this.show(msg, 'warning'); },
+    info(msg) { this.show(msg, 'info'); }
+  };
+}
 
 // Live Search with Debounce
 function initLiveSearch() {

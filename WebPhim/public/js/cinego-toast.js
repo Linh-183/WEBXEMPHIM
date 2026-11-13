@@ -2,6 +2,7 @@
  * CINEGO EDITORIAL TOAST NOTIFICATION SYSTEM
  * Hiển thị thông báo góc phải màn hình cho Khách Hàng (Thành viên) và Quản Trị Viên (Admin)
  * Chuẩn phong cách thiết kế Contemporary Cinema Editorial
+ * Tích hợp cơ chế Deduplication & Debounce chống gửi trùng lặp thông báo
  */
 
 (function (window, document) {
@@ -64,10 +65,41 @@
     }
   };
 
+  // Cache kiểm tra trùng lặp thông báo (Deduplication trong 3.5 giây)
+  const recentToasts = new Map();
+
+  function isDuplicate(message, type) {
+    if (!message) return true;
+    const cleanMsg = String(message).trim().toLowerCase();
+    const key = (type || 'info') + '::' + cleanMsg;
+    const now = Date.now();
+    const lastTime = recentToasts.get(key);
+
+    if (lastTime && (now - lastTime) < 3500) {
+      // Đã gửi thông báo giống hệt trong 3.5 giây gần nhất -> Bỏ qua không gửi lại
+      return true;
+    }
+
+    recentToasts.set(key, now);
+    // Dọn dẹp bộ nhớ đệm
+    if (recentToasts.size > 30) {
+      for (const [k, t] of recentToasts.entries()) {
+        if (now - t > 10000) recentToasts.delete(k);
+      }
+    }
+    return false;
+  }
+
   const CinegoToast = {
     show: function (message, type, duration, customTitle) {
       if (!message) return;
       type = (type && toastTheme[type]) ? type : 'info';
+      
+      // Chặn ngay lập tức nếu thông báo bị trùng lặp
+      if (isDuplicate(message, type)) {
+        return null;
+      }
+
       duration = typeof duration === 'number' ? duration : 4500;
       const theme = toastTheme[type];
       const title = customTitle || theme.title;
@@ -187,35 +219,12 @@
     console.info('[CineGo Toast Intercepted Alert]:', message);
   };
 
-  // Tự động quét thông báo từ Query URL hoặc Data Attributes khi tải trang
+  // Tự động quét thông báo khi tải trang (Ưu tiên phân tầng DUY NHẤT 1 thông báo, không gửi trùng lặp)
   document.addEventListener('DOMContentLoaded', () => {
     try {
-      const container = document.getElementById('cinego-toast-container');
-      
-      // 1. Quét Data Attributes được nhúng từ Server EJS
-      if (container) {
-        const dError = container.getAttribute('data-flash-error') || container.getAttribute('data-view-error');
-        const dSuccess = container.getAttribute('data-flash-success') || container.getAttribute('data-view-success');
-        const dWarning = container.getAttribute('data-flash-warning');
-        const dInfo = container.getAttribute('data-flash-info');
+      let initialNotificationHandled = false;
 
-        if (dError) setTimeout(() => CinegoToast.error(dError), 200);
-        if (dSuccess) setTimeout(() => CinegoToast.success(dSuccess), 200);
-        if (dWarning) setTimeout(() => CinegoToast.warning(dWarning), 200);
-        if (dInfo) setTimeout(() => CinegoToast.info(dInfo), 200);
-      }
-
-      // Quét các thẻ có data-toast-error hoặc data-toast-success rải rác trong body
-      document.querySelectorAll('[data-toast-error]').forEach(el => {
-        const val = el.getAttribute('data-toast-error');
-        if (val) setTimeout(() => CinegoToast.error(val), 250);
-      });
-      document.querySelectorAll('[data-toast-success]').forEach(el => {
-        const val = el.getAttribute('data-toast-success');
-        if (val) setTimeout(() => CinegoToast.success(val), 250);
-      });
-
-      // 2. Quét Query Parameters trên URL (Ví dụ: ?error=... hoặc ?success=...)
+      // 1. Quét Query Parameters trên URL (Ưu tiên hàng đầu sau redirect của controller)
       const urlParams = new URLSearchParams(window.location.search);
       let hasNotificationParam = false;
 
@@ -229,22 +238,20 @@
         let errMsg = qError;
         if (qError === 'unauthorized') errMsg = 'Bạn không có quyền thực hiện thao tác này!';
         else if (qError === 'active_showtime') errMsg = 'Không thể xóa hoặc hoàn vé của suất chiếu đang diễn ra hoặc đã kết thúc.';
-        setTimeout(() => CinegoToast.error(errMsg), 300);
-      }
-
-      if (qSuccess) {
+        setTimeout(() => CinegoToast.error(errMsg), 200);
+        initialNotificationHandled = true;
+      } else if (qSuccess) {
         hasNotificationParam = true;
-        setTimeout(() => CinegoToast.success(qSuccess), 300);
-      }
-
-      if (qWarning) {
+        setTimeout(() => CinegoToast.success(qSuccess), 200);
+        initialNotificationHandled = true;
+      } else if (qWarning) {
         hasNotificationParam = true;
-        setTimeout(() => CinegoToast.warning(qWarning), 300);
-      }
-
-      if (qInfo) {
+        setTimeout(() => CinegoToast.warning(qWarning), 200);
+        initialNotificationHandled = true;
+      } else if (qInfo) {
         hasNotificationParam = true;
-        setTimeout(() => CinegoToast.info(qInfo), 300);
+        setTimeout(() => CinegoToast.info(qInfo), 200);
+        initialNotificationHandled = true;
       }
 
       // Dọn dẹp thanh URL nếu có query thông báo để tránh lặp lại khi người dùng bấm F5 Reload
@@ -256,6 +263,54 @@
         const newSearch = urlParams.toString();
         const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '') + window.location.hash;
         window.history.replaceState(null, '', newUrl);
+      }
+
+      // 2. Chỉ quét Data Attributes nếu CHƯA xử lý thông báo từ URL
+      if (!initialNotificationHandled) {
+        const container = document.getElementById('cinego-toast-container');
+        if (container) {
+          const dError = container.getAttribute('data-flash-error') || container.getAttribute('data-view-error');
+          const dSuccess = container.getAttribute('data-flash-success') || container.getAttribute('data-view-success');
+          const dWarning = container.getAttribute('data-flash-warning');
+          const dInfo = container.getAttribute('data-flash-info');
+
+          if (dError) {
+            setTimeout(() => CinegoToast.error(dError), 200);
+            initialNotificationHandled = true;
+          } else if (dSuccess) {
+            setTimeout(() => CinegoToast.success(dSuccess), 200);
+            initialNotificationHandled = true;
+          } else if (dWarning) {
+            setTimeout(() => CinegoToast.warning(dWarning), 200);
+            initialNotificationHandled = true;
+          } else if (dInfo) {
+            setTimeout(() => CinegoToast.info(dInfo), 200);
+            initialNotificationHandled = true;
+          }
+        }
+      }
+
+      // 3. Quét các thẻ data-toast riêng lẻ chỉ khi chưa có thông báo nào được phát đi
+      if (!initialNotificationHandled) {
+        const errEl = document.querySelector('[data-toast-error]');
+        if (errEl) {
+          const val = errEl.getAttribute('data-toast-error');
+          if (val) {
+            setTimeout(() => CinegoToast.error(val), 200);
+            initialNotificationHandled = true;
+          }
+        }
+      }
+
+      if (!initialNotificationHandled) {
+        const sucEl = document.querySelector('[data-toast-success]');
+        if (sucEl) {
+          const val = sucEl.getAttribute('data-toast-success');
+          if (val) {
+            setTimeout(() => CinegoToast.success(val), 200);
+            initialNotificationHandled = true;
+          }
+        }
       }
     } catch (e) {
       console.error('[CineGo Toast Init Error]:', e);
