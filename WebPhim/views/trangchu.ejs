@@ -71,7 +71,7 @@
                     <span class="font-['JetBrains_Mono'] text-xs">→</span>
                   </a>
                   <button type="button" 
-                          data-trailer="<%= item.trailerUrl || 'https://www.youtube.com/watch?v=Way9Dexny3w' %>"
+                          data-trailer="<%= item.trailerUrl || '' %>"
                           data-title="<%= item.title %> (Trailer)"
                           onclick="openTrailerModal(this.dataset.trailer, this.dataset.title)" 
                           class="btn-editorial-secondary !border-white/30 !text-white hover:!bg-white hover:!text-[#0E1015] text-xs !py-3 !px-5">
@@ -89,6 +89,11 @@
                   <img src="<%= item.posterUrl || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=80' %>" 
                        alt="<%= item.title %>" 
                        class="filter brightness-[0.9] contrast-[1.05]" 
+                       loading="<%= idx === 0 ? 'eager' : 'lazy' %>"
+                       fetchpriority="<%= idx === 0 ? 'high' : 'auto' %>"
+                       decoding="async"
+                       width="320"
+                       height="426"
                        style="width: 320px; height: 426px; min-width: 320px; min-height: 426px; max-width: 320px; max-height: 426px; object-fit: cover; object-position: center; display: block; transform: none; transition: none;" />
                   
                   <div class="absolute inset-0 bg-gradient-to-t from-[#0E1015] via-transparent to-transparent opacity-80 pointer-events-none"></div>
@@ -160,55 +165,7 @@
   </section>
 
   <!-- =========================================================================
-       2. EDITORIAL FAST-BOOKING STRIP (THANH CHỌN VÉ NHANH)
-       ========================================================================= -->
-  <section class="bg-[#F3EFE6] border-b border-[#E5E0D5] py-5 px-6 sm:px-10 lg:px-14">
-    <div class="max-w-[1520px] mx-auto flex flex-col lg:flex-row items-center justify-between gap-4 font-['Plus_Jakarta_Sans']">
-      
-      <div class="flex items-center gap-3 shrink-0">
-        <span class="w-2.5 h-2.5 rounded-full bg-[#BA2D27]"></span>
-        <span class="font-serif text-sm font-bold text-[#121316] uppercase tracking-wider">Đặt Vé Nhanh:</span>
-      </div>
-
-      <!-- Quick Selector Controls -->
-      <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto text-xs font-['JetBrains_Mono']">
-        <!-- Select Movie -->
-        <select id="quickMovieSelect" class="bg-white border border-[#E5E0D5] py-2 px-3 text-[#121316] font-semibold focus:outline-none focus:border-[#121316]">
-          <% heroList.forEach(function(m) { %>
-            <option value="<%= m._id %>"><%= m.title %></option>
-          <% }); %>
-        </select>
-
-        <!-- Select Cinema -->
-        <select id="quickCinemaSelect" class="bg-white border border-[#E5E0D5] py-2 px-3 text-[#121316] font-semibold focus:outline-none focus:border-[#121316]">
-          <option value="CGV Kim Cúc Plaza">CGV Kim Cúc Plaza</option>
-          <option value="Starlight Nguyễn Kim">Starlight Nguyễn Kim</option>
-          <option value="DCine Quy Nhơn">DCine Quy Nhơn</option>
-        </select>
-
-        <!-- Select Time -->
-        <select id="quickTimeSelect" class="bg-white border border-[#E5E0D5] py-2 px-3 text-[#121316] font-semibold focus:outline-none focus:border-[#121316]">
-          <option value="19:30">19:30 (Tối nay)</option>
-          <option value="20:45">20:45 (Tối nay)</option>
-          <option value="22:15">22:15 (Tối nay)</option>
-        </select>
-
-        <button type="button" onclick="handleQuickBook()" class="btn-editorial-primary text-xs !py-2 !px-5">
-          Tiếp Tục →
-        </button>
-      </div>
-
-      <div class="hidden xl:flex items-center gap-4 text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">
-        <a href="/bap-nuoc" class="text-[#A6853B] font-bold hover:underline">Quầy Bắp Nước Online →</a>
-        <span>•</span>
-        <a href="/phim" class="hover:text-[#BA2D27] underline">Tất Cả Phim →</a>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- =========================================================================
-       3. NOW SHOWING SPOTLIGHT (CÁC TÁC PHẨM ĐANG CHIẾU RẠP)
+       2. NOW SHOWING SPOTLIGHT (CÁC TÁC PHẨM ĐANG CHIẾU RẠP)
        ========================================================================= -->
   <section class="py-14 lg:py-20 px-6 sm:px-10 lg:px-14 border-b border-[#E5E0D5]">
     <div class="max-w-[1520px] mx-auto">
@@ -417,7 +374,7 @@
           <div>
             <span class="text-[10px] font-['JetBrains_Mono'] text-[#A6853B] font-bold uppercase">CỤM RẠP SỐ 02</span>
             <h3 class="font-serif text-xl font-bold text-[#121316] mt-0.5">Starlight Nguyễn Kim</h3>
-            <p class="text-xs text-[#7A7E8B] mt-1">Tầng 8 TTTM Nguyễn Kim, An Dương Vương, Quy Nhơn</p>
+            <p class="text-xs text-[#7A7E8B] mt-1">Tầng 4 TTTM Nguyễn Kim, 06 Trần Phú, Quy Nhơn</p>
           </div>
           <div class="pt-3 border-t border-[#E5E0D5] flex items-center justify-between text-xs font-['JetBrains_Mono']">
             <span class="text-[#10B981] font-bold">Ghế Đôi Sweetbox</span>
@@ -433,7 +390,7 @@
           <div>
             <span class="text-[10px] font-['JetBrains_Mono'] text-[#10B981] font-bold uppercase">CỤM RẠP SỐ 03</span>
             <h3 class="font-serif text-xl font-bold text-[#121316] mt-0.5">DCine Quy Nhơn</h3>
-            <p class="text-xs text-[#7A7E8B] mt-1">Tầng 4 Trung Tâm Phú Tài, Trần Hưng Đạo, Quy Nhơn</p>
+            <p class="text-xs text-[#7A7E8B] mt-1">Ngã ba Đống Đa, P. Thị Nại, TP. Quy Nhơn</p>
           </div>
           <div class="pt-3 border-t border-[#E5E0D5] flex items-center justify-between text-xs font-['JetBrains_Mono']">
             <span class="text-[#10B981] font-bold">Dolby Atmos 7.1</span>
@@ -533,7 +490,11 @@
         <div class="p-6 bg-white border border-[#E5E0D5] space-y-4">
           <span class="font-serif text-4xl text-[#BA2D27] leading-none block">“</span>
           <p class="font-serif italic text-sm text-[#121316] leading-relaxed">
-            Dune 2 là đỉnh cao thị giác và âm thanh của thập kỷ. Trải nghiệm tại phòng chiếu màn ảnh cong Quy Nhơn thực sự làm người xem sởn gai ốc từ những giây đầu tiên.
+            <% if (heroList && heroList.length > 0) { %>
+              <%= heroList[0].title %> cùng các tác phẩm đang khởi chiếu mang lại trải nghiệm thị giác và âm thanh đỉnh cao. Trải nghiệm tại phòng chiếu màn ảnh cong Quy Nhơn thực sự làm khán giả thỏa mãn từ những phút đầu tiên.
+            <% } else { %>
+              Trải nghiệm điện ảnh tại phòng chiếu màn ảnh cong và hệ thống âm thanh vòm Dolby sống động tại các cụm rạp Quy Nhơn thực sự làm người xem đắm chìm vào từng thước phim nghệ thuật.
+            <% } %>
           </p>
           <div class="pt-4 border-t border-[#E5E0D5] font-['JetBrains_Mono'] text-xs">
             <span class="font-bold text-[#121316] block">Hải Đăng</span>
@@ -568,23 +529,6 @@
   </section>
 
 </main>
-
-<!-- =========================================================================
-     TRAILER MODAL POPUP
-     ========================================================================= -->
-<div id="trailerModal" class="hidden fixed inset-0 z-50 bg-[#121316]/90 backdrop-blur-md flex items-center justify-center p-4">
-  <div class="bg-[#121316] border border-white/20 w-full max-w-4xl p-4 sm:p-6 shadow-2xl relative">
-    <div class="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
-      <h3 id="trailerModalTitle" class="font-serif text-lg font-bold text-white truncate max-w-xl">Trailer Phim</h3>
-      <button type="button" onclick="closeTrailerModal()" class="text-white/60 hover:text-white">
-        <span class="material-symbols-outlined text-2xl">close</span>
-      </button>
-    </div>
-    <div class="aspect-video w-full bg-black">
-      <iframe id="trailerIframe" class="w-full h-full" src="" title="YouTube Trailer" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-    </div>
-  </div>
-</div>
 
 <script>
   // ==========================================
@@ -676,35 +620,6 @@
       startAutoPlay();
     });
   })();
-
-  function handleQuickBook() {
-    const movieId = document.getElementById('quickMovieSelect').value;
-    const cinema = document.getElementById('quickCinemaSelect').value;
-    const time = document.getElementById('quickTimeSelect').value;
-    window.location.href = `/dat-ve/${movieId}?cinema=${encodeURIComponent(cinema)}&time=${encodeURIComponent(time)}`;
-  }
-
-  function openTrailerModal(url, title) {
-    const modal = document.getElementById('trailerModal');
-    const iframe = document.getElementById('trailerIframe');
-    const titleEl = document.getElementById('trailerModalTitle');
-    if (!modal || !iframe) return;
-
-    let embedUrl = url;
-    if (url.includes('watch?v=')) {
-      embedUrl = url.replace('watch?v=', 'embed/') + '?autoplay=1';
-    }
-    iframe.src = embedUrl;
-    if (titleEl) titleEl.innerText = title || 'Trailer Thước Phim';
-    modal.classList.remove('hidden');
-  }
-
-  function closeTrailerModal() {
-    const modal = document.getElementById('trailerModal');
-    const iframe = document.getElementById('trailerIframe');
-    if (iframe) iframe.src = '';
-    if (modal) modal.classList.add('hidden');
-  }
 </script>
 
 <%- include('partials/footer') %>

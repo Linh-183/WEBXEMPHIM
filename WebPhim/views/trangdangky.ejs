@@ -53,6 +53,9 @@
       <% } %>
 
       <form action="/dang-ky" method="POST" class="space-y-4 text-xs font-['Plus_Jakarta_Sans']" onsubmit="return validateRegisterForm()">
+        <% if (typeof returnTo !== 'undefined' && returnTo) { %>
+          <input type="hidden" name="returnTo" value="<%= returnTo %>" />
+        <% } %>
         <div>
           <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-widest mb-1">
             Họ và tên <span class="text-[#BA2D27]">*</span>
@@ -131,7 +134,7 @@
 
       <div class="pt-6 border-t border-[#E5E0D5] text-center font-['JetBrains_Mono'] text-xs text-[#7A7E8B]">
         <span>Đã có tài khoản? </span>
-        <a href="/dang-nhap" class="text-[#121316] hover:text-[#BA2D27] underline font-bold">
+        <a href="/dang-nhap<%= (typeof returnTo !== 'undefined' && returnTo) ? '?returnTo=' + encodeURIComponent(returnTo) : '' %>" class="text-[#121316] hover:text-[#BA2D27] underline font-bold">
           Đăng nhập ngay
         </a>
       </div>

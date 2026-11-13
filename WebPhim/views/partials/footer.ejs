@@ -53,11 +53,11 @@
             </li>
             <li class="border-l-2 border-[#121316] pl-3 py-0.5">
               <strong class="text-[#121316] block font-semibold">2. Starlight Nguyễn Kim</strong>
-              <span class="text-[#7A7E8B] block text-[11px]">Tầng 8, TTTM Nguyễn Kim, An Dương Vương</span>
+              <span class="text-[#7A7E8B] block text-[11px]">Tầng 4, TTTM Nguyễn Kim, 06 Trần Phú</span>
             </li>
             <li class="border-l-2 border-[#A6853B] pl-3 py-0.5">
               <strong class="text-[#121316] block font-semibold">3. DCine Quy Nhơn</strong>
-              <span class="text-[#7A7E8B] block text-[11px]">Tầng 4 Trung Tâm Phú Tài, Trần Hưng Đạo</span>
+              <span class="text-[#7A7E8B] block text-[11px]">Ngã ba Đống Đa, P. Thị Nại, TP. Quy Nhơn</span>
             </li>
           </ul>
         </div>
@@ -126,20 +126,76 @@
     <% if (typeof success !== 'undefined' && success) { %> data-view-success="<%= success %>"<% } %>
   ></div>
 
-  <!-- Trailer Player Modal -->
-  <div id="trailerModal" class="hidden fixed inset-0 z-50 bg-[#0E1015]/90 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="relative w-full max-w-4xl bg-black border border-white/20 shadow-2xl overflow-hidden">
+  <!-- Trailer Player Modal (Native HTML5 Dialog Pattern) -->
+  <dialog id="trailerModal" class="cinego-dialog p-0 m-auto bg-transparent border-none" aria-labelledby="trailerModalTitle">
+    <div class="relative w-[92vw] max-w-4xl bg-black border border-white/20 shadow-2xl overflow-hidden">
       <div class="flex items-center justify-between p-4 bg-[#151820] border-b border-white/10 text-white font-['JetBrains_Mono'] text-xs">
         <span id="trailerModalTitle" class="truncate font-semibold tracking-wider">Trailer Thước Phim</span>
-        <button type="button" onclick="closeTrailerModal()" class="text-white/70 hover:text-white transition-colors">
+        <button type="button" onclick="closeTrailerModal()" class="text-white/70 hover:text-white transition-colors p-1" aria-label="Đóng Trailer">
           <span class="material-symbols-outlined text-lg">close</span>
         </button>
       </div>
       <div class="aspect-video w-full bg-black">
-        <iframe id="trailerIframe" class="w-full h-full" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <iframe id="trailerIframe" class="w-full h-full" src="" title="Trailer Video Player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
       </div>
     </div>
-  </div>
+  </dialog>
+
+  <script>
+    function openTrailerModal(url, title) {
+      const modal = document.getElementById('trailerModal');
+      const iframe = document.getElementById('trailerIframe');
+      const titleEl = document.getElementById('trailerModalTitle');
+      if (!modal || !iframe) return;
+
+      let embedUrl = (url && url.trim()) ? url.trim() : ('https://www.youtube.com/embed?listType=search&list=' + encodeURIComponent((title || 'Phim điện ảnh') + ' trailer'));
+      if (embedUrl.includes('watch?v=')) {
+        embedUrl = embedUrl.replace('watch?v=', 'embed/') + '?autoplay=1';
+      } else if (embedUrl.includes('youtu.be/')) {
+        const id = embedUrl.split('youtu.be/')[1]?.split('?')[0];
+        embedUrl = 'https://www.youtube.com/embed/' + id + '?autoplay=1';
+      } else if (!embedUrl.includes('autoplay=1')) {
+        embedUrl += (embedUrl.includes('?') ? '&' : '?') + 'autoplay=1';
+      }
+
+      iframe.src = embedUrl;
+      if (titleEl) titleEl.innerText = title || 'Trailer Thước Phim';
+
+      if (typeof modal.showModal === 'function') {
+        if (!modal.open) modal.showModal();
+      } else {
+        modal.classList.remove('hidden');
+      }
+    }
+
+    function closeTrailerModal() {
+      const modal = document.getElementById('trailerModal');
+      const iframe = document.getElementById('trailerIframe');
+      if (iframe) iframe.src = '';
+      if (!modal) return;
+      if (typeof modal.close === 'function') {
+        if (modal.open) modal.close();
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    // Auto-stop video on native dialog cancel/close or backdrop click
+    (function() {
+      const modal = document.getElementById('trailerModal');
+      if (modal) {
+        modal.addEventListener('close', () => {
+          const iframe = document.getElementById('trailerIframe');
+          if (iframe) iframe.src = '';
+        });
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            closeTrailerModal();
+          }
+        });
+      }
+    })();
+  </script>
 
   <!-- Main client JavaScripts -->
   <script src="/js/cinego-toast.js?v=6.0"></script>

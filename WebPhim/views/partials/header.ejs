@@ -140,13 +140,17 @@
         <div class="hidden xl:flex items-center">
           <div class="relative inline-block text-left">
             <button type="button" 
-                    onclick="document.getElementById('quick-cinema-menu').classList.toggle('hidden')"
-                    class="flex items-center gap-2 text-[11px] font-['JetBrains_Mono'] text-[#121316] bg-[#F3EFE6] px-3.5 py-2 border border-[#E5E0D5] hover:border-[#CDC6B8] transition-colors uppercase tracking-wider">
+                    id="quick-cinema-trigger"
+                    popovertarget="quick-cinema-menu"
+                    onclick="if(!this.popoverTargetElement) document.getElementById('quick-cinema-menu')?.classList.toggle('hidden')"
+                    class="flex items-center gap-2 text-[11px] font-['JetBrains_Mono'] text-[#121316] bg-[#F3EFE6] px-3.5 py-2 border border-[#E5E0D5] hover:border-[#CDC6B8] transition-colors uppercase tracking-wider cursor-pointer"
+                    aria-haspopup="menu"
+                    aria-controls="quick-cinema-menu">
               <span class="w-1.5 h-1.5 rounded-full bg-[#BA2D27]"></span>
               <span id="header-cinema-label">CGV Kim Cúc</span>
               <span class="material-symbols-outlined text-[14px]">expand_more</span>
             </button>
-            <div id="quick-cinema-menu" class="hidden absolute right-0 mt-1 w-64 bg-white border border-[#E5E0D5] shadow-xl py-1 z-50 text-xs font-['Plus_Jakarta_Sans']">
+            <div id="quick-cinema-menu" popover="auto" class="cinego-popover absolute right-0 mt-1 w-64 bg-white border border-[#E5E0D5] shadow-xl py-1 z-50 text-xs font-['Plus_Jakarta_Sans']">
               <div class="px-3 py-1.5 text-[10px] font-['JetBrains_Mono'] uppercase tracking-widest text-[#7A7E8B] border-b border-[#E5E0D5]">
                 Chọn cụm rạp Quy Nhơn
               </div>
@@ -175,8 +179,12 @@
           <!-- Logged In Menu -->
           <div class="relative">
             <button type="button" 
-                    onclick="document.getElementById('user-profile-menu').classList.toggle('hidden')" 
-                    class="flex items-center gap-2.5 py-1.5 px-3 border border-[#E5E0D5] hover:border-[#121316] bg-white transition-all">
+                    id="user-profile-trigger"
+                    popovertarget="user-profile-menu"
+                    onclick="if(!this.popoverTargetElement) document.getElementById('user-profile-menu')?.classList.toggle('hidden')" 
+                    class="flex items-center gap-2.5 py-1.5 px-3 border border-[#E5E0D5] hover:border-[#121316] bg-white transition-all cursor-pointer"
+                    aria-haspopup="menu"
+                    aria-controls="user-profile-menu">
               <span class="w-7 h-7 bg-[#121316] text-[#FAF8F5] flex items-center justify-center font-serif font-bold text-xs">
                 <%= (user.hoTen && user.hoTen.length > 0) ? user.hoTen.charAt(0).toUpperCase() : 'U' %>
               </span>
@@ -187,7 +195,7 @@
             </button>
 
             <!-- Dropdown Menu -->
-            <div id="user-profile-menu" class="hidden absolute right-0 mt-2 w-56 bg-white border border-[#E5E0D5] shadow-xl py-2 z-50 text-xs font-['Plus_Jakarta_Sans']">
+            <div id="user-profile-menu" popover="auto" class="cinego-popover absolute right-0 mt-2 w-56 bg-white border border-[#E5E0D5] shadow-xl py-2 z-50 text-xs font-['Plus_Jakarta_Sans']">
               <div class="px-4 py-2 border-b border-[#E5E0D5]">
                 <div class="font-bold text-[#121316] truncate"><%= user.hoTen %></div>
                 <div class="text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B] truncate"><%= user.email %></div>
@@ -247,13 +255,13 @@
   </header>
 
   <!-- =========================================================================
-       3. SEARCH OVERLAY MODAL (EDITORIAL DOSSIER SEARCH)
+       3. SEARCH OVERLAY MODAL (NATIVE HTML5 DIALOG PATTERN)
        ========================================================================= -->
-  <div id="search-modal" class="hidden fixed inset-0 z-50 bg-[#121316]/80 backdrop-blur-sm flex items-start justify-center pt-16 px-4">
-    <div class="bg-[#FAF8F5] border border-[#E5E0D5] w-full max-w-2xl p-6 sm:p-8 shadow-2xl relative">
+  <dialog id="search-modal" class="cinego-dialog p-0 m-auto bg-transparent border-none" aria-labelledby="searchDialogTitle">
+    <div class="bg-[#FAF8F5] border border-[#E5E0D5] w-[92vw] max-w-2xl p-6 sm:p-8 shadow-2xl relative text-[#121316]">
       <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-4">
-        <span class="font-serif text-xs uppercase tracking-[0.25em] text-[#7A7E8B]">Tra cứu tác phẩm điện ảnh</span>
-        <button type="button" onclick="toggleSearchModal(false)" class="text-[#7A7E8B] hover:text-[#121316]">
+        <span id="searchDialogTitle" class="font-serif text-xs uppercase tracking-[0.25em] text-[#7A7E8B]">Tra cứu tác phẩm điện ảnh</span>
+        <button type="button" onclick="toggleSearchModal(false)" class="text-[#7A7E8B] hover:text-[#121316] p-1" aria-label="Đóng tra cứu">
           <span class="material-symbols-outlined text-xl">close</span>
         </button>
       </div>
@@ -275,16 +283,16 @@
 
       <div class="mt-6 flex flex-wrap gap-2 text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B]">
         <span class="text-[#121316] font-bold">Gợi ý từ khóa:</span>
-        <a href="/tim-kiem?keyword=Dune" class="hover:text-[#BA2D27] underline">Dune 2</a>
+        <a href="/tim-kiem?keyword=Hành+động" class="hover:text-[#BA2D27] underline">Hành Động</a>
         <span>•</span>
-        <a href="/tim-kiem?keyword=Mai" class="hover:text-[#BA2D27] underline">Phim Mai</a>
+        <a href="/tim-kiem?keyword=Khoa+học" class="hover:text-[#BA2D27] underline">Khoa Học Viễn Tưởng</a>
         <span>•</span>
-        <a href="/tim-kiem?keyword=Godzilla" class="hover:text-[#BA2D27] underline">Godzilla x Kong</a>
+        <a href="/tim-kiem?keyword=Tình+cảm" class="hover:text-[#BA2D27] underline">Tâm Lý - Tình Cảm</a>
         <span>•</span>
         <a href="/phim?status=DangChieu" class="hover:text-[#BA2D27] underline">Phim Đang Chiếu</a>
       </div>
     </div>
-  </div>
+  </dialog>
 
   <!-- =========================================================================
        4. MOBILE SLIDING DRAWER
@@ -343,13 +351,29 @@
   <script>
     function toggleSearchModal(show) {
       const modal = document.getElementById('search-modal');
-      if (modal) {
-        modal.classList.toggle('hidden', !show);
-        if (show) {
-          setTimeout(() => document.getElementById('searchInput')?.focus(), 100);
+      if (!modal) return;
+      if (show) {
+        if (typeof modal.showModal === 'function') {
+          if (!modal.open) modal.showModal();
+        } else {
+          modal.classList.remove('hidden');
+        }
+        setTimeout(() => document.getElementById('searchInput')?.focus(), 60);
+      } else {
+        if (typeof modal.close === 'function') {
+          if (modal.open) modal.close();
+        } else {
+          modal.classList.add('hidden');
         }
       }
     }
+
+    // Native backdrop light-dismiss for search modal
+    document.getElementById('search-modal')?.addEventListener('click', function(e) {
+      if (e.target === this) {
+        toggleSearchModal(false);
+      }
+    });
 
     function toggleMobileMenu(show) {
       const drawer = document.getElementById('mobile-drawer');
@@ -359,13 +383,23 @@
     function selectQuickCinema(cinemaName) {
       const label = document.getElementById('header-cinema-label');
       if (label) label.innerText = cinemaName;
-      document.getElementById('quick-cinema-menu')?.classList.add('hidden');
+      const menu = document.getElementById('quick-cinema-menu');
+      if (menu) {
+        if (typeof menu.hidePopover === 'function' && menu.matches(':popover-open')) {
+          menu.hidePopover();
+        }
+        menu.classList.add('hidden');
+      }
     }
 
-    // Debounced Live Search Autocomplete
+    // Debounced Live Search Autocomplete with AbortController
     let searchDebounce = null;
+    let searchAbortController = null;
     document.getElementById('searchInput')?.addEventListener('input', function(e) {
       clearTimeout(searchDebounce);
+      if (searchAbortController) {
+        searchAbortController.abort();
+      }
       const val = e.target.value.trim();
       const resultsBox = document.getElementById('searchResults');
       if (!val || val.length < 2) {
@@ -374,8 +408,11 @@
       }
 
       searchDebounce = setTimeout(async () => {
+        searchAbortController = new AbortController();
         try {
-          const res = await fetch('/api/tim-kiem?tuKhoa=' + encodeURIComponent(val));
+          const res = await fetch('/api/tim-kiem?tuKhoa=' + encodeURIComponent(val), {
+            signal: searchAbortController.signal
+          });
           const list = await res.json();
           if (resultsBox) {
             resultsBox.innerHTML = '';
@@ -387,7 +424,13 @@
                 row.href = '/chi-tiet-phim/' + item._id;
                 row.className = 'flex items-center gap-3 py-3 hover:bg-[#F3EFE6] transition-colors';
                 row.innerHTML = `
-                  <img src="${item.posterUrl || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=100&q=80'}" class="w-10 h-14 object-cover border border-[#E5E0D5]" alt="${item.title}" />
+                  <img src="${item.posterUrl || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=100&q=80'}" 
+                       class="w-10 h-14 object-cover border border-[#E5E0D5]" 
+                       alt="${item.title}" 
+                       loading="lazy" 
+                       decoding="async" 
+                       width="40" 
+                       height="56" />
                   <div>
                     <div class="font-bold text-sm text-[#121316] font-serif">${item.title}</div>
                     <div class="text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B] mt-0.5">${item.ageRating || 'P'} • Đang Chiếu</div>
@@ -399,19 +442,19 @@
             resultsBox.classList.remove('hidden');
           }
         } catch(err) {
-          console.error(err);
+          if (err.name !== 'AbortError') console.error(err);
         }
-      }, 300);
+      }, 250);
     });
 
-    // Close dropdowns on outside click
+    // Close dropdowns on outside click (fallback for browsers without Popover API)
     document.addEventListener('click', function(e) {
       const qMenu = document.getElementById('quick-cinema-menu');
       const uMenu = document.getElementById('user-profile-menu');
-      if (qMenu && !e.target.closest('#quick-cinema-menu') && !e.target.closest('button[onclick*="quick-cinema-menu"]')) {
+      if (qMenu && !qMenu.matches?.(':popover-open') && !e.target.closest('#quick-cinema-menu') && !e.target.closest('button[popovertarget="quick-cinema-menu"]')) {
         qMenu.classList.add('hidden');
       }
-      if (uMenu && !e.target.closest('#user-profile-menu') && !e.target.closest('button[onclick*="user-profile-menu"]')) {
+      if (uMenu && !uMenu.matches?.(':popover-open') && !e.target.closest('#user-profile-menu') && !e.target.closest('button[popovertarget="user-profile-menu"]')) {
         uMenu.classList.add('hidden');
       }
     });

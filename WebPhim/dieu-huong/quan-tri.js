@@ -16,10 +16,10 @@ router.get('/', async (req, res) => {
         
         let start, end;
         if (filter === 'today') {
-            start = new Date(now.setHours(0, 0, 0, 0));
-            end = new Date(now.setHours(23, 59, 59, 999));
+            start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+            end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
         } else if (filter === 'month') {
-            start = new Date(now.getFullYear(), now.getMonth(), 1);
+            start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
             end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
         }
 
@@ -353,8 +353,8 @@ router.get('/quan-ly-rap', async (req, res, next) => {
             // Tự động khởi tạo dữ liệu 3 rạp chuẩn Quy Nhơn nếu collection trống
             await Cinema.insertMany([
                 { name: 'CGV Kim Cúc Plaza', code: 'cgv-kim-cuc', location: 'Tầng 3, Kim Cúc Plaza, TP. Quy Nhơn', totalSeats: 270, phone: '12345678' },
-                { name: 'Starlight Nguyễn Kim', code: 'starlight-nguyen-kim', location: 'Tầng 8 TTTM Nguyễn Kim, TP. Quy Nhơn', totalSeats: 210, phone: '12345678' },
-                { name: 'DCine Quy Nhơn', code: 'dcine-quy-nhon', location: 'Tòa nhà Phú Tài Center, TP. Quy Nhơn', totalSeats: 200, phone: '12345678' }
+                { name: 'Starlight Nguyễn Kim', code: 'starlight-nguyen-kim', location: 'Tầng 4, TTTM Nguyễn Kim, Số 06 Trần Phú, TP. Quy Nhơn', totalSeats: 210, phone: '12345678' },
+                { name: 'DCine Quy Nhơn', code: 'dcine-quy-nhon', location: 'Ngã ba Đống Đa, P. Thị Nại, TP. Quy Nhơn', totalSeats: 200, phone: '12345678' }
             ]);
             dbCinemas = await Cinema.find().lean();
         }
@@ -615,8 +615,8 @@ router.get('/so-do-ghe', async (req, res) => {
         if (cinemas.length === 0) {
             cinemas = [
                 { name: 'CGV Kim Cúc Plaza', location: 'Tầng 3, Kim Cúc Plaza' },
-                { name: 'Starlight Nguyễn Kim', location: 'Tầng 8 TTTM Nguyễn Kim' },
-                { name: 'DCine Quy Nhơn', location: 'Tầng 4 Trung Tâm Phú Tài' }
+                { name: 'Starlight Nguyễn Kim', location: 'Tầng 4 TTTM Nguyễn Kim, 06 Trần Phú' },
+                { name: 'DCine Quy Nhơn', location: 'Ngã ba Đống Đa, P. Thị Nại, TP. Quy Nhơn' }
             ];
         }
         res.render('admin-sodoghe', { user: req.session.user, cinemas });

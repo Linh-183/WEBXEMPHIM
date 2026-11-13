@@ -61,7 +61,7 @@
                 <span class="text-[11px] text-[#7A7E8B]"><%= cinemaName %></span>
               </td>
               <td class="py-3.5 px-4 font-['JetBrains_Mono']">
-                <span class="text-[#121316] block"><%= t.showTime || '19:30' %> • <%= t.showDate || '12/11/2026' %></span>
+                <span class="text-[#121316] block"><%= t.showTime || '19:30' %> • <%= t.showDate || (t.createdAt ? new Date(t.createdAt).toLocaleDateString('vi-VN') : 'Hôm nay') %></span>
                 <span class="text-[#BA2D27] font-bold"><%= seatList %></span>
               </td>
               <td class="py-3.5 px-4 font-['JetBrains_Mono'] text-[#7A7E8B] uppercase"><%= t.paymentMethod || 'VietQR' %></td>

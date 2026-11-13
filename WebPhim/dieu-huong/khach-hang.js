@@ -127,7 +127,7 @@ router.post('/tai-khoan/ve-cua-toi/xoa/:id', checkLogin, async (req, res) => {
     }
 });
 
-router.get('/dat-ve/:id', async (req, res, next) => {
+router.get('/dat-ve/:id', checkLogin, async (req, res, next) => {
     try { 
         if (!isValidObjectId(req.params.id)) {
             return res.status(404).render('404', { title: '404 — Không Tìm Thấy Suất Chiếu' });
@@ -167,12 +167,29 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
         const currentUserId = req.session.user._id ? req.session.user._id.toString() : 'guest';
 
         // 0. Chống đặt vé các suất chiếu trong quá khứ (Thời gian thực)
-        const todayZero = new Date();
-        todayZero.setHours(0, 0, 0, 0);
-        const bookingDate = new Date(showDate);
-        bookingDate.setHours(0, 0, 0, 0);
+        const now = new Date();
+        const todayZero = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        let bookingDate = null;
+        if (showDate && typeof showDate === 'string' && showDate.includes('-')) {
+            const [bYear, bMonth, bDay] = showDate.split('-').map(Number);
+            if (bYear && bMonth && bDay) {
+                bookingDate = new Date(bYear, bMonth - 1, bDay, 0, 0, 0, 0);
+            }
+        }
+        if (!bookingDate) {
+            bookingDate = new Date(showDate);
+            bookingDate.setHours(0, 0, 0, 0);
+        }
+
         if (bookingDate < todayZero) {
-            return res.redirect(`/dat-ve/${movieId}?error=${encodeURIComponent('Suất chiếu này đã thuộc về quá khứ! Vui lòng chọn lịch chiếu từ hôm nay trở đi.')}`);
+            return res.redirect(`/dat-ve/${movieId}?error=${encodeURIComponent('Suất chiếu này đã thuộc về ngày trong quá khứ! Vui lòng chọn lịch chiếu từ hôm nay trở đi.')}`);
+        }
+        if (bookingDate.getTime() === todayZero.getTime() && showTime) {
+            const [shHour, shMin] = showTime.split(':').map(Number);
+            const showtimeMoment = new Date(now.getFullYear(), now.getMonth(), now.getDate(), shHour || 0, shMin || 0, 0, 0);
+            if (now >= showtimeMoment) {
+                return res.redirect(`/dat-ve/${movieId}?error=${encodeURIComponent(`Suất chiếu lúc ${showTime} hôm nay đã bắt đầu hoặc đã qua giờ chiếu! Vui lòng chọn suất chiếu khác.`)}`);
+            }
         }
 
         if (seatList.length > 0) {
@@ -204,7 +221,7 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
             });
             if (lockedByOthers.length > 0) {
                 const names = lockedByOthers.map(l => l.seat).join(', ');
-                return res.redirect(`/dat-ve/${movieId}?error=${encodeURIComponent(`Ghế (${names}) đang được giữ chỗ trong 5 phút bởi khách hàng khác. Vui lòng chọn ghế khác!`)}`);
+                return res.redirect(`/dat-ve/${movieId}?error=${encodeURIComponent(`Ghế (${names}) đang có người chọn. Vui lòng chọn ghế khác!`)}`);
             }
 
             // 3. Khóa ghế an toàn trong MongoDB SeatLock (5 phút TTL tự động xóa)
@@ -239,6 +256,31 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
         
         if (!seats || seats.trim() === '') {
             return res.redirect(`/dat-ve/${phimId}?error=${encodeURIComponent('Vui lòng chọn ít nhất 1 ghế trước khi thanh toán!')}`);
+        }
+
+        const now = new Date();
+        const todayZero = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        let bookingDate = null;
+        if (showDate && typeof showDate === 'string' && showDate.includes('-')) {
+            const [bYear, bMonth, bDay] = showDate.split('-').map(Number);
+            if (bYear && bMonth && bDay) {
+                bookingDate = new Date(bYear, bMonth - 1, bDay, 0, 0, 0, 0);
+            }
+        }
+        if (!bookingDate) {
+            bookingDate = new Date(showDate);
+            bookingDate.setHours(0, 0, 0, 0);
+        }
+
+        if (bookingDate < todayZero) {
+            return res.redirect(`/dat-ve/${phimId}?error=${encodeURIComponent('Suất chiếu này đã thuộc về ngày trong quá khứ!')}`);
+        }
+        if (bookingDate.getTime() === todayZero.getTime() && showTime) {
+            const [shHour, shMin] = showTime.split(':').map(Number);
+            const showtimeMoment = new Date(now.getFullYear(), now.getMonth(), now.getDate(), shHour || 0, shMin || 0, 0, 0);
+            if (now >= showtimeMoment) {
+                return res.redirect(`/dat-ve/${phimId}?error=${encodeURIComponent(`Suất chiếu lúc ${showTime} hôm nay đã qua giờ bắt đầu! Vui lòng chọn suất chiếu khác.`)}`);
+            }
         }
 
         const seatList = seats.split(',').map(s => s.trim()).filter(Boolean);
@@ -797,13 +839,20 @@ router.post('/tai-khoan/doi-mat-khau', checkLogin, async (req, res, next) => {
 
 // [GIAI ĐOẠN 3] NÂNG CẤP XÁC THỰC, VALIDATION & FLASH MESSAGES
 router.get('/dang-nhap', (req, res) => {
-    if (req.session.user) return res.redirect('/');
-    res.render('trangdangnhap', { error: null, success: null, email: '' });
+    const returnTo = req.query.returnTo || (req.session && req.session.returnTo) || '';
+    if (req.session.user) {
+        return res.redirect(returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/');
+    }
+    const warning = req.query.warning || null;
+    res.render('trangdangnhap', { error: null, success: null, warning, email: '', returnTo });
 });
 
 router.get('/dang-ky', (req, res) => {
-    if (req.session.user) return res.redirect('/');
-    res.render('trangdangky', { error: null, success: null, formData: {} });
+    const returnTo = req.query.returnTo || (req.session && req.session.returnTo) || '';
+    if (req.session.user) {
+        return res.redirect(returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/');
+    }
+    res.render('trangdangky', { error: null, success: null, formData: {}, returnTo });
 });
 
 router.get('/quen-mat-khau', (req, res) => {
@@ -812,26 +861,27 @@ router.get('/quen-mat-khau', (req, res) => {
 
 router.post('/dang-ky', async (req, res) => {
     try {
-        const { hoTen, email, matKhau, soDienThoai } = req.body;
+        const { hoTen, email, matKhau, soDienThoai, returnTo } = req.body;
         const formData = { hoTen, email, soDienThoai };
+        const safeReturnTo = returnTo || req.query.returnTo || '';
 
         if (!hoTen || hoTen.trim().length < 2) {
-            return res.render('trangdangky', { error: 'Họ và tên tối thiểu 2 ký tự.', formData });
+            return res.render('trangdangky', { error: 'Họ và tên tối thiểu 2 ký tự.', formData, returnTo: safeReturnTo });
         }
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!email || !emailRegex.test(email.trim())) {
-            return res.render('trangdangky', { error: 'Địa chỉ email không đúng định dạng.', formData });
+            return res.render('trangdangky', { error: 'Địa chỉ email không đúng định dạng.', formData, returnTo: safeReturnTo });
         }
         if (!soDienThoai || !/^[0-9]{10}$/.test(soDienThoai.trim())) {
-            return res.render('trangdangky', { error: 'Số điện thoại phải gồm đúng 10 chữ số.', formData });
+            return res.render('trangdangky', { error: 'Số điện thoại phải gồm đúng 10 chữ số.', formData, returnTo: safeReturnTo });
         }
         if (!matKhau || matKhau.length < 6) {
-            return res.render('trangdangky', { error: 'Mật khẩu phải có độ dài tối thiểu 6 ký tự.', formData });
+            return res.render('trangdangky', { error: 'Mật khẩu phải có độ dài tối thiểu 6 ký tự.', formData, returnTo: safeReturnTo });
         }
 
         const existing = await User.findOne({ email: email.toLowerCase().trim() });
         if (existing) {
-            return res.render('trangdangky', { error: 'Địa chỉ email này đã được sử dụng. Vui lòng đăng nhập hoặc dùng email khác.', formData });
+            return res.render('trangdangky', { error: 'Địa chỉ email này đã được sử dụng. Vui lòng đăng nhập hoặc dùng email khác.', formData, returnTo: safeReturnTo });
         }
 
         const hashedPassword = await bcrypt.hash(matKhau, 10);
@@ -847,42 +897,48 @@ router.post('/dang-ky', async (req, res) => {
         });
 
         res.render('trangdangnhap', { 
-            success: 'Đăng ký tài khoản thành công! Vui lòng đăng nhập.', 
+            success: 'Đăng ký tài khoản thành công! Vui lòng đăng nhập để tiếp tục đặt vé.', 
             error: null, 
-            email: email.toLowerCase().trim() 
+            warning: null,
+            email: email.toLowerCase().trim(),
+            returnTo: safeReturnTo
         });
     } catch (error) { 
         console.error("Lỗi đăng ký:", error);
-        res.render('trangdangky', { error: 'Lỗi đăng ký: ' + error.message, formData: req.body }); 
+        res.render('trangdangky', { error: 'Lỗi đăng ký: ' + error.message, formData: req.body, returnTo: req.body.returnTo || '' }); 
     }
 });
 
 router.post('/dang-nhap', async (req, res) => {
     try {
-        const { email, matKhau } = req.body;
+        const { email, matKhau, returnTo } = req.body;
+        const safeReturnTo = returnTo || req.query.returnTo || (req.session && req.session.returnTo) || '';
         if (!email || !matKhau) {
-            return res.render('trangdangnhap', { error: 'Vui lòng nhập đầy đủ email và mật khẩu.', success: null, email: email || '' });
+            return res.render('trangdangnhap', { error: 'Vui lòng nhập đầy đủ email và mật khẩu.', success: null, warning: null, email: email || '', returnTo: safeReturnTo });
         }
 
         const user = await User.findOne({ email: email.toLowerCase().trim() });
         if (!user) {
-            return res.render('trangdangnhap', { error: 'Email hoặc mật khẩu không chính xác. Vui lòng thử lại!', success: null, email });
+            return res.render('trangdangnhap', { error: 'Email hoặc mật khẩu không chính xác. Vui lòng thử lại!', success: null, warning: null, email, returnTo: safeReturnTo });
         }
 
         const isMatch = await bcrypt.compare(matKhau, user.matKhau);
         if (!isMatch) { 
-            return res.render('trangdangnhap', { error: 'Email hoặc mật khẩu không chính xác. Vui lòng thử lại!', success: null, email });
+            return res.render('trangdangnhap', { error: 'Email hoặc mật khẩu không chính xác. Vui lòng thử lại!', success: null, warning: null, email, returnTo: safeReturnTo });
         }
 
         req.session.user = user;
         req.session.save((err) => {
             if (err) console.error("Session save error:", err);
-            // Cả tài khoản thường và Admin khi đăng nhập đều về trang chủ với thông báo thành công
+            if (safeReturnTo && safeReturnTo.startsWith('/') && !safeReturnTo.startsWith('//')) {
+                delete req.session.returnTo;
+                return res.redirect(safeReturnTo);
+            }
             res.redirect('/?success=' + encodeURIComponent('Đăng nhập thành công! Chào mừng ' + (user.hoTen || 'bạn') + ' trở lại CineGo.'));
         });
     } catch (error) { 
         console.error("Lỗi đăng nhập:", error);
-        res.render('trangdangnhap', { error: 'Lỗi đăng nhập: ' + error.message, success: null, email: req.body.email || '' }); 
+        res.render('trangdangnhap', { error: 'Lỗi đăng nhập: ' + error.message, success: null, warning: null, email: req.body.email || '', returnTo: req.body.returnTo || '' }); 
     }
 });
 

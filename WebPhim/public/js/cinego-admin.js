@@ -40,7 +40,7 @@ window.CinegoAdmin = (function() {
       new Chart(cinemaCtx, {
         type: 'doughnut',
         data: {
-          labels: ['CGV Kim Cúc (45%)', 'Starlight Nguyễn Kim (32%)', 'Dcine Phú Tài (23%)'],
+          labels: ['CGV Kim Cúc (45%)', 'Starlight Nguyễn Kim (32%)', 'DCine Quy Nhơn (23%)'],
           datasets: [{
             data: [45, 32, 23],
             backgroundColor: ['#E50914', '#F59E0B', '#3B82F6'],
@@ -60,9 +60,9 @@ window.CinegoAdmin = (function() {
 
   // POS QR Ticket Scanner Check-In Simulator
   const checkInDatabase = new Map([
-    ['CG682914', { customer: 'Nguyễn Văn An', movie: 'Thám Tử Lừng Danh Conan', cinema: 'CGV Kim Cúc', seats: ['E5', 'E6'], showTime: '19:30 - Hôm nay', checkedIn: false }],
-    ['CG992145', { customer: 'Trần Thị Mai', movie: 'Dune: Hành Tinh Cát 2', cinema: 'Starlight Quy Nhơn', seats: ['F8'], showTime: '21:00 - Hôm nay', checkedIn: true }],
-    ['CG551023', { customer: 'Lê Hoàng Nam', movie: 'Kung Fu Panda 4', cinema: 'Dcine Quy Nhơn', seats: ['D3', 'D4', 'D5'], showTime: '15:15 - Hôm nay', checkedIn: false }]
+    ['CG682914', { customer: 'Khách Hàng 01', movie: 'Phim Chiếu Rạp 01', cinema: 'CGV Kim Cúc', seats: ['E5', 'E6'], showTime: '19:30 - Hôm nay', checkedIn: false }],
+    ['CG992145', { customer: 'Khách Hàng 02', movie: 'Phim Chiếu Rạp 02', cinema: 'Starlight Quy Nhơn', seats: ['F8'], showTime: '21:00 - Hôm nay', checkedIn: true }],
+    ['CG551023', { customer: 'Khách Hàng 03', movie: 'Phim Chiếu Rạp 03', cinema: 'Dcine Quy Nhơn', seats: ['D3', 'D4', 'D5'], showTime: '15:15 - Hôm nay', checkedIn: false }]
   ]);
 
   function scanTicketCode(code) {

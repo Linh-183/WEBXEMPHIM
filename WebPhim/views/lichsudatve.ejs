@@ -11,7 +11,7 @@
         <span class="archival-index">HỒ SƠ KHÁCH HÀNG / VÉ ĐIỆN TỬ</span>
         <h1 class="editorial-headline mt-1">Lịch Sử Vé & Vé Của Tôi</h1>
         <p class="text-xs text-[#7A7E8B] mt-1.5 font-light">
-          Danh mục toàn bộ vé điện tử đã được phát hành tại 3 cụm rạp: CGV Kim Cúc Plaza, Starlight Nguyễn Kim, Dcine Phú Tài.
+          Danh mục toàn bộ vé điện tử đã được phát hành tại 3 cụm rạp: CGV Kim Cúc Plaza, Starlight Nguyễn Kim, DCine Quy Nhơn.
         </p>
       </div>
 
@@ -121,16 +121,16 @@
   </div>
 
   <!-- =========================================================================
-       3. MODAL XUẤT VÉ ĐIỆN TỬ VÀ MÃ QR CHECK-IN TẠI QUẦY
+       3. MODAL XUẤT VÉ ĐIỆN TỬ VÀ MÃ QR CHECK-IN TẠI QUẦY (NATIVE DIALOG)
        ========================================================================= -->
-  <div id="ticketQrModal" class="hidden fixed inset-0 z-50 bg-[#121316]/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white border border-[#121316] w-full max-w-md p-8 shadow-2xl relative space-y-6">
-      <button type="button" onclick="closeTicketQRModal()" class="absolute top-4 right-4 text-[#7A7E8B] hover:text-[#121316]">
+  <dialog id="ticketQrModal" class="cinego-dialog p-0 m-auto bg-transparent border-none" aria-labelledby="qrModalTitle">
+    <div class="bg-white border border-[#121316] w-[92vw] max-w-md p-8 shadow-2xl relative space-y-6">
+      <button type="button" onclick="closeTicketQRModal()" class="absolute top-4 right-4 text-[#7A7E8B] hover:text-[#121316]" aria-label="Đóng">
         <span class="material-symbols-outlined text-2xl">close</span>
       </button>
 
       <div class="text-center border-b border-[#E5E0D5] pb-4">
-        <span class="font-serif font-black text-xl tracking-[0.2em] text-[#121316]">CINEGO</span>
+        <span id="qrModalTitle" class="font-serif font-black text-xl tracking-[0.2em] text-[#121316]">CINEGO</span>
         <span class="font-['JetBrains_Mono'] text-[9px] uppercase tracking-widest text-[#7A7E8B] block mt-0.5">VÉ ĐIỆN TỬ XÁC THỰC 1 CHẠM</span>
       </div>
 
@@ -160,7 +160,7 @@
           </svg>
         </div>
         <span id="qrTicketCodeDisplay" class="font-['JetBrains_Mono'] text-xs font-bold tracking-widest text-[#121316] mt-3 block">
-          CNE-8921-QN
+          --
         </span>
       </div>
 
@@ -168,11 +168,11 @@
       <div class="space-y-1.5 text-xs font-['JetBrains_Mono'] border-t border-[#E5E0D5] pt-4">
         <div class="flex justify-between">
           <span class="text-[#7A7E8B]">Phim:</span>
-          <span id="qrMovieTitle" class="font-bold text-[#121316] text-right truncate max-w-[200px]">Dune 2</span>
+          <span id="qrMovieTitle" class="font-bold text-[#121316] text-right truncate max-w-[200px]">--</span>
         </div>
         <div class="flex justify-between">
           <span class="text-[#7A7E8B]">Cụm rạp:</span>
-          <span id="qrCinema" class="font-bold text-[#121316]">CGV Kim Cúc</span>
+          <span id="qrCinema" class="font-bold text-[#121316]">--</span>
         </div>
         <div class="flex justify-between">
           <span class="text-[#7A7E8B]">Suất & Ngày:</span>
@@ -180,7 +180,7 @@
         </div>
         <div class="flex justify-between">
           <span class="text-[#7A7E8B]">Ghế ngồi:</span>
-          <span id="qrSeats" class="font-bold text-[#BA2D27]">D5, D6</span>
+          <span id="qrSeats" class="font-bold text-[#BA2D27]">--</span>
         </div>
       </div>
 
@@ -193,7 +193,7 @@
         </button>
       </div>
     </div>
-  </div>
+  </dialog>
 
 </main>
 
@@ -204,12 +204,29 @@
     document.getElementById('qrCinema').innerText = cinema;
     document.getElementById('qrTimeDate').innerText = time + ' • ' + date;
     document.getElementById('qrSeats').innerText = seats;
-    document.getElementById('ticketQrModal').classList.remove('hidden');
+    const modal = document.getElementById('ticketQrModal');
+    if (!modal) return;
+    if (typeof modal.showModal === 'function') {
+      if (!modal.open) modal.showModal();
+    } else {
+      modal.classList.remove('hidden');
+    }
   }
 
   function closeTicketQRModal() {
-    document.getElementById('ticketQrModal').classList.add('hidden');
+    const modal = document.getElementById('ticketQrModal');
+    if (!modal) return;
+    if (typeof modal.close === 'function') {
+      if (modal.open) modal.close();
+    } else {
+      modal.classList.add('hidden');
+    }
   }
+
+  // Backdrop click dismissal
+  document.getElementById('ticketQrModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeTicketQRModal();
+  });
 
   function filterTicketCategory(type, btn) {
     document.querySelectorAll('.ticket-tab-pill').forEach(b => {

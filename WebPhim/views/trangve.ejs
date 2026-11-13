@@ -24,7 +24,7 @@
         <div class="text-right font-['JetBrains_Mono']">
           <span class="block text-[9px] text-[#7A7E8B] uppercase">MÃ ĐẶT CHỖ</span>
           <span class="text-sm font-bold text-[#BA2D27] tracking-wider" id="ticketCodeDisplay">
-            <%= (typeof ticket !== 'undefined' && ticket && ticket._id) ? 'CNE-' + ticket._id.toString().slice(-6).toUpperCase() : 'CNE-8921-QN' %>
+            <%= (typeof ticket !== 'undefined' && ticket && ticket._id) ? 'CNE-' + ticket._id.toString().slice(-6).toUpperCase() : 'CNE-ONLINE' %>
           </span>
         </div>
       </div>
@@ -48,23 +48,23 @@
         <div>
           <span class="block text-[9px] text-[#7A7E8B] uppercase">Cụm rạp</span>
           <span class="text-xs font-bold text-[#121316] mt-0.5 block truncate" id="ticketCinemaDisplay">
-            <%= (typeof ticket !== 'undefined' && ticket && ticket.cinema) ? ticket.cinema : 'CGV Kim Cúc' %>
+            <%= (typeof ticket !== 'undefined' && ticket && ticket.cinema) ? ticket.cinema : 'Hệ thống CineGo' %>
           </span>
         </div>
         <div>
           <span class="block text-[9px] text-[#7A7E8B] uppercase">Phòng chiếu</span>
-          <span class="text-xs font-bold text-[#121316] mt-0.5 block">Phòng 1 (Standard)</span>
+          <span class="text-xs font-bold text-[#121316] mt-0.5 block">Phòng Standard</span>
         </div>
         <div>
           <span class="block text-[9px] text-[#7A7E8B] uppercase">Suất chiếu</span>
           <span class="text-xs font-bold text-[#121316] mt-0.5 block" id="ticketTimeDisplay">
-            <%= (typeof ticket !== 'undefined' && ticket && ticket.showTime) ? ticket.showTime : '19:30' %><% if (typeof ticket !== 'undefined' && ticket && ticket.showDate) { %><br><span class="text-[10px] text-[#7A7E8B] font-normal"><%= ticket.showDate %></span><% } %>
+            <%= (typeof ticket !== 'undefined' && ticket && ticket.showTime) ? ticket.showTime : '--:--' %><% if (typeof ticket !== 'undefined' && ticket && ticket.showDate) { %><br><span class="text-[10px] text-[#7A7E8B] font-normal"><%= ticket.showDate %></span><% } %>
           </span>
         </div>
         <div>
           <span class="block text-[9px] text-[#7A7E8B] uppercase">Ghế ngồi</span>
           <span class="text-xs font-bold text-[#BA2D27] mt-0.5 block" id="ticketSeatsDisplay">
-            <%= (typeof ticket !== 'undefined' && ticket && ticket.seats) ? (Array.isArray(ticket.seats) ? ticket.seats.join(', ') : ticket.seats) : 'D5, D6' %>
+            <%= (typeof ticket !== 'undefined' && ticket && ticket.seats) ? (Array.isArray(ticket.seats) ? ticket.seats.join(', ') : ticket.seats) : '--' %>
           </span>
         </div>
       </div>
@@ -79,7 +79,7 @@
       <div class="p-3 bg-[#FAF8F5] border border-[#E5E0D5] text-xs font-['JetBrains_Mono'] text-[#474A54] flex items-center justify-between">
         <span class="uppercase text-[10px] text-[#7A7E8B]">Tổng thanh toán:</span>
         <span class="text-sm font-bold text-[#BA2D27]">
-          <%= (typeof ticket !== 'undefined' && ticket && ticket.totalPrice) ? ticket.totalPrice.toLocaleString('vi-VN') + ' đ' : '190.000 đ' %>
+          <%= (typeof ticket !== 'undefined' && ticket && ticket.totalPrice) ? ticket.totalPrice.toLocaleString('vi-VN') + ' đ' : '0 đ' %>
         </span>
       </div>
 

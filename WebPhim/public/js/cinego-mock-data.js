@@ -11,7 +11,7 @@ window.CINEGO_DATA = {
       name: "CGV Kim Cúc Plaza Quy Nhơn",
       shortName: "CGV Kim Cúc",
       address: "Tầng 3, Kim Cúc Plaza, Khu đô thị An Phú Thịnh, P. Ghềnh Ráng, TP. Quy Nhơn, Bình Định",
-      phone: "1900 6017",
+      phone: "12345678",
       rooms: [
         { id: "cgv-r1", name: "Cinema 1 (IMAX Laser)", seats: 120, format: "IMAX 2D/3D" },
         { id: "cgv-r2", name: "Cinema 2 (Dolby Atmos)", seats: 90, format: "2D Digital" },
@@ -27,7 +27,7 @@ window.CINEGO_DATA = {
       name: "Starlight Nguyễn Kim Quy Nhơn",
       shortName: "Starlight Quy Nhơn",
       address: "Tầng 4, TTTM Nguyễn Kim, Số 06 Trần Phú, TP. Quy Nhơn, Bình Định",
-      phone: "1900 1744",
+      phone: "12345678",
       rooms: [
         { id: "sl-r1", name: "Phòng chiếu 1", seats: 100, format: "2D Digital" },
         { id: "sl-r2", name: "Phòng chiếu 2 (3D)", seats: 80, format: "3D Digital" },
@@ -40,10 +40,10 @@ window.CINEGO_DATA = {
     },
     {
       id: "dcine-quynhon",
-      name: "Dcine Phú Tài Center Quy Nhơn",
-      shortName: "Dcine Quy Nhơn",
-      address: "Tòa nhà Phú Tài Center, Ngã ba Đống Đa, P. Thị Nại, TP. Quy Nhơn, Bình Định",
-      phone: "0256 381 8888",
+      name: "DCine Quy Nhơn",
+      shortName: "DCine Quy Nhơn",
+      address: "Ngã ba Đống Đa, P. Thị Nại, TP. Quy Nhơn, Bình Định",
+      phone: "12345678",
       rooms: [
         { id: "dc-r1", name: "Hall A (Laser Projector)", seats: 110, format: "2D Laser" },
         { id: "dc-r2", name: "Hall B (VIP Lounge)", seats: 50, format: "VIP Gold Class" }

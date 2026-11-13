@@ -24,6 +24,11 @@
                style="width: 340px; height: 453px; min-width: 340px; min-height: 453px; max-width: 340px; max-height: 453px; flex-shrink: 0; position: relative; overflow: hidden;">
             <img src="<%= phim.posterUrl || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=80' %>" 
                  alt="<%= phim.title %>" 
+                 fetchpriority="high"
+                 loading="eager"
+                 decoding="async"
+                 width="340"
+                 height="453"
                  style="width: 340px; height: 453px; min-width: 340px; min-height: 453px; max-width: 340px; max-height: 453px; object-fit: cover; object-position: center; display: block; transform: none;" />
             
             <div class="absolute top-3 left-3 bg-[#BA2D27] text-white font-['JetBrains_Mono'] text-[10px] font-bold px-2.5 py-1">
@@ -101,6 +106,13 @@
                 <span>Xem Trailer</span>
               </button>
             <% } %>
+            <button type="button" 
+                    onclick="handleShareMovie('<%= phim.title %>', window.location.href)" 
+                    class="btn-editorial-secondary !border-white/30 !text-white hover:!bg-white hover:!text-[#0E1015]"
+                    aria-label="Chia sẻ thông tin tác phẩm">
+              <span class="material-symbols-outlined text-base">share</span>
+              <span>Chia Sẻ</span>
+            </button>
           </div>
 
         </div>
@@ -129,13 +141,24 @@
       <% 
         const today = new Date();
         const daysOfWeek = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+        const yNowDetail = today.getFullYear();
+        const mNowDetail = String(today.getMonth() + 1).padStart(2, '0');
+        const dNowDetail = String(today.getDate()).padStart(2, '0');
+        const todayIsoDetail = `${yNowDetail}-${mNowDetail}-${dNowDetail}`;
+        const nowHourDetail = today.getHours();
+        const nowMinDetail = today.getMinutes();
+        const isPastDetailServer = (tStr) => {
+          const [h, m] = (tStr || '').split(':').map(Number);
+          if (isNaN(h) || isNaN(m)) return false;
+          return (h < nowHourDetail || (h === nowHourDetail && m <= nowMinDetail));
+        };
         for (let i = 0; i < 7; i++) {
           const d = new Date(today);
           d.setDate(today.getDate() + i);
           const isToday = i === 0;
           const dayName = isToday ? 'Hôm Nay' : daysOfWeek[d.getDay()];
           const dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-          const fullIso = d.toISOString().split('T')[0];
+          const fullIso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       %>
         <button type="button" 
                 onclick="filterShowtimesByDate('<%= fullIso %>', this)"
@@ -149,6 +172,24 @@
         </button>
       <% } %>
     </div>
+
+    <%
+      const renderShowtimePill = (cin, time, tag) => {
+        const isPast = isPastDetailServer(time);
+        if (isPast) {
+    %>
+          <span data-cinema="<%= cin %>" data-time="<%= time %>" data-tag="<%= tag %>" class="detail-showtime-btn px-4 py-2.5 bg-[#FAF8F5] border border-[#E5E0D5] opacity-50 cursor-not-allowed text-xs font-['JetBrains_Mono'] font-bold text-[#A6AAB6] text-center min-w-[90px]" title="Suất <%= time %> hôm nay đã kết thúc hoặc qua giờ chiếu">
+            <%= time %>
+            <span class="detail-tag block text-[9px] font-normal text-[#A6AAB6]">Đã chiếu</span>
+          </span>
+    <%  } else { %>
+          <a href="/dat-ve/<%= phim._id %>?cinema=<%= encodeURIComponent(cin) %>&date=<%= todayIsoDetail %>&time=<%= time %>" data-cinema="<%= cin %>" data-time="<%= time %>" data-tag="<%= tag %>" class="detail-showtime-btn px-4 py-2.5 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316] text-center min-w-[90px]" title="Đặt vé suất <%= time %>">
+            <%= time %>
+            <span class="detail-tag block text-[9px] font-normal opacity-70"><%= tag %></span>
+          </a>
+    <%  }
+      };
+    %>
 
     <!-- The 3 Quy Nhon Cinemas Screening Matrices -->
     <div class="space-y-8">
@@ -175,26 +216,11 @@
         <div class="space-y-4">
           <div class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B] uppercase">Phòng Chiếu 1 (IMAX Laser):</div>
           <div class="flex flex-wrap gap-3">
-            <a href="/dat-ve/<%= phim._id %>?cinema=CGV Kim Cúc Plaza&time=09:30" class="px-4 py-2.5 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316] text-center min-w-[90px]">
-              09:30
-              <span class="block text-[9px] font-normal opacity-70">Ghế VIP</span>
-            </a>
-            <a href="/dat-ve/<%= phim._id %>?cinema=CGV Kim Cúc Plaza&time=13:15" class="px-4 py-2.5 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316] text-center min-w-[90px]">
-              13:15
-              <span class="block text-[9px] font-normal opacity-70">Ghế VIP</span>
-            </a>
-            <a href="/dat-ve/<%= phim._id %>?cinema=CGV Kim Cúc Plaza&time=16:45" class="px-4 py-2.5 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316] text-center min-w-[90px]">
-              16:45
-              <span class="block text-[9px] font-normal opacity-70">Ghế VIP</span>
-            </a>
-            <a href="/dat-ve/<%= phim._id %>?cinema=CGV Kim Cúc Plaza&time=19:30" class="px-4 py-2.5 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316] text-center min-w-[90px]">
-              19:30
-              <span class="block text-[9px] font-normal opacity-70">Giờ Vàng</span>
-            </a>
-            <a href="/dat-ve/<%= phim._id %>?cinema=CGV Kim Cúc Plaza&time=22:15" class="px-4 py-2.5 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316] text-center min-w-[90px]">
-              22:15
-              <span class="block text-[9px] font-normal opacity-70">Suất Khuya</span>
-            </a>
+            <% renderShowtimePill('CGV Kim Cúc Plaza', '09:30', 'Ghế VIP'); %>
+            <% renderShowtimePill('CGV Kim Cúc Plaza', '13:15', 'Ghế VIP'); %>
+            <% renderShowtimePill('CGV Kim Cúc Plaza', '16:45', 'Ghế VIP'); %>
+            <% renderShowtimePill('CGV Kim Cúc Plaza', '19:30', 'Giờ Vàng'); %>
+            <% renderShowtimePill('CGV Kim Cúc Plaza', '22:15', 'Suất Khuya'); %>
           </div>
         </div>
       </div>
@@ -221,38 +247,26 @@
         <div class="space-y-4">
           <div class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B] uppercase">Phòng Chiếu 2 (2D Digital):</div>
           <div class="flex flex-wrap gap-3">
-            <a href="/dat-ve/<%= phim._id %>?cinema=Starlight Nguyễn Kim&time=10:00" class="px-4 py-2.5 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316] text-center min-w-[90px]">
-              10:00
-              <span class="block text-[9px] font-normal opacity-70">Standard</span>
-            </a>
-            <a href="/dat-ve/<%= phim._id %>?cinema=Starlight Nguyễn Kim&time=14:00" class="px-4 py-2.5 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316] text-center min-w-[90px]">
-              14:00
-              <span class="block text-[9px] font-normal opacity-70">Standard</span>
-            </a>
-            <a href="/dat-ve/<%= phim._id %>?cinema=Starlight Nguyễn Kim&time=18:00" class="px-4 py-2.5 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316] text-center min-w-[90px]">
-              18:00
-              <span class="block text-[9px] font-normal opacity-70">Giờ Vàng</span>
-            </a>
-            <a href="/dat-ve/<%= phim._id %>?cinema=Starlight Nguyễn Kim&time=20:45" class="px-4 py-2.5 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316] text-center min-w-[90px]">
-              20:45
-              <span class="block text-[9px] font-normal opacity-70">Giờ Vàng</span>
-            </a>
+            <% renderShowtimePill('Starlight Nguyễn Kim', '10:00', 'Standard'); %>
+            <% renderShowtimePill('Starlight Nguyễn Kim', '14:00', 'Standard'); %>
+            <% renderShowtimePill('Starlight Nguyễn Kim', '18:00', 'Giờ Vàng'); %>
+            <% renderShowtimePill('Starlight Nguyễn Kim', '20:45', 'Giờ Vàng'); %>
           </div>
         </div>
       </div>
 
-      <!-- 3. Dcine Phú Tài Center -->
+      <!-- 3. DCine Quy Nhơn -->
       <div class="bg-white border border-[#E5E0D5] p-6 sm:p-8">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E5E0D5] gap-2 mb-6">
           <div>
             <div class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-[#A6853B]"></span>
               <h3 class="font-serif text-xl font-bold text-[#121316]">
-                Dcine Phú Tài Center Quy Nhơn
+                DCine Quy Nhơn
               </h3>
             </div>
             <span class="text-xs text-[#7A7E8B] block mt-0.5">
-              Tòa nhà Phú Tài Center, Ngã ba Đống Đa, P. Thị Nại
+              Ngã ba Đống Đa, P. Thị Nại, TP. Quy Nhơn
             </span>
           </div>
           <span class="text-xs font-['JetBrains_Mono'] text-[#10B981] font-semibold">
@@ -263,22 +277,10 @@
         <div class="space-y-4">
           <div class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B] uppercase">Hall A (Laser Projector):</div>
           <div class="flex flex-wrap gap-3">
-            <a href="/dat-ve/<%= phim._id %>?cinema=Dcine Quy Nhơn&time=11:15" class="px-4 py-2.5 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316] text-center min-w-[90px]">
-              11:15
-              <span class="block text-[9px] font-normal opacity-70">Laser 4K</span>
-            </a>
-            <a href="/dat-ve/<%= phim._id %>?cinema=Dcine Quy Nhơn&time=15:30" class="px-4 py-2.5 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316] text-center min-w-[90px]">
-              15:30
-              <span class="block text-[9px] font-normal opacity-70">Laser 4K</span>
-            </a>
-            <a href="/dat-ve/<%= phim._id %>?cinema=Dcine Quy Nhơn&time=19:00" class="px-4 py-2.5 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316] text-center min-w-[90px]">
-              19:00
-              <span class="block text-[9px] font-normal opacity-70">VIP Sofa</span>
-            </a>
-            <a href="/dat-ve/<%= phim._id %>?cinema=Dcine Quy Nhơn&time=21:30" class="px-4 py-2.5 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316] text-center min-w-[90px]">
-              21:30
-              <span class="block text-[9px] font-normal opacity-70">VIP Sofa</span>
-            </a>
+            <% renderShowtimePill('Dcine Quy Nhơn', '11:15', 'Laser 4K'); %>
+            <% renderShowtimePill('Dcine Quy Nhơn', '15:30', 'Laser 4K'); %>
+            <% renderShowtimePill('Dcine Quy Nhơn', '19:00', 'VIP Sofa'); %>
+            <% renderShowtimePill('Dcine Quy Nhơn', '21:30', 'VIP Sofa'); %>
           </div>
         </div>
       </div>
@@ -290,7 +292,11 @@
 </main>
 
 <script>
+  const todayDetailIso = '<%= todayIsoDetail %>';
+  let activeDetailDate = todayDetailIso;
+
   function filterShowtimesByDate(dateStr, btnElement) {
+    activeDetailDate = dateStr;
     document.querySelectorAll('.date-pill-btn').forEach(btn => {
       btn.classList.remove('bg-[#121316]', 'text-white', 'border-[#121316]');
       btn.classList.add('bg-white', 'text-[#121316]');
@@ -303,8 +309,76 @@
     const activeTag = btnElement.querySelector('span');
     if (activeTag) activeTag.classList.add('!text-white/70');
 
+    updateDetailShowtimesDisplay();
+
     if (window.cinegoToast) {
       window.cinegoToast.info('Đang hiển thị lịch chiếu ngày: ' + dateStr);
+    }
+  }
+
+  function updateDetailShowtimesDisplay() {
+    const isToday = (activeDetailDate === todayDetailIso);
+    const now = new Date();
+    const nowH = now.getHours();
+    const nowM = now.getMinutes();
+
+    document.querySelectorAll('.detail-showtime-btn').forEach(el => {
+      const cin = el.getAttribute('data-cinema');
+      const time = el.getAttribute('data-time');
+      const tag = el.getAttribute('data-tag') || 'Standard';
+      if (!time) return;
+
+      const [hStr, mStr] = time.split(':');
+      const h = parseInt(hStr, 10);
+      const m = parseInt(mStr, 10);
+      const isPast = isToday && (h < nowH || (h === nowH && m <= nowM));
+
+      const tagEl = el.querySelector('.detail-tag');
+
+      if (isPast) {
+        el.className = 'detail-showtime-btn px-4 py-2.5 bg-[#FAF8F5] border border-[#E5E0D5] opacity-50 cursor-not-allowed text-xs font-[\'JetBrains_Mono\'] font-bold text-[#A6AAB6] text-center min-w-[90px]';
+        el.removeAttribute('href');
+        el.style.pointerEvents = 'none';
+        el.title = `Suất ${time} hôm nay đã kết thúc hoặc qua giờ chiếu`;
+        if (tagEl) {
+          tagEl.className = 'detail-tag block text-[9px] font-normal text-[#A6AAB6]';
+          tagEl.innerText = 'Đã chiếu';
+        }
+      } else {
+        el.className = 'detail-showtime-btn px-4 py-2.5 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-[\'JetBrains_Mono\'] font-bold text-[#121316] text-center min-w-[90px]';
+        el.href = `/dat-ve/<%= phim._id %>?cinema=${encodeURIComponent(cin)}&date=${activeDetailDate}&time=${time}`;
+        el.style.pointerEvents = 'auto';
+        el.title = `Đặt vé suất ${time} ngày ${activeDetailDate}`;
+        if (tagEl) {
+          tagEl.className = 'detail-tag block text-[9px] font-normal opacity-70';
+          tagEl.innerText = tag;
+        }
+      }
+    });
+  }
+
+  async function handleShareMovie(title, url) {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: title + ' — CineGo Quy Nhơn',
+          text: 'Đặt vé xem phim ' + title + ' tại CineGo Quy Nhơn:',
+          url: url
+        });
+      } catch (err) {
+        if (err.name !== 'AbortError') console.error(err);
+      }
+    } else if (navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(url);
+        if (window.cinegoToast) {
+          window.cinegoToast.success('Đã sao chép liên kết phim vào bộ nhớ tạm!');
+        }
+      } catch (e) {
+        prompt('Sao chép đường dẫn xem phim:', url);
+      }
+    } else {
+      prompt('Sao chép đường dẫn xem phim:', url);
     }
   }
 </script>

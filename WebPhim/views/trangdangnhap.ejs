@@ -49,8 +49,17 @@
           <span><%= success %></span>
         </div>
       <% } %>
+      <% if (typeof warning !== 'undefined' && warning) { %>
+        <div data-toast-warning="<%= warning %>" class="p-3.5 bg-[#FFFBEB] border-l-4 border-[#F59E0B] text-[#B45309] text-xs font-['Plus_Jakarta_Sans'] flex items-center gap-2">
+          <span class="material-symbols-outlined text-base">info</span>
+          <span><%= warning %></span>
+        </div>
+      <% } %>
 
       <form action="/dang-nhap" method="POST" class="space-y-4 text-xs font-['Plus_Jakarta_Sans']">
+        <% if (typeof returnTo !== 'undefined' && returnTo) { %>
+          <input type="hidden" name="returnTo" value="<%= returnTo %>" />
+        <% } %>
         <div>
           <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-widest mb-1.5">
             Địa chỉ Email <span class="text-[#BA2D27]">*</span>
@@ -86,7 +95,7 @@
 
       <div class="pt-6 border-t border-[#E5E0D5] text-center font-['JetBrains_Mono'] text-xs text-[#7A7E8B]">
         <span>Chưa có tài khoản CineGo? </span>
-        <a href="/dang-ky" class="text-[#121316] hover:text-[#BA2D27] underline font-bold">
+        <a href="/dang-ky<%= (typeof returnTo !== 'undefined' && returnTo) ? '?returnTo=' + encodeURIComponent(returnTo) : '' %>" class="text-[#121316] hover:text-[#BA2D27] underline font-bold">
           Đăng ký thành viên mới
         </a>
       </div>

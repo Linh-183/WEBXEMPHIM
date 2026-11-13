@@ -566,3 +566,99 @@ img {
   }
 }
 
+/* ==========================================================================
+   MODERN WEB PLATFORM: NATIVE DIALOG & POPOVER PATTERNS
+   Aligned with Baseline & Modern Web Guidance standards.
+   ========================================================================== */
+dialog.cinego-dialog {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: auto;
+  max-width: calc(100vw - 2rem);
+  color: var(--ink-primary);
+  opacity: 0;
+  transform: scale(0.96) translateY(8px);
+  transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), display 0.22s allow-discrete, overlay 0.22s allow-discrete;
+}
+
+dialog.cinego-dialog[open] {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+@starting-style {
+  dialog.cinego-dialog[open] {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+}
+
+dialog.cinego-dialog::backdrop {
+  background: rgba(14, 16, 21, 0.85);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.22s ease, display 0.22s allow-discrete, overlay 0.22s allow-discrete;
+}
+
+dialog.cinego-dialog[open]::backdrop {
+  opacity: 1;
+}
+
+@starting-style {
+  dialog.cinego-dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* Native Popovers */
+.cinego-popover {
+  border: 1px solid var(--border-hairline);
+  background: #FFFFFF;
+  box-shadow: 0 12px 32px -4px rgba(18, 19, 22, 0.18);
+  padding: 0;
+  margin: 0;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), display 0.18s allow-discrete, overlay 0.18s allow-discrete;
+}
+
+.cinego-popover:popover-open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@starting-style {
+  .cinego-popover:popover-open {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+/* CSS Anchor Positioning for Native Popovers */
+#quick-cinema-trigger {
+  anchor-name: --quick-cinema-btn;
+}
+
+#quick-cinema-menu {
+  position-anchor: --quick-cinema-btn;
+  inset: auto;
+  top: anchor(bottom);
+  right: anchor(right);
+  margin-top: 6px;
+}
+
+#user-profile-trigger {
+  anchor-name: --user-profile-btn;
+}
+
+#user-profile-menu {
+  position-anchor: --user-profile-btn;
+  inset: auto;
+  top: anchor(bottom);
+  right: anchor(right);
+  margin-top: 6px;
+}
+
+
+
