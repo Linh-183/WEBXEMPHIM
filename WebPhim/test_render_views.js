@@ -12,7 +12,9 @@ const mockUser = {
   ngaySinh: new Date('1998-05-15'),
   gioiTinh: 'Nam',
   vaiTro: 'admin',
-  diemTichLuy: 185
+  diemTichLuy: 185,
+  hangHoiVien: 'Bac',
+  favoriteGenres: ['Hành Động', 'Khoa Học Viễn Tưởng']
 };
 
 const mockMovie = {
@@ -40,6 +42,22 @@ const mockVoucher = {
   expiryDate: new Date('2026-12-31')
 };
 
+const mockFlashSale = {
+  _id: '65f1234567890abcdef44444',
+  title: 'Khung Giờ Vàng — Đồng Giá 19K',
+  movie: mockMovie,
+  cinema: 'Tất cả các rạp',
+  salePrice: 19000,
+  originalPrice: 95000,
+  startTime: new Date(Date.now() - 3600000),
+  endTime: new Date(Date.now() + 3600000),
+  totalQuantity: 50,
+  claimedQuantity: 24,
+  description: 'Áp dụng cho mọi suất chiếu trong tuần',
+  voucherCode: 'FLASH19K',
+  isActive: true
+};
+
 const mockTicket = {
   _id: '65f1234567890abcdef77777',
   movie: mockMovie,
@@ -65,10 +83,11 @@ const mockCinema = {
 
 const pagesToTest = [
   { file: 'trangchu.ejs', data: { user: mockUser, movies: [mockMovie], vouchers: [mockVoucher] } },
+  { file: 'trangchu.ejs (empty movies test)', target: 'trangchu.ejs', data: { user: mockUser, movies: [], vouchers: [] } },
   { file: 'trangdanhsachphim.ejs', data: { user: mockUser, movies: [mockMovie], currentStatus: 'DangChieu', tuKhoa: '' } },
   { file: 'trangchitietphim.ejs', data: { user: mockUser, phim: mockMovie, title: mockMovie.title } },
   { file: 'tranghethongrap.ejs', data: { user: mockUser } },
-  { file: 'trangchitietrap.ejs', data: { user: mockUser } },
+  { file: 'trangchitietrap.ejs', data: { user: mockUser, movies: [mockMovie] } },
   { file: 'trangdatvephim.ejs', data: { user: mockUser, phim: mockMovie } },
   { file: 'trangthanhtoan.ejs', data: { user: mockUser, phim: mockMovie, cinema: 'CGV Kim Cúc Plaza', showDate: '2026-11-12', showTime: '19:30', seats: ['D5', 'D6'], total: 305000, comboDetails: 'Combo Cine Couple x1', comboTotal: 115000, vouchers: [mockVoucher] } },
   { file: 'trangve.ejs', data: { user: mockUser } },
@@ -76,11 +95,14 @@ const pagesToTest = [
   { file: '404.ejs', data: { user: mockUser, title: '404' } },
   { file: '500.ejs', data: { user: mockUser, title: '500', error: new Error('Test') } },
   { file: '403.ejs', data: { user: mockUser, title: '403' } },
-  { file: 'lichsudatve.ejs', data: { user: mockUser, tickets: [mockTicket] } },
-  { file: 'thongtincanhan.ejs', data: { user: mockUser } },
+  { file: 'lichsudatve.ejs (has tickets)', target: 'lichsudatve.ejs', data: { user: mockUser, tickets: [mockTicket] } },
+  { file: 'lichsudatve.ejs (empty tickets - no dune)', target: 'lichsudatve.ejs', data: { user: mockUser, tickets: [] } },
+  { file: 'thongtincanhan.ejs (admin)', target: 'thongtincanhan.ejs', data: { user: mockUser, vouchers: [mockVoucher] } },
+  { file: 'thongtincanhan.ejs (new user 0 points)', target: 'thongtincanhan.ejs', data: { user: { hoTen: 'Linh Nguyễn', email: 'linh@example.com', diemTichLuy: 0, hangHoiVien: 'Dong', favoriteGenres: [] }, vouchers: [] } },
   { file: 'trangkhuyenmai.ejs', data: { user: mockUser, vouchers: [mockVoucher] } },
   { file: 'trangbapnuoc.ejs', data: { user: mockUser } },
-  { file: 'trangflashsale.ejs', data: { user: mockUser } },
+  { file: 'trangflashsale.ejs (with active sale)', target: 'trangflashsale.ejs', data: { user: mockUser, activeSales: [mockFlashSale], upcomingSales: [] } },
+  { file: 'trangflashsale.ejs (empty sales)', target: 'trangflashsale.ejs', data: { user: mockUser, activeSales: [], upcomingSales: [] } },
   { file: 'trangtimkiem.ejs', data: { user: mockUser, movies: [mockMovie], tuKhoa: 'Dune' } },
   { file: 'trangdanhgia.ejs', data: { user: mockUser } },
   { file: 'trangdangnhap.ejs', data: { user: null } },
@@ -95,13 +117,11 @@ const pagesToTest = [
   { file: 'admin-quanlysuatchieu.ejs', data: { user: mockUser } },
   { file: 'admin-sodoghe.ejs', data: { user: mockUser } },
   { file: 'admin-quanlycombo.ejs', data: { user: mockUser } },
-  { file: 'admin-khuyenmai.ejs', data: { user: mockUser, vouchers: [mockVoucher] } },
+  { file: 'admin-khuyenmai.ejs (voucher tab)', target: 'admin-khuyenmai.ejs', data: { user: mockUser, vouchers: [mockVoucher], flashSales: [mockFlashSale], movies: [mockMovie], tab: 'voucher' } },
+  { file: 'admin-khuyenmai.ejs (flashsale tab)', target: 'admin-khuyenmai.ejs', data: { user: mockUser, vouchers: [mockVoucher], flashSales: [mockFlashSale], movies: [mockMovie], tab: 'flashsale' } },
   { file: 'admin-quanlynguoidung.ejs', data: { user: mockUser, users: [mockUser] } },
   { file: 'admin-quanlygiaodich.ejs', data: { user: mockUser } },
-  { file: 'admin-baocaodoanhthu.ejs', data: { user: mockUser } },
-  { file: 'trangchu.ejs (empty movies test)', target: 'trangchu.ejs', data: { user: mockUser, movies: [], vouchers: [] } },
-  { file: 'trangchu.ejs (null movies test)', target: 'trangchu.ejs', data: { user: mockUser, movies: null, vouchers: null } },
-  { file: 'trangchu.ejs (undefined movies test)', target: 'trangchu.ejs', data: { user: mockUser } }
+  { file: 'admin-baocaodoanhthu.ejs', data: { user: mockUser } }
 ];
 
 let errors = 0;

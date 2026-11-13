@@ -6,14 +6,14 @@
     <!-- Left Column: Editorial Manifesto (Span 5) -->
     <div class="hidden md:flex md:col-span-5 bg-[#0E1015] p-8 flex-col justify-between text-white relative">
       <div class="space-y-2 z-10">
-        <span class="font-['Georgia'] font-black text-xl tracking-[0.2em] text-white">CINEGO</span>
+        <span class="font-['Playfair_Display','Merriweather',Georgia,serif] font-black text-xl tracking-[0.2em] text-white">CINEGO</span>
         <span class="block font-['JetBrains_Mono'] text-[9px] uppercase tracking-widest text-[#BA2D27]">
           THÀNH VIÊN MỚI
         </span>
       </div>
 
       <div class="space-y-4 z-10 my-auto py-12">
-        <blockquote class="font-['Georgia'] italic text-2xl text-[#C5C8D1] leading-snug">
+        <blockquote class="font-['Playfair_Display','Merriweather',Georgia,serif] italic text-2xl text-[#C5C8D1] leading-snug">
           "Trở thành một phần của cộng đồng điện ảnh đích thực tại Quy Nhơn."
         </blockquote>
         <div class="space-y-2 text-xs font-['JetBrains_Mono'] text-white/70">
@@ -93,9 +93,12 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-widest mb-1">
-              Mật khẩu (Tối thiểu 6 ký tự) <span class="text-[#BA2D27]">*</span>
-            </label>
+            <div class="h-6 flex items-center justify-between mb-1">
+              <label class="font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-widest">
+                Mật khẩu <span class="text-[#BA2D27]">*</span>
+              </label>
+              <span class="text-[9px] text-[#A6AAB6] font-['JetBrains_Mono']">≥ 6 ký tự</span>
+            </div>
             <input type="password" 
                    name="matKhau" 
                    id="reg_matKhau"
@@ -106,9 +109,12 @@
           </div>
 
           <div>
-            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-widest mb-1">
-              Xác nhận mật khẩu <span class="text-[#BA2D27]">*</span>
-            </label>
+            <div class="h-6 flex items-center justify-between mb-1">
+              <label class="font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-widest">
+                Xác nhận mật khẩu <span class="text-[#BA2D27]">*</span>
+              </label>
+              <span class="text-[9px] text-[#A6AAB6] font-['JetBrains_Mono']">Khớp mật khẩu</span>
+            </div>
             <input type="password" 
                    id="reg_confirmPassword"
                    required 

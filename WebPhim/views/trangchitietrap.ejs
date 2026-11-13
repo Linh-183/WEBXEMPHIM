@@ -59,39 +59,34 @@
       </div>
 
       <div class="space-y-6">
-        <!-- Movie 1 Schedule Row -->
-        <div class="bg-white border border-[#E5E0D5] p-6 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-          <div class="flex items-center gap-4 sm:gap-6 flex-1">
-            <div class="w-20 h-28 bg-[#EFEBE3] overflow-hidden shrink-0 border border-[#E5E0D5]">
-              <img src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=400&q=80" alt="Dune 2" class="w-full h-full object-cover" />
-            </div>
-            <div class="space-y-1">
-              <span class="px-2 py-0.5 bg-[#BA2D27] text-white text-[10px] font-['JetBrains_Mono'] font-bold">T16</span>
-              <h4 class="font-['Georgia'] text-2xl font-bold text-[#121316]">
-                Dune: Hành Tinh Cát (Phần Hai)
-              </h4>
-              <p class="text-xs text-[#7A7E8B] font-['JetBrains_Mono']">166 Phút • Khoa học viễn tưởng, Hành động</p>
-            </div>
-          </div>
+        <% if (typeof movies !== 'undefined' && movies && movies.length > 0) { %>
+          <% movies.forEach(function(m) { %>
+            <div class="bg-white border border-[#E5E0D5] p-6 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+              <div class="flex items-center gap-4 sm:gap-6 flex-1">
+                <div class="w-20 h-28 bg-[#EFEBE3] overflow-hidden shrink-0 border border-[#E5E0D5]">
+                  <img src="<%= m.posterUrl %>" alt="<%= m.title %>" class="w-full h-full object-cover" />
+                </div>
+                <div class="space-y-1">
+                  <span class="px-2 py-0.5 bg-[#BA2D27] text-white text-[10px] font-['JetBrains_Mono'] font-bold"><%= m.ageRating || 'P' %></span>
+                  <h4 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-2xl font-bold text-[#121316]">
+                    <%= m.title %>
+                  </h4>
+                  <p class="text-xs text-[#7A7E8B] font-['JetBrains_Mono']"><%= m.duration || 120 %> Phút • <%= m.genre || 'Điện ảnh' %></p>
+                </div>
+              </div>
 
-          <div class="flex flex-wrap items-center gap-2.5">
-            <a href="/dat-ve/sample?cinema=CGV Kim Cúc Plaza&time=09:30" class="px-3.5 py-2 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316]">
-              09:30
-            </a>
-            <a href="/dat-ve/sample?cinema=CGV Kim Cúc Plaza&time=13:15" class="px-3.5 py-2 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316]">
-              13:15
-            </a>
-            <a href="/dat-ve/sample?cinema=CGV Kim Cúc Plaza&time=16:45" class="px-3.5 py-2 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316]">
-              16:45
-            </a>
-            <a href="/dat-ve/sample?cinema=CGV Kim Cúc Plaza&time=19:30" class="px-3.5 py-2 bg-[#121316] text-white text-xs font-['JetBrains_Mono'] font-bold hover:bg-[#BA2D27] transition-all">
-              19:30 (Hot)
-            </a>
-            <a href="/dat-ve/sample?cinema=CGV Kim Cúc Plaza&time=22:15" class="px-3.5 py-2 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] hover:bg-[#BA2D27] hover:text-white transition-all text-xs font-['JetBrains_Mono'] font-bold text-[#121316]">
-              22:15
-            </a>
+              <div class="flex flex-wrap items-center gap-2.5">
+                <a href="/dat-ve/<%= m._id %>" class="btn-editorial-primary text-xs !py-2.5 !px-5 font-['JetBrains_Mono']">
+                  Đặt Vé Phim Này →
+                </a>
+              </div>
+            </div>
+          <% }); %>
+        <% } else { %>
+          <div class="bg-white border border-[#E5E0D5] p-8 text-center text-xs text-[#7A7E8B]">
+            Hiện chưa có lịch chiếu nào trong cơ sở dữ liệu cho cụm rạp này.
           </div>
-        </div>
+        <% } %>
       </div>
     </div>
 

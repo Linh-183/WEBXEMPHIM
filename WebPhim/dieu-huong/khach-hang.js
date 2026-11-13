@@ -10,6 +10,7 @@ const Ticket = require('../models/Ticket');
 const Voucher = require('../models/Voucher');
 const FoodCombo = require('../models/FoodCombo');
 const SeatLock = require('../models/SeatLock');
+const FlashSale = require('../models/FlashSale');
 const { checkLogin } = require('../trung-gian/xac-thuc');
 
 // Hàm kiểm tra ObjectId MongoDB hợp lệ chống lỗi 500 CastError
@@ -244,6 +245,21 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
             seat: { $in: seatList }
         });
 
+        // Tích điểm tự động: 10.000đ = 1 Điểm & Cập nhật hạng hội viên (Đồng -> Bạc -> Vàng -> Kim Cương)
+        const earnedPoints = Math.floor(verifiedTotalPrice / 10000);
+        if (earnedPoints > 0 && req.session.user && req.session.user._id) {
+            const userInDb = await User.findById(req.session.user._id);
+            if (userInDb) {
+                userInDb.diemTichLuy = (userInDb.diemTichLuy || 0) + earnedPoints;
+                if (userInDb.diemTichLuy >= 600) userInDb.hangHoiVien = 'KimCuong';
+                else if (userInDb.diemTichLuy >= 300) userInDb.hangHoiVien = 'Vang';
+                else if (userInDb.diemTichLuy >= 100) userInDb.hangHoiVien = 'Bac';
+                else userInDb.hangHoiVien = 'Dong';
+                await userInDb.save();
+                req.session.user = userInDb;
+            }
+        }
+
         // Chuyển hướng trực tiếp đến trang Thẻ Vé Điện Tử có mã QR CineGo Pass
         res.redirect(`/ve/${savedTicket._id}`);
     } catch (error) { 
@@ -274,11 +290,84 @@ router.get(['/ve/:id', '/ve-dien-tu/:id'], checkLogin, async (req, res, next) =>
 
 // [MỚI] CÁC ROUTE PHỤ TRỢ: HỒ SƠ RẠP, FLASH SALE, BÌNH PHẨM ĐIỆN ẢNH
 router.get(['/he-thong-rap/:id', '/chi-tiet-rap/:id', '/rap/:id'], async (req, res) => {
-    res.render('trangchitietrap', { user: req.session.user || null, title: 'Hồ Sơ Cụm Rạp — CineGo Quy Nhơn' });
+    try {
+        const movies = await Movie.find({ status: 'DangChieu' }).sort({ createdAt: -1 });
+        res.render('trangchitietrap', { user: req.session.user || null, movies, title: 'Hồ Sơ Cụm Rạp — CineGo Quy Nhơn' });
+    } catch (err) {
+        res.render('trangchitietrap', { user: req.session.user || null, movies: [], title: 'Hồ Sơ Cụm Rạp — CineGo Quy Nhơn' });
+    }
 });
 
-router.get('/flash-sale', (req, res) => {
-    res.render('trangflashsale', { user: req.session.user || null, title: 'Khung Giờ Vàng Flash Sale — CineGo' });
+router.get('/flash-sale', async (req, res) => {
+    try {
+        const now = new Date();
+        const activeSales = await FlashSale.find({
+            isActive: true,
+            startTime: { $lte: now },
+            endTime: { $gte: now }
+        }).populate('movie');
+
+        const upcomingSales = await FlashSale.find({
+            isActive: true,
+            startTime: { $gt: now }
+        }).populate('movie').sort({ startTime: 1 });
+
+        res.render('trangflashsale', {
+            user: req.session.user || null,
+            activeSales,
+            upcomingSales,
+            title: 'Khung Giờ Vàng Flash Sale — CineGo'
+        });
+    } catch (err) {
+        res.render('trangflashsale', {
+            user: req.session.user || null,
+            activeSales: [],
+            upcomingSales: [],
+            title: 'Khung Giờ Vàng Flash Sale — CineGo'
+        });
+    }
+});
+
+// API Người Dùng Nhận Mã Ưu Đãi Flash Sale Vào Ví
+router.post('/api/nhan-flash-voucher', checkLogin, async (req, res) => {
+    try {
+        const { saleId } = req.body;
+        if (!isValidObjectId(saleId)) return res.json({ success: false, message: 'Đợt Flash Sale không hợp lệ.' });
+        const sale = await FlashSale.findById(saleId);
+        if (!sale || !sale.isActive) return res.json({ success: false, message: 'Đợt Flash Sale này không khả dụng.' });
+
+        const now = new Date();
+        if (now < sale.startTime || now > sale.endTime) {
+            return res.json({ success: false, message: 'Khung giờ Flash Sale chưa bắt đầu hoặc đã kết thúc.' });
+        }
+        if (sale.claimedQuantity >= sale.totalQuantity) {
+            return res.json({ success: false, message: 'Đợt Flash Sale này đã hết số lượng vé mở bán.' });
+        }
+
+        // Tự động tạo voucher trong bảng Voucher nếu chưa có
+        let v = await Voucher.findOne({ code: sale.voucherCode });
+        if (!v) {
+            v = await Voucher.create({
+                code: sale.voucherCode,
+                title: sale.title,
+                discountType: 'fixed',
+                discountValue: sale.originalPrice - sale.salePrice,
+                minOrderValue: sale.originalPrice,
+                maxDiscountValue: sale.originalPrice - sale.salePrice,
+                expiryDate: sale.endTime
+            });
+        }
+
+        sale.claimedQuantity += 1;
+        await sale.save();
+
+        res.json({ 
+            success: true, 
+            message: `Bạn đã nhận mã ${sale.voucherCode} thành công! Hãy kiểm tra ví voucher để áp dụng khi đặt vé.` 
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Lỗi hệ thống: ' + err.message });
+    }
 });
 
 router.get('/danh-gia', (req, res) => {
@@ -386,30 +475,43 @@ router.get('/tai-khoan/ve-cua-toi', checkLogin, async (req, res) => {
     try { res.render('lichsudatve', { tickets: await Ticket.find({ user: req.session.user._id }).populate('movie').sort({ _id: -1 }) }); } catch (error) { res.status(500).send("Lỗi tải lịch sử"); }
 });
 
-router.get('/tai-khoan/thong-tin', async (req, res) => {
+router.get('/tai-khoan/thong-tin', checkLogin, async (req, res) => {
     try {
-        if (!req.session.user || !req.session.user._id) return res.redirect('/dang-nhap'); 
         const thongTinUser = await User.findById(req.session.user._id);
         if (!thongTinUser) return res.redirect('/dang-nhap');
-        res.render('thongtincanhan', { user: thongTinUser });
+        const vouchers = await Voucher.find({ $or: [{ expiryDate: { $gte: new Date() } }, { expiryDate: null }] }).sort({ createdAt: -1 });
+        res.render('thongtincanhan', { 
+            user: thongTinUser, 
+            vouchers: vouchers || [], 
+            error: req.query.error || null, 
+            success: req.query.success || null 
+        });
     } catch (error) { res.redirect('/dang-nhap'); }
 });
 
-// [ĐÃ SỬA] Bổ sung Session đồng bộ cho Admin
-router.post('/tai-khoan/cap-nhat', async (req, res) => {
+// [ĐÃ SỬA] Cập nhật thông tin cá nhân và lưu thể loại phim yêu thích
+router.post('/tai-khoan/cap-nhat', checkLogin, async (req, res) => {
     try {
-        if (!req.session.user || !req.session.user._id) return res.redirect('/dang-nhap');
-        const { hoTen, sdt, ngaySinh, gender } = req.body;
+        const { hoTen, sdt, ngaySinh, gender, favoriteGenres } = req.body;
+        const genresList = favoriteGenres ? favoriteGenres.split(',').map(s => s.trim()).filter(Boolean) : [];
+        const normalizedGender = (gender === 'Nu' || gender === 'Nữ') ? 'Nữ' : ((gender === 'Khac' || gender === 'Khác') ? 'Khác' : 'Nam');
+
         const updatedUser = await User.findByIdAndUpdate(
             req.session.user._id, 
-            { hoTen, soDienThoai: sdt, ngaySinh: ngaySinh ? new Date(ngaySinh) : null, gioiTinh: gender }, 
+            { 
+                hoTen: hoTen ? hoTen.trim() : undefined, 
+                soDienThoai: sdt ? sdt.trim() : undefined, 
+                ngaySinh: ngaySinh ? new Date(ngaySinh) : null, 
+                gioiTinh: normalizedGender,
+                favoriteGenres: genresList
+            }, 
             { new: true } 
         );
         if (!updatedUser) return res.redirect('/dang-nhap');
         req.session.user = updatedUser; // Cập nhật lại session ngay lập tức
         return new Promise((resolve, reject) => {
             req.session.save((err) => { if (err) return reject(err); resolve(); });
-        }).then(() => res.redirect('/tai-khoan/thong-tin'));
+        }).then(() => res.redirect('/tai-khoan/thong-tin?success=' + encodeURIComponent('Cập nhật hồ sơ thành công!')));
     } catch (error) { res.status(500).send("Lỗi cập nhật: " + error.message); }
 });
 
@@ -493,7 +595,10 @@ router.post('/dang-ky', async (req, res) => {
             email: email.toLowerCase().trim(), 
             matKhau: hashedPassword, 
             soDienThoai: soDienThoai.trim(), 
-            vaiTro: 'user' 
+            vaiTro: 'user',
+            diemTichLuy: 0,
+            hangHoiVien: 'Dong',
+            favoriteGenres: []
         });
 
         res.render('trangdangnhap', { 
@@ -527,9 +632,7 @@ router.post('/dang-nhap', async (req, res) => {
         req.session.user = user;
         req.session.save((err) => {
             if (err) console.error("Session save error:", err);
-            if (user.vaiTro === 'admin') {
-                return res.redirect('/admin');
-            }
+            // Cả tài khoản thường và Admin khi đăng nhập đều về trang chủ (Admin có nút Quản Trị trên Header)
             res.redirect('/');
         });
     } catch (error) { 

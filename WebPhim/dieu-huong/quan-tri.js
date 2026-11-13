@@ -7,6 +7,7 @@ const Ticket = require('../models/Ticket');
 const Voucher = require('../models/Voucher');
 const FoodCombo = require('../models/FoodCombo');
 const Cinema = require('../models/Cinema');
+const FlashSale = require('../models/FlashSale');
 
 router.get('/', async (req, res) => {
     try {
@@ -225,8 +226,14 @@ router.get('/quan-ly-rap', async (req, res, next) => {
     }
 });
 
-router.get('/khuyen-mai', async (req, res) => {
-    try { res.render('admin-khuyenmai', { vouchers: await Voucher.find().sort({ createdAt: -1 }) }); } catch (error) { res.status(500).send("Lỗi tải trang voucher"); }
+router.get('/khuyen-mai', async (req, res, next) => {
+    try { 
+        const tab = req.query.tab || 'voucher';
+        const vouchers = await Voucher.find().sort({ createdAt: -1 });
+        const flashSales = await FlashSale.find().populate('movie').sort({ createdAt: -1 });
+        const movies = await Movie.find().select('title posterUrl').sort({ title: 1 });
+        res.render('admin-khuyenmai', { user: req.session.user, vouchers, flashSales, movies, tab }); 
+    } catch (error) { next(error); }
 });
 
 router.post('/vouchers/add', async (req, res) => {
@@ -235,7 +242,7 @@ router.post('/vouchers/add', async (req, res) => {
         let val = discountType === 'fixed' ? Number(discountValue) * 1000 : Number(discountValue);
         let min = Number(minOrderValue) * 1000, max = Number(maxDiscountValue) * 1000;
         await Voucher.create({ code: code.toUpperCase(), discountValue: val, minOrderValue: min, maxDiscountValue: max, title, description, discountType, imageUrl, expiryDate: expiryDate ? new Date(expiryDate) : null });
-        res.redirect('/admin/khuyen-mai');
+        res.redirect('/admin/khuyen-mai?tab=voucher');
     } catch (error) { res.status(500).send("Lỗi thêm voucher"); }
 });
 
@@ -245,12 +252,55 @@ router.post('/vouchers/sua/:id', async (req, res) => {
         let val = discountType === 'fixed' ? Number(discountValue) * 1000 : Number(discountValue);
         let min = Number(minOrderValue) * 1000, max = Number(maxDiscountValue) * 1000;
         await Voucher.findByIdAndUpdate(req.params.id, { code: code.toUpperCase(), discountValue: val, minOrderValue: min, maxDiscountValue: max, title, description, discountType, imageUrl, expiryDate: expiryDate ? new Date(expiryDate) : null });
-        res.redirect('/admin/khuyen-mai');
+        res.redirect('/admin/khuyen-mai?tab=voucher');
     } catch (error) { res.status(500).send("Lỗi cập nhật voucher"); }
 });
 
 router.post('/vouchers/delete/:id', async (req, res) => {
-    try { await Voucher.findByIdAndDelete(req.params.id); res.redirect('/admin/khuyen-mai'); } catch (error) { res.status(500).send("Lỗi xóa voucher"); }
+    try { 
+        await Voucher.findByIdAndDelete(req.params.id); 
+        res.redirect('/admin/khuyen-mai?tab=voucher'); 
+    } catch (error) { res.status(500).send("Lỗi xóa voucher"); }
+});
+
+// [MỚI] QUẢN LÝ CÁC ĐỢT SĂN VÉ FLASH SALE (CHỦ ĐỘNG BẬT/TẮT TẠI ADMIN)
+router.post('/flash-sale/add', async (req, res, next) => {
+    try {
+        const { title, movieId, cinema, salePrice, originalPrice, startTime, endTime, totalQuantity, voucherCode, description } = req.body;
+        await FlashSale.create({
+            title: title ? title.trim() : 'Săn Vé Đồng Giá Flash Sale',
+            movie: movieId && mongoose.Types.ObjectId.isValid(movieId) ? movieId : null,
+            cinema: cinema || 'Tất cả các rạp',
+            salePrice: Number(salePrice) || 19000,
+            originalPrice: Number(originalPrice) || 95000,
+            startTime: startTime ? new Date(startTime) : new Date(),
+            endTime: endTime ? new Date(endTime) : new Date(Date.now() + 2 * 3600 * 1000),
+            totalQuantity: Number(totalQuantity) || 50,
+            claimedQuantity: 0,
+            voucherCode: (voucherCode ? voucherCode.trim() : 'FLASH19K').toUpperCase(),
+            description: description ? description.trim() : '',
+            isActive: true
+        });
+        res.redirect('/admin/khuyen-mai?tab=flashsale');
+    } catch (error) { next(error); }
+});
+
+router.post('/flash-sale/toggle/:id', async (req, res, next) => {
+    try {
+        const fs = await FlashSale.findById(req.params.id);
+        if (fs) {
+            fs.isActive = !fs.isActive;
+            await fs.save();
+        }
+        res.redirect('/admin/khuyen-mai?tab=flashsale');
+    } catch (error) { next(error); }
+});
+
+router.post('/flash-sale/delete/:id', async (req, res, next) => {
+    try {
+        await FlashSale.findByIdAndDelete(req.params.id);
+        res.redirect('/admin/khuyen-mai?tab=flashsale');
+    } catch (error) { next(error); }
 });
 
 // =========================================================================

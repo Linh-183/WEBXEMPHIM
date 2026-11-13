@@ -4,41 +4,7 @@
   
 <%
   var rawMovies = (typeof movies !== 'undefined' && movies && Array.isArray(movies)) ? movies : [];
-  var heroList = rawMovies.length > 0 ? rawMovies : [
-    {
-      _id: 'default_1',
-      title: 'Dune: Hành Tinh Cát (Phần Hai)',
-      director: 'Denis Villeneuve',
-      duration: 166,
-      ageRating: 'T16',
-      genre: 'Khoa học viễn tưởng, Phiêu lưu',
-      posterUrl: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=80',
-      trailerUrl: 'https://www.youtube.com/watch?v=Way9Dexny3w',
-      description: 'Paul Atreides liên minh cùng Chani và tộc người Fremen để trả thù những kẻ đã hủy diệt gia tộc mình, đối diện giữa tình yêu và số phận toàn vũ trụ.'
-    },
-    {
-      _id: 'default_2',
-      title: 'Oppenheimer',
-      director: 'Christopher Nolan',
-      duration: 180,
-      ageRating: 'T18',
-      genre: 'Tiểu sử, Lịch sử, Kịch tính',
-      posterUrl: 'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?auto=format&fit=crop&w=800&q=80',
-      trailerUrl: 'https://www.youtube.com/watch?v=uYPbbksJxIg',
-      description: 'Câu chuyện thiên tài vật lý J. Robert Oppenheimer trong Dự án Manhattan phát triển quả bom nguyên tử đầu tiên làm thay đổi lịch sử loài người.'
-    },
-    {
-      _id: 'default_3',
-      title: 'Mai',
-      director: 'Trấn Thành',
-      duration: 131,
-      ageRating: 'T18',
-      genre: 'Tâm lý, Tình cảm',
-      posterUrl: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80',
-      trailerUrl: 'https://www.youtube.com/watch?v=Way9Dexny3w',
-      description: 'Hành trình cuộc đời của Mai - một người phụ nữ với quá khứ nhiều tổn thương khi gặp được Dương, chàng trai trẻ đem lại hy vọng nhưng cũng đầy trắc trở.'
-    }
-  ];
+  var heroList = rawMovies;
 %>
 
   <!-- =========================================================================
@@ -46,7 +12,7 @@
        ========================================================================= -->
   <section id="heroCarouselSection" class="bg-[#0E1015] text-[#FAF8F5] border-b border-white/10 relative overflow-hidden">
     <div class="max-w-[1520px] mx-auto px-6 sm:px-10 lg:px-14 py-8 lg:py-12 relative z-10">
-      
+      <% if (heroList.length > 0) { %>
       <!-- Hero Slides Container (Khung cố định 100%, chống đổi kích cỡ khi chuyển phim) -->
       <div id="heroSlidesContainer" class="relative w-full h-[720px] sm:h-[660px] lg:h-[460px] overflow-hidden">
         <% heroList.forEach(function(item, idx) { %>
@@ -168,6 +134,27 @@
           CINEGO CURATED SELECTION 2026
         </div>
       </div>
+      <% } else { %>
+        <!-- Empty State khi CSDL chưa có phim -->
+        <div class="py-16 text-center space-y-4 max-w-xl mx-auto">
+          <span class="material-symbols-outlined text-5xl text-white/40">movie</span>
+          <div class="space-y-1">
+            <h2 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-2xl sm:text-3xl font-bold text-white">
+              Cơ Sở Dữ Liệu Hiện Chưa Có Phim
+            </h2>
+            <p class="text-xs text-white/60">
+              Hệ thống hiện tại hiển thị danh mục phim từ cơ sở dữ liệu của bạn. Quản trị viên vui lòng truy cập Trang Quản Trị để đăng tải phim mới.
+            </p>
+          </div>
+          <% if (typeof user !== 'undefined' && user && user.vaiTro === 'admin') { %>
+            <div class="pt-2">
+              <a href="/admin/phim/them" class="btn-editorial-primary text-xs !py-3 !px-6 inline-block">
+                + Thêm Phim Mới Ngay
+              </a>
+            </div>
+          <% } %>
+        </div>
+      <% } %>
 
     </div>
   </section>
@@ -243,42 +230,61 @@
       </div>
 
       <!-- Curated Movies Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        <% heroList.forEach(function(m, idx) { %>
-          <div class="bg-white border border-[#E5E0D5] flex flex-col justify-between group hover:border-[#121316] transition-all">
-            <div>
-              <div class="relative aspect-[3/4] bg-[#F3EFE6] overflow-hidden">
-                <img src="<%= m.posterUrl %>" alt="<%= m.title %>" class="w-full h-full object-cover transition-opacity group-hover:opacity-95" />
-                <span class="absolute top-3 left-3 px-2 py-0.5 bg-[#BA2D27] text-white font-['JetBrains_Mono'] text-[10px] font-bold uppercase">
-                  <%= m.ageRating || 'P' %>
-                </span>
-                <span class="absolute top-3 right-3 px-2 py-0.5 bg-black/70 text-white font-['JetBrains_Mono'] text-[10px] backdrop-blur-sm">
-                  <%= m.duration || 120 %>p
-                </span>
+      <% if (heroList.length > 0) { %>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <% heroList.forEach(function(m, idx) { %>
+            <div class="bg-white border border-[#E5E0D5] flex flex-col justify-between group hover:border-[#121316] transition-all">
+              <div>
+                <div class="relative aspect-[3/4] bg-[#F3EFE6] overflow-hidden">
+                  <img src="<%= m.posterUrl %>" alt="<%= m.title %>" class="w-full h-full object-cover transition-opacity group-hover:opacity-95" />
+                  <span class="absolute top-3 left-3 px-2 py-0.5 bg-[#BA2D27] text-white font-['JetBrains_Mono'] text-[10px] font-bold uppercase">
+                    <%= m.ageRating || 'P' %>
+                  </span>
+                  <span class="absolute top-3 right-3 px-2 py-0.5 bg-black/70 text-white font-['JetBrains_Mono'] text-[10px] backdrop-blur-sm">
+                    <%= m.duration || 120 %>p
+                  </span>
+                </div>
+
+                <div class="p-5 space-y-2">
+                  <span class="text-[10px] font-['JetBrains_Mono'] text-[#A6853B] uppercase font-bold block">
+                    <%= m.genre || 'Hành Động, Kịch Tính' %>
+                  </span>
+                  <h3 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-lg font-bold text-[#121316] leading-snug group-hover:text-[#BA2D27] transition-colors">
+                    <a href="/chi-tiet-phim/<%= m._id %>"><%= m.title %></a>
+                  </h3>
+                  <p class="text-xs text-[#7A7E8B] line-clamp-2 leading-relaxed">
+                    <%= m.description || 'Tác phẩm điện ảnh đáng xem nhất tại rạp tuần này.' %>
+                  </p>
+                </div>
               </div>
 
-              <div class="p-5 space-y-2">
-                <span class="text-[10px] font-['JetBrains_Mono'] text-[#A6853B] uppercase font-bold block">
-                  <%= m.genre || 'Hành Động, Kịch Tính' %>
-                </span>
-                <h3 class="font-['Georgia'] text-lg font-bold text-[#121316] leading-snug group-hover:text-[#BA2D27] transition-colors">
-                  <a href="/chi-tiet-phim/<%= m._id %>"><%= m.title %></a>
-                </h3>
-                <p class="text-xs text-[#7A7E8B] line-clamp-2 leading-relaxed">
-                  <%= m.description || 'Tác phẩm điện ảnh đáng xem nhất tại rạp tuần này.' %>
-                </p>
+              <div class="p-5 pt-0 border-t border-[#E5E0D5] mt-4 flex items-center justify-between text-xs font-['JetBrains_Mono']">
+                <span class="text-[#7A7E8B]">Từ <strong class="text-[#121316]">75.000đ</strong></span>
+                <a href="/dat-ve/<%= m._id %>" class="btn-editorial-primary text-xs !py-2 !px-4">
+                  Đặt Vé →
+                </a>
               </div>
             </div>
-
-            <div class="p-5 pt-0 border-t border-[#E5E0D5] mt-4 flex items-center justify-between text-xs font-['JetBrains_Mono']">
-              <span class="text-[#7A7E8B]">Từ <strong class="text-[#121316]">75.000đ</strong></span>
-              <a href="/dat-ve/<%= m._id %>" class="btn-editorial-primary text-xs !py-2 !px-4">
-                Đặt Vé →
+          <% }); %>
+        </div>
+      <% } else { %>
+        <div class="bg-white border border-[#E5E0D5] p-12 text-center space-y-4">
+          <span class="material-symbols-outlined text-4xl text-[#7A7E8B]">movie</span>
+          <h3 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-xl font-bold text-[#121316]">
+            Chưa có tác phẩm nào trong cơ sở dữ liệu
+          </h3>
+          <p class="text-xs text-[#7A7E8B] max-w-md mx-auto">
+            Hệ thống chỉ hiển thị phim thực tế được lưu trữ trong cơ sở dữ liệu của bạn. Quản trị viên vui lòng thêm phim tại Bảng Quản Trị.
+          </p>
+          <% if (typeof user !== 'undefined' && user && user.vaiTro === 'admin') { %>
+            <div class="pt-2">
+              <a href="/admin/phim/them" class="btn-editorial-primary text-xs !py-2.5 !px-5 inline-block">
+                + Thêm Phim Mới
               </a>
             </div>
-          </div>
-        <% }); %>
-      </div>
+          <% } %>
+        </div>
+      <% } %>
 
     </div>
   </section>

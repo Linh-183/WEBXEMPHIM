@@ -34,8 +34,9 @@
         <span class="px-2 py-0.5 bg-[#BA2D27] text-white text-[10px] font-['JetBrains_Mono'] font-bold inline-block">
           <%= (typeof ticket !== 'undefined' && ticket && ticket.movie && ticket.movie.ageRating) ? ticket.movie.ageRating : 'P' %>
         </span>
-        <h2 class="font-['Georgia'] text-3xl sm:text-4xl font-bold text-[#121316] leading-tight" id="ticketMovieTitle">
-          <%= (typeof ticket !== 'undefined' && ticket && ticket.movie && ticket.movie.title) ? ticket.movie.title : 'Dune: Hành Tinh Cát (Phần Hai)' %>
+        <% const currentTicket = (typeof ticket !== 'undefined' && ticket) ? ticket : null; %>
+        <h2 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-3xl sm:text-4xl font-bold text-[#121316] leading-tight" id="ticketMovieTitle">
+          <%= (currentTicket && currentTicket.movie && currentTicket.movie.title) ? currentTicket.movie.title : (currentTicket && currentTicket.comboDetails ? 'CineGo Concessions Pass' : 'Vé Xem Phim CineGo') %>
         </h2>
         <span class="font-['JetBrains_Mono'] text-xs text-[#7A7E8B] block mt-1">
           Định dạng: 2D Laser Digital • Âm thanh vòm Dolby Surround

@@ -1,5 +1,51 @@
 <%- include('partials/header') %>
 
+<%
+  const points = (user && typeof user.diemTichLuy === 'number') ? user.diemTichLuy : 0;
+  let tierCode = 'Dong';
+  let tierName = 'HỘI VIÊN ĐỒNG';
+  let tierBadge = 'ĐỒNG';
+  let tierColor = '#A6853B';
+  let nextTierName = 'Bạc';
+  let nextTierPoints = 100;
+  let progressPercent = Math.min(100, Math.round((points / 100) * 100));
+
+  if (user && user.vaiTro === 'admin') {
+    tierCode = 'Admin';
+    tierName = 'QUẢN TRỊ VIÊN HỆ THỐNG';
+    tierBadge = 'ADMIN';
+    tierColor = '#BA2D27';
+    nextTierName = null;
+    progressPercent = 100;
+  } else if (points >= 600) {
+    tierCode = 'KimCuong';
+    tierName = 'HỘI VIÊN KIM CƯƠNG';
+    tierBadge = 'KIM CƯƠNG';
+    tierColor = '#2563EB';
+    nextTierName = null;
+    progressPercent = 100;
+  } else if (points >= 300) {
+    tierCode = 'Vang';
+    tierName = 'HỘI VIÊN VÀNG';
+    tierBadge = 'VÀNG';
+    tierColor = '#D97706';
+    nextTierName = 'Kim Cương';
+    nextTierPoints = 600;
+    progressPercent = Math.min(100, Math.round(((points - 300) / 300) * 100));
+  } else if (points >= 100) {
+    tierCode = 'Bac';
+    tierName = 'HỘI VIÊN BẠC';
+    tierBadge = 'BẠC';
+    tierColor = '#64748B';
+    nextTierName = 'Vàng';
+    nextTierPoints = 300;
+    progressPercent = Math.min(100, Math.round(((points - 100) / 200) * 100));
+  }
+
+  const userVouchers = (typeof vouchers !== 'undefined' && Array.isArray(vouchers)) ? vouchers : [];
+  const userGenres = (user && Array.isArray(user.favoriteGenres)) ? user.favoriteGenres : [];
+%>
+
 <main class="min-h-screen py-12 pb-24 bg-[#FAF8F5]">
   <div class="max-w-6xl mx-auto px-4 sm:px-8">
     
@@ -31,14 +77,14 @@
         <!-- Embossed Member Card -->
         <div class="bg-white border-2 border-[#121316] p-6 relative overflow-hidden shadow-lg">
           <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-4 mb-4">
-            <span class="font-['Georgia'] font-black text-lg tracking-[0.2em] text-[#121316]">CINEGO CLUB</span>
-            <span class="font-['JetBrains_Mono'] text-[9px] uppercase tracking-widest px-2 py-0.5 bg-[#BA2D27] text-white font-bold">
-              <%= (user && user.vaiTro === 'admin') ? 'ADMIN' : 'VIP PASS' %>
+            <span class="font-['Playfair_Display','Merriweather',Georgia,serif] font-black text-lg tracking-[0.2em] text-[#121316]">CINEGO CLUB</span>
+            <span class="font-['JetBrains_Mono'] text-[9px] uppercase tracking-widest px-2.5 py-0.5 text-white font-bold" style="background-color: <%= tierColor %>;">
+              <%= tierBadge %>
             </span>
           </div>
 
           <div class="flex items-center gap-4 py-2">
-            <div class="w-14 h-14 bg-[#121316] text-[#FAF8F5] font-['Georgia'] font-bold text-2xl flex items-center justify-center shrink-0">
+            <div class="w-14 h-14 bg-[#121316] text-[#FAF8F5] font-['Playfair_Display','Merriweather',Georgia,serif] font-bold text-2xl flex items-center justify-center shrink-0">
               <%= (user && (user.hoTen || user.name)) ? (user.hoTen || user.name).charAt(0).toUpperCase() : 'U' %>
             </div>
             <div class="overflow-hidden">
@@ -52,23 +98,88 @@
           </div>
 
           <!-- Points Display (SRS 1.2: 10.000đ = 1 Điểm) -->
-          <div class="mt-6 p-4 bg-[#FAF8F5] border border-[#E5E0D5] font-['JetBrains_Mono']">
-            <span class="block text-[10px] text-[#7A7E8B] uppercase">ĐIỂM TÍCH LŨY CỦA BẠN:</span>
-            <div class="flex items-baseline justify-between mt-1">
+          <div class="mt-6 p-4 bg-[#FAF8F5] border border-[#E5E0D5] font-['JetBrains_Mono'] space-y-3">
+            <div class="flex items-center justify-between text-[10px]">
+              <span class="text-[#7A7E8B] uppercase">ĐIỂM TÍCH LŨY CỦA BẠN:</span>
+              <span class="font-bold text-[#121316]"><%= tierName %></span>
+            </div>
+            
+            <div class="flex items-baseline justify-between">
               <span class="text-3xl font-black text-[#BA2D27]">
-                <%= (user && typeof user.diemTichLuy !== 'undefined') ? user.diemTichLuy : 150 %>
+                <%= points %>
               </span>
               <span class="text-xs text-[#7A7E8B]">Điểm thưởng</span>
             </div>
-            <div class="text-[10px] text-[#7A7E8B] mt-2 pt-2 border-t border-[#E5E0D5]">
-              Quy đổi: <strong>10.000đ</strong> chi tiêu = <strong>1 điểm</strong>. Đổi vé 0đ khi đạt 100 điểm.
+
+            <!-- Tier Progress Bar -->
+            <% if (nextTierName) { %>
+              <div class="space-y-1 pt-1 border-t border-[#E5E0D5]">
+                <div class="flex justify-between text-[10px] text-[#7A7E8B]">
+                  <span>Hạng tiếp theo: <strong><%= nextTierName %></strong></span>
+                  <span><strong><%= points %></strong> / <%= nextTierPoints %> điểm</span>
+                </div>
+                <div class="w-full bg-[#E5E0D5] h-1.5 overflow-hidden">
+                  <div class="bg-[#BA2D27] h-full transition-all duration-500" style="width: <%= progressPercent %>%;"></div>
+                </div>
+                <div class="text-[9px] text-[#7A7E8B]">
+                  Cần thêm <strong><%= Math.max(0, nextTierPoints - points) %> điểm</strong> nữa để thăng hạng!
+                </div>
+              </div>
+            <% } else { %>
+              <div class="pt-1 border-t border-[#E5E0D5] text-[10px] text-[#10B981] font-bold">
+                ✓ Bạn đang ở hạng đặc quyền cao nhất!
+              </div>
+            <% } %>
+
+            <div class="text-[10px] text-[#7A7E8B] pt-2 border-t border-[#E5E0D5]">
+              Quy đổi: <strong>10.000đ</strong> chi tiêu = <strong>1 điểm</strong>. Đổi vé 0đ hoặc voucher 50K khi đủ điểm.
             </div>
           </div>
 
           <div class="pt-4">
-            <button type="button" onclick="redeemPointsModal()" class="btn-editorial-primary w-full text-xs text-center !py-2.5">
+            <button type="button" onclick="redeemPointsModal(<%= points %>)" class="btn-editorial-primary w-full text-xs text-center !py-2.5">
               Đổi Điểm Lấy Voucher 50K
             </button>
+          </div>
+        </div>
+
+        <!-- Membership Tiers Perks Table -->
+        <div class="bg-white border border-[#E5E0D5] p-5 space-y-3 font-['JetBrains_Mono'] text-xs">
+          <span class="block text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider border-b border-[#E5E0D5] pb-2">
+            HỆ THỐNG CÁC CẤP BẬC HỘI VIÊN
+          </span>
+          <div class="space-y-2.5 text-[11px]">
+            <div class="p-2 border border-[#E5E0D5] <%= tierCode === 'Dong' ? 'bg-[#F9EBEA] border-[#BA2D27]' : 'bg-[#FAF8F5]' %>">
+              <div class="flex items-center justify-between font-bold text-[#A6853B]">
+                <span>1. HỘI VIÊN ĐỒNG</span>
+                <span>0 – 99đ</span>
+              </div>
+              <p class="text-[#7A7E8B] text-[10px] mt-0.5">Tích 1 điểm cho mỗi 10.000đ khi đặt vé tại 3 rạp Quy Nhơn.</p>
+            </div>
+            
+            <div class="p-2 border border-[#E5E0D5] <%= tierCode === 'Bac' ? 'bg-[#F9EBEA] border-[#BA2D27]' : 'bg-[#FAF8F5]' %>">
+              <div class="flex items-center justify-between font-bold text-[#64748B]">
+                <span>2. HỘI VIÊN BẠC</span>
+                <span>100 – 299đ</span>
+              </div>
+              <p class="text-[#7A7E8B] text-[10px] mt-0.5">Giảm 5% bắp nước + Tặng 01 vé 2D vào tháng sinh nhật.</p>
+            </div>
+
+            <div class="p-2 border border-[#E5E0D5] <%= tierCode === 'Vang' ? 'bg-[#F9EBEA] border-[#BA2D27]' : 'bg-[#FAF8F5]' %>">
+              <div class="flex items-center justify-between font-bold text-[#D97706]">
+                <span>3. HỘI VIÊN VÀNG</span>
+                <span>300 – 599đ</span>
+              </div>
+              <p class="text-[#7A7E8B] text-[10px] mt-0.5">Giảm 10% bắp nước + 2 vé 2D sinh nhật + Ưu tiên Fast-Track.</p>
+            </div>
+
+            <div class="p-2 border border-[#E5E0D5] <%= tierCode === 'KimCuong' ? 'bg-[#F9EBEA] border-[#BA2D27]' : 'bg-[#FAF8F5]' %>">
+              <div class="flex items-center justify-between font-bold text-[#2563EB]">
+                <span>4. HỘI VIÊN KIM CƯƠNG</span>
+                <span>≥ 600đ</span>
+              </div>
+              <p class="text-[#7A7E8B] text-[10px] mt-0.5">Giảm 15% bắp nước + Vé Premiere + Phòng chờ VIP Lounge.</p>
+            </div>
           </div>
         </div>
 
@@ -79,7 +190,7 @@
             <span>→</span>
           </a>
           <a href="#voucher-tab" onclick="switchTab('vouchers')" class="flex items-center justify-between p-2.5 hover:bg-[#F3EFE6] text-[#474A54] hover:text-[#121316]">
-            <span>Ví Voucher (<span class="text-[#BA2D27] font-bold">3 mã</span>)</span>
+            <span>Ví Voucher (<span class="text-[#BA2D27] font-bold"><%= userVouchers.length %> mã</span>)</span>
             <span>→</span>
           </a>
           <a href="#security-tab" onclick="switchTab('security')" class="flex items-center justify-between p-2.5 hover:bg-[#F3EFE6] text-[#474A54] hover:text-[#121316]">
@@ -107,7 +218,7 @@
         <!-- SECTION A: PROFILE EDIT FORM & FAVORITE GENRES -->
         <div id="section-profile" class="bg-white border border-[#E5E0D5] p-6 sm:p-8 space-y-6">
           <div class="border-b border-[#E5E0D5] pb-4 flex items-center justify-between">
-            <h2 class="font-['Georgia'] text-base font-bold text-[#121316] uppercase tracking-wider">
+            <h2 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-base font-bold text-[#121316] uppercase tracking-wider">
               1. Cập Nhật Thông Tin Cá Nhân
             </h2>
             <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">THÔNG TIN XÁC THỰC</span>
@@ -166,32 +277,44 @@
               </span>
               <div class="flex items-center gap-6 font-['Plus_Jakarta_Sans'] text-xs">
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="gender" value="Nam" <%= (user && user.gioiTinh === 'Nam') ? 'checked' : '' %> class="accent-[#BA2D27]" />
+                  <input type="radio" name="gender" value="Nam" <%= (!user || !user.gioiTinh || user.gioiTinh === 'Nam') ? 'checked' : '' %> class="accent-[#BA2D27]" />
                   <span>Nam</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="gender" value="Nu" <%= (user && user.gioiTinh === 'Nu') ? 'checked' : '' %> class="accent-[#BA2D27]" />
+                  <input type="radio" name="gender" value="Nu" <%= (user && (user.gioiTinh === 'Nu' || user.gioiTinh === 'Nữ')) ? 'checked' : '' %> class="accent-[#BA2D27]" />
                   <span>Nữ</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="gender" value="Khac" <%= (user && user.gioiTinh === 'Khac') ? 'checked' : '' %> class="accent-[#BA2D27]" />
+                  <input type="radio" name="gender" value="Khac" <%= (user && (user.gioiTinh === 'Khac' || user.gioiTinh === 'Khác')) ? 'checked' : '' %> class="accent-[#BA2D27]" />
                   <span>Khác</span>
                 </label>
               </div>
             </div>
 
-            <!-- SRS 1.1: Khảo sát 1-3 thể loại yêu thích ban đầu -->
+            <!-- SRS 1.1: Khảo sát 1-3 thể loại yêu thích ban đầu (Lưu vào DB, không mock sẵn) -->
             <div class="pt-4 border-t border-[#E5E0D5]">
-              <span class="block font-['JetBrains_Mono'] text-[10px] uppercase text-[#7A7E8B] mb-1 font-semibold">
-                Thể loại phim yêu thích (Chọn từ 1 đến 3 thể loại để nhận gợi ý chuẩn xác):
-              </span>
-              <div class="flex flex-wrap gap-2 pt-2">
-                <% const allGenres = ['Hành Động', 'Khoa Học Viễn Tưởng', 'Kinh Dị', 'Tâm Lý', 'Hoạt Hình', 'Hài Hước', 'Tình Cảm', 'Tài Liệu']; %>
-                <% allGenres.forEach((g, idx) => { %>
+              <div class="flex items-center justify-between">
+                <span class="block font-['JetBrains_Mono'] text-[10px] uppercase text-[#7A7E8B] mb-1 font-semibold">
+                  Thể loại phim yêu thích (Chọn từ 1 đến 3 thể loại để nhận gợi ý chuẩn xác):
+                </span>
+                <span class="text-[10px] font-['JetBrains_Mono'] text-[#BA2D27]" id="genreCountLabel">
+                  Đã chọn: <%= userGenres.length %>/3
+                </span>
+              </div>
+              
+              <input type="hidden" name="favoriteGenres" id="favoriteGenresInput" value="<%= userGenres.join(',') %>" />
+
+              <div class="flex flex-wrap gap-2 pt-2" id="genreContainer">
+                <% 
+                  const allGenres = ['Hành Động', 'Khoa Học Viễn Tưởng', 'Kinh Dị', 'Tâm Lý', 'Hoạt Hình', 'Hài Hước', 'Tình Cảm', 'Tài Liệu']; 
+                %>
+                <% allGenres.forEach((g) => { %>
+                  <% const isSelected = userGenres.includes(g); %>
                   <button type="button" 
                           onclick="toggleFavoriteGenre(this, '<%= g %>')" 
-                          class="genre-chip px-3 py-1.5 border border-[#E5E0D5] bg-[#FAF8F5] text-xs font-medium text-[#121316] transition-colors <%= (idx < 2) ? 'border-[#BA2D27] bg-[#F9EBEA] text-[#BA2D27] font-bold' : '' %>">
-                    <%= g %>
+                          data-genre="<%= g %>"
+                          class="genre-chip px-3 py-1.5 border text-xs font-medium transition-all <%= isSelected ? 'border-[#BA2D27] bg-[#F9EBEA] text-[#BA2D27] font-bold shadow-sm' : 'border-[#E5E0D5] bg-[#FAF8F5] text-[#121316] hover:border-[#121316]' %>">
+                    <%= isSelected ? '✓ ' : '+ ' %><%= g %>
                   </button>
                 <% }); %>
               </div>
@@ -205,94 +328,65 @@
           </form>
         </div>
 
-        <!-- SECTION B: VOUCHER WALLET (SRS 1.2: KHẢ DỤNG, ĐÃ DÙNG, HẾT HẠN) -->
+        <!-- SECTION B: VOUCHER WALLET (Đọc trực tiếp từ DB, không mock sẵn 3 mã) -->
         <div id="section-vouchers" class="bg-white border border-[#E5E0D5] p-6 sm:p-8 space-y-6">
           <div class="border-b border-[#E5E0D5] pb-4 flex items-center justify-between">
-            <h2 class="font-['Georgia'] text-base font-bold text-[#121316] uppercase tracking-wider">
-              2. Ví Voucher Cá Nhân
+            <h2 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-base font-bold text-[#121316] uppercase tracking-wider">
+              2. Ví Voucher Khả Dụng Trong Hệ Thống
             </h2>
-            <div class="flex items-center gap-2 text-xs font-['JetBrains_Mono']">
-              <button type="button" onclick="filterWalletTab('available', this)" class="wallet-tab-btn font-bold text-[#BA2D27] underline">Khả Dụng (2)</button>
-              <span>•</span>
-              <button type="button" onclick="filterWalletTab('used', this)" class="wallet-tab-btn text-[#7A7E8B]">Đã Sử Dụng (1)</button>
-              <span>•</span>
-              <button type="button" onclick="filterWalletTab('expired', this)" class="wallet-tab-btn text-[#7A7E8B]">Hết Hạn (1)</button>
+            <div class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">
+              TỔNG SỐ: <strong class="text-[#BA2D27]"><%= userVouchers.length %> MÃ</strong>
             </div>
           </div>
 
           <div class="space-y-4" id="wallet-vouchers-container">
-            
-            <!-- Voucher 1 -->
-            <div class="wallet-voucher-card ticket-pass ticket-pass-horizontal p-5 bg-[#FAF8F5] border border-[#E5E0D5] flex flex-col sm:flex-row items-center justify-between gap-4" data-status="available">
-              <div>
-                <div class="flex items-center gap-2">
-                  <span class="font-['Georgia'] font-black text-lg text-[#121316]">CINEGO50</span>
-                  <span class="px-1.5 py-0.5 bg-[#BA2D27] text-white text-[9px] font-['JetBrains_Mono'] font-bold uppercase">GIẢM 50.000Đ</span>
+            <% if (userVouchers.length > 0) { %>
+              <% userVouchers.forEach(v => { %>
+                <div class="wallet-voucher-card ticket-pass ticket-pass-horizontal p-5 bg-[#FAF8F5] border border-[#E5E0D5] flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="font-['Playfair_Display','Merriweather',Georgia,serif] font-black text-lg text-[#121316]"><%= v.code %></span>
+                      <span class="px-1.5 py-0.5 bg-[#BA2D27] text-white text-[9px] font-['JetBrains_Mono'] font-bold uppercase">
+                        <%= v.discountType === 'percentage' ? ('GIẢM ' + v.discountValue + '%') : ('GIẢM ' + (v.discountValue / 1000) + 'K') %>
+                      </span>
+                    </div>
+                    <p class="text-xs text-[#474A54] mt-0.5"><%= v.title %></p>
+                    <div class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B] mt-1">
+                      Hạn dùng: <strong><%= v.expiryDate ? new Date(v.expiryDate).toLocaleDateString('vi-VN') : 'Vô thời hạn' %></strong>
+                      <% if (v.minOrderValue) { %>
+                        • Đơn từ: <strong><%= (v.minOrderValue / 1000) %>K</strong>
+                      <% } %>
+                    </div>
+                  </div>
+                  <button type="button" onclick="copyVoucher('<%= v.code %>')" class="btn-editorial-secondary text-xs !py-2 !px-4 shrink-0 font-['JetBrains_Mono']">
+                    Sao Chép Mã
+                  </button>
                 </div>
-                <p class="text-xs text-[#7A7E8B] mt-0.5">Áp dụng cho đơn đặt vé từ 150.000đ tại mọi cụm rạp</p>
-                <div class="text-[10px] font-['JetBrains_Mono'] text-[#474A54] mt-1">
-                  Hạn sử dụng: <strong>31/12/2026</strong> • Trạng thái: <span class="text-[#10B981] font-bold">Khả dụng</span>
+              <% }); %>
+            <% } else { %>
+              <!-- Empty State khi tài khoản mới hoặc hệ thống chưa có voucher -->
+              <div class="p-8 text-center bg-[#FAF8F5] border border-[#E5E0D5] space-y-3">
+                <span class="material-symbols-outlined text-3xl text-[#7A7E8B]">loyalty</span>
+                <div class="space-y-1">
+                  <h4 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-base font-bold text-[#121316]">Ví Voucher Hiện Đang Trống</h4>
+                  <p class="text-xs text-[#7A7E8B] max-w-md mx-auto">
+                    Bạn chưa có mã ưu đãi nào trong ví. Hãy tham gia tích điểm khi xem phim hoặc săn vé tại mục Khuyến Mãi / Flash Sale!
+                  </p>
                 </div>
-              </div>
-              <button type="button" onclick="copyVoucher('CINEGO50')" class="btn-editorial-secondary text-xs !py-2 !px-4 shrink-0">
-                Sao Chép Mã
-              </button>
-            </div>
-
-            <!-- Voucher 2 -->
-            <div class="wallet-voucher-card ticket-pass ticket-pass-horizontal p-5 bg-[#FAF8F5] border border-[#E5E0D5] flex flex-col sm:flex-row items-center justify-between gap-4" data-status="available">
-              <div>
-                <div class="flex items-center gap-2">
-                  <span class="font-['Georgia'] font-black text-lg text-[#121316]">FLASH19K</span>
-                  <span class="px-1.5 py-0.5 bg-[#A6853B] text-white text-[9px] font-['JetBrains_Mono'] font-bold uppercase">ĐỒNG GIÁ 19K</span>
-                </div>
-                <p class="text-xs text-[#7A7E8B] mt-0.5">Vé suất chiếu thứ 2 đến thứ 5 hàng tuần</p>
-                <div class="text-[10px] font-['JetBrains_Mono'] text-[#474A54] mt-1">
-                  Hạn sử dụng: <strong>30/11/2026</strong> • Trạng thái: <span class="text-[#10B981] font-bold">Khả dụng</span>
-                </div>
-              </div>
-              <button type="button" onclick="copyVoucher('FLASH19K')" class="btn-editorial-secondary text-xs !py-2 !px-4 shrink-0">
-                Sao Chép Mã
-              </button>
-            </div>
-
-            <!-- Voucher 3 (Used) -->
-            <div class="wallet-voucher-card ticket-pass ticket-pass-horizontal p-5 bg-[#FAF8F5] border border-[#E5E0D5] flex flex-col sm:flex-row items-center justify-between gap-4 opacity-50 hidden" data-status="used">
-              <div>
-                <div class="flex items-center gap-2">
-                  <span class="font-['Georgia'] font-black text-lg text-[#7A7E8B]">WELCOME20</span>
-                  <span class="px-1.5 py-0.5 bg-[#7A7E8B] text-white text-[9px] font-['JetBrains_Mono'] font-bold uppercase">GIẢM 20%</span>
-                </div>
-                <p class="text-xs text-[#7A7E8B] mt-0.5">Chào mừng hội viên mới đăng ký tài khoản CineGo</p>
-                <div class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B] mt-1">
-                  Đã sử dụng cho đơn vé Dune 2 ngày 05/11/2026
+                <div class="pt-2">
+                  <a href="/khuyen-mai" class="btn-editorial-primary text-xs !py-2 !px-4 inline-block">
+                    Khám Phá Ưu Đãi & Flash Sale →
+                  </a>
                 </div>
               </div>
-              <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B] uppercase font-bold">Đã Dùng</span>
-            </div>
-
-            <!-- Voucher 4 (Expired) -->
-            <div class="wallet-voucher-card ticket-pass ticket-pass-horizontal p-5 bg-[#FAF8F5] border border-[#E5E0D5] flex flex-col sm:flex-row items-center justify-between gap-4 opacity-40 hidden" data-status="expired">
-              <div>
-                <div class="flex items-center gap-2">
-                  <span class="font-['Georgia'] font-black text-lg text-[#7A7E8B]">HALLOWEEN</span>
-                  <span class="px-1.5 py-0.5 bg-[#7A7E8B] text-white text-[9px] font-['JetBrains_Mono'] font-bold uppercase">TẶNG BẮP</span>
-                </div>
-                <p class="text-xs text-[#7A7E8B] mt-0.5">Ưu đãi mùa phim kinh dị Halloween 2026</p>
-                <div class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B] mt-1">
-                  Đã hết hạn ngày 31/10/2026
-                </div>
-              </div>
-              <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B] uppercase font-bold">Hết Hạn</span>
-            </div>
-
+            <% } %>
           </div>
         </div>
 
         <!-- SECTION C: PASSWORD CHANGE FORM -->
         <div id="section-security" class="bg-white border border-[#E5E0D5] p-6 sm:p-8 space-y-6">
           <div class="border-b border-[#E5E0D5] pb-4 flex items-center justify-between">
-            <h2 class="font-['Georgia'] text-base font-bold text-[#121316] uppercase tracking-wider">
+            <h2 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-base font-bold text-[#121316] uppercase tracking-wider">
               3. Đổi Mật Khẩu Bảo Mật
             </h2>
             <span class="text-[10px] font-['JetBrains_Mono'] text-[#BA2D27] font-bold">MẬT KHẨU TỐI THIỂU 6 KÝ TỰ</span>
@@ -318,7 +412,7 @@
                 <input type="password" 
                        name="newPassword" 
                        required 
-                       minlength="6"
+                       minlength="6" 
                        placeholder="Tối thiểu 6 ký tự..."
                        class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-3 text-[#121316] font-medium focus:outline-none focus:border-[#121316]" />
               </div>
@@ -330,7 +424,7 @@
                 <input type="password" 
                        name="confirmPassword" 
                        required 
-                       minlength="6"
+                       minlength="6" 
                        placeholder="Nhập lại mật khẩu mới..."
                        class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-3 text-[#121316] font-medium focus:outline-none focus:border-[#121316]" />
               </div>
@@ -363,31 +457,27 @@
   }
 
   function toggleFavoriteGenre(btn, name) {
-    btn.classList.toggle('border-[#BA2D27]');
-    btn.classList.toggle('bg-[#F9EBEA]');
-    btn.classList.toggle('text-[#BA2D27]');
-    btn.classList.toggle('font-bold');
-
-    if (window.cinegoToast) {
-      window.cinegoToast.info('Đã cập nhật sở thích: ' + name);
-    }
-  }
-
-  function filterWalletTab(status, btn) {
-    document.querySelectorAll('.wallet-tab-btn').forEach(b => {
-      b.classList.remove('font-bold', 'text-[#BA2D27]', 'underline');
-      b.classList.add('text-[#7A7E8B]');
-    });
-    btn.classList.remove('text-[#7A7E8B]');
-    btn.classList.add('font-bold', 'text-[#BA2D27]', 'underline');
-
-    document.querySelectorAll('.wallet-voucher-card').forEach(card => {
-      if (card.dataset.status === status) {
-        card.classList.remove('hidden');
-      } else {
-        card.classList.add('hidden');
+    const input = document.getElementById('favoriteGenresInput');
+    let selected = input.value ? input.value.split(',').filter(Boolean) : [];
+    
+    if (selected.includes(name)) {
+      selected = selected.filter(x => x !== name);
+      btn.className = 'genre-chip px-3 py-1.5 border text-xs font-medium transition-all border-[#E5E0D5] bg-[#FAF8F5] text-[#121316] hover:border-[#121316]';
+      btn.innerText = '+ ' + name;
+    } else {
+      if (selected.length >= 3) {
+        if (window.cinegoToast) window.cinegoToast.warning('Bạn chỉ có thể chọn tối đa 3 thể loại yêu thích.');
+        else alert('Bạn chỉ có thể chọn tối đa 3 thể loại yêu thích.');
+        return;
       }
-    });
+      selected.push(name);
+      btn.className = 'genre-chip px-3 py-1.5 border text-xs font-medium transition-all border-[#BA2D27] bg-[#F9EBEA] text-[#BA2D27] font-bold shadow-sm';
+      btn.innerText = '✓ ' + name;
+    }
+    
+    input.value = selected.join(',');
+    const countLabel = document.getElementById('genreCountLabel');
+    if (countLabel) countLabel.innerText = 'Đã chọn: ' + selected.length + '/3';
   }
 
   function copyVoucher(code) {
@@ -400,10 +490,15 @@
     });
   }
 
-  function redeemPointsModal() {
-    if (confirm('Bạn có muốn dùng 50 điểm thưởng để đổi lấy voucher giảm 50.000đ không?')) {
+  function redeemPointsModal(currentPoints) {
+    if (currentPoints < 100) {
+      if (window.cinegoToast) window.cinegoToast.warning('Bạn cần tối thiểu 100 điểm thưởng để đổi lấy voucher 50.000đ.');
+      else alert('Bạn cần tối thiểu 100 điểm thưởng để đổi lấy voucher 50.000đ.');
+      return;
+    }
+    if (confirm('Bạn có muốn dùng 100 điểm thưởng để đổi lấy voucher giảm 50.000đ không?')) {
       if (window.cinegoToast) {
-        window.cinegoToast.success('Đổi điểm thành công! Mã CINEGO50 đã được cộng vào ví của bạn.');
+        window.cinegoToast.success('Đổi điểm thành công! Hãy kiểm tra ví voucher.');
       } else {
         alert('Đổi điểm thành công!');
       }

@@ -96,51 +96,24 @@
           </div>
         <% }) %>
       <% } else { %>
-        <!-- Default Curated Active Ticket Demo (SRS Spec Compliant) -->
-        <div class="ticket-pass ticket-pass-horizontal p-6 sm:p-8 bg-white border border-[#E5E0D5] flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:border-[#121316] transition-all">
-          
-          <div class="space-y-2 flex-1">
-            <div class="flex flex-wrap items-center gap-3 font-['JetBrains_Mono'] text-[11px]">
-              <span class="px-2 py-0.5 bg-[#BA2D27] text-white font-bold tracking-wider">
-                MÃ VÉ: CNE-8921-QN
-              </span>
-              <span class="text-[#121316] font-semibold">
-                CGV Kim Cúc Plaza Quy Nhơn
-              </span>
-              <span class="text-[#7A7E8B]">•</span>
-              <span class="text-[#10B981] font-bold">✓ VÉ SẮP XEM HÔM NAY</span>
-            </div>
-
-            <h2 class="font-['Georgia'] text-2xl sm:text-3xl font-bold text-[#121316] leading-tight">
-              Dune: Hành Tinh Cát (Phần Hai)
-            </h2>
-
-            <div class="font-['JetBrains_Mono'] text-xs text-[#7A7E8B] flex flex-wrap items-center gap-3">
-              <span>Phòng: <strong class="text-[#121316]">Phòng 1 (IMAX Laser)</strong></span>
-              <span>•</span>
-              <span>Suất: <strong class="text-[#121316]">19:30 Hôm nay</strong></span>
-              <span>•</span>
-              <span>Ghế: <strong class="text-[#BA2D27]">D5, D6 (VIP)</strong></span>
-            </div>
-
-            <div class="text-[11px] font-['JetBrains_Mono'] text-[#474A54]">
-              Bắp nước: <span class="font-semibold text-[#121316]">1 Combo Cine Couple (Bắp ngọt caramel + 2 Nước ngọt)</span>
-            </div>
+        <!-- Empty State khi tài khoản chưa đặt vé -->
+        <div class="bg-white border border-[#E5E0D5] p-12 text-center space-y-4">
+          <div class="w-16 h-16 mx-auto bg-[#FAF8F5] border border-[#E5E0D5] flex items-center justify-center text-[#7A7E8B]">
+            <span class="material-symbols-outlined text-3xl">confirmation_number</span>
           </div>
-
-          <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 border-[#E5E0D5] pt-4 md:pt-0 font-['JetBrains_Mono'] text-xs shrink-0">
-            <div class="text-left md:text-right">
-              <span class="block text-[10px] text-[#7A7E8B] uppercase">Tổng thanh toán</span>
-              <span class="text-base font-bold text-[#BA2D27]">305.000 đ</span>
-            </div>
-
-            <button type="button" 
-                    onclick="openTicketQRModal('CNE-8921-QN', 'Dune: Hành Tinh Cát (Phần Hai)', 'CGV Kim Cúc Plaza', '2026-11-12', '19:30', 'D5, D6')"
-                    class="btn-editorial-primary text-xs !py-2.5 !px-4">
-              Mã QR Vào Rạp
-            </button>
+          <div class="space-y-1">
+            <h3 class="font-['Playfair_Display','Merriweather',Georgia,serif] text-xl font-bold text-[#121316]">
+              Bạn chưa có vé xem phim nào
+            </h3>
+            <p class="text-xs text-[#7A7E8B] max-w-md mx-auto">
+              Mọi vé điện tử bạn đặt tại 3 cụm rạp CGV Kim Cúc Plaza, Starlight hoặc DCine Quy Nhơn sẽ xuất hiện tại đây kèm mã QR để làm thủ tục vào phòng chiếu.
+            </p>
           </div>
-
+          <div class="pt-2">
+            <a href="/phim" class="btn-editorial-primary text-xs !py-3 !px-6 inline-block">
+              Khám Phá Phim Đang Chiếu & Đặt Vé Ngay →
+            </a>
+          </div>
         </div>
       <% } %>
     </div>

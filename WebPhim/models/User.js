@@ -4,10 +4,13 @@ const userSchema = new mongoose.Schema({
     hoTen: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     matKhau: { type: String, required: true },
-    soDienThoai: { type: String }, // Bắt buộc phải là soDienThoai để khớp với DB
+    soDienThoai: { type: String }, // Khớp với DB
     ngaySinh: { type: Date }, 
-    gioiTinh: { type: String, enum: ['Nam', 'Nữ', 'Khác'] },
-    vaiTro: { type: String, default: 'user' }, // Bắt buộc phải có để giữ quyền Admin
+    gioiTinh: { type: String, enum: ['Nam', 'Nữ', 'Khác', 'Nu', 'Khac'] },
+    vaiTro: { type: String, default: 'user' }, // 'user' hoặc 'admin'
+    diemTichLuy: { type: Number, default: 0 },
+    hangHoiVien: { type: String, default: 'Dong', enum: ['Dong', 'Bac', 'Vang', 'KimCuong'] },
+    favoriteGenres: [{ type: String }],
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date }
 }, { timestamps: true });
