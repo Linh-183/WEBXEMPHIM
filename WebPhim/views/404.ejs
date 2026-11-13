@@ -1,0 +1,51 @@
+<%- include('partials/header') %>
+
+<main class="min-h-[75vh] flex items-center justify-center py-20 bg-[#FAF8F5]">
+  <div class="max-w-2xl mx-auto px-6 text-center space-y-6">
+    
+    <div class="inline-flex items-center gap-2 px-3 py-1 bg-[#BA2D27]/10 border border-[#BA2D27]/30 text-[#BA2D27] text-xs font-['JetBrains_Mono'] font-bold tracking-widest uppercase">
+      <span class="w-2 h-2 rounded-full bg-[#BA2D27] animate-ping"></span>
+      MÃ NGOẠI LỆ 404 • KHÔNG TÌM THẤY TÀI NGUYÊN
+    </div>
+
+    <h1 class="font-['Georgia'] text-6xl sm:text-8xl font-black text-[#121316] tracking-tight leading-none">
+      404
+    </h1>
+
+    <h2 class="font-['Georgia'] text-2xl sm:text-3xl font-bold text-[#121316]">
+      Thước Phim Này Không Tồn Tại Hoặc Đã Đổi Lịch Chiếu
+    </h2>
+
+    <p class="text-sm text-[#474A54] leading-relaxed max-w-lg mx-auto font-['Plus_Jakarta_Sans']">
+      Đường dẫn bạn vừa truy cập có thể đã bị thay đổi, xóa bỏ hoặc tạm thời gián đoạn. Đừng lo lắng, các suất chiếu hấp dẫn tại CGV Kim Cúc, Starlight và DCine Quy Nhơn vẫn đang sẵn sàng chào đón bạn.
+    </p>
+
+    <div class="pt-4 flex flex-wrap items-center justify-center gap-4 font-['JetBrains_Mono'] text-xs">
+      <a href="/" class="btn-editorial-primary !py-3.5 !px-8">
+        ← Trở Về Trang Chủ CineGo
+      </a>
+      <a href="/phim" class="btn-editorial-secondary !py-3.5 !px-8">
+        Xem Danh Sách Phim Đang Chiếu →
+      </a>
+    </div>
+
+    <!-- Quick Navigation Ledger -->
+    <div class="pt-8 border-t border-[#E5E0D5] grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">
+      <div>
+        <span class="block text-[10px] uppercase text-[#A6853B] font-bold">Rạp Chiếu</span>
+        <a href="/he-thong-rap" class="hover:text-[#BA2D27] transition-colors">3 Cụm Rạp Quy Nhơn →</a>
+      </div>
+      <div>
+        <span class="block text-[10px] uppercase text-[#A6853B] font-bold">Bắp Nước</span>
+        <a href="/bap-nuoc" class="hover:text-[#BA2D27] transition-colors">Quầy F&B Concessions →</a>
+      </div>
+      <div>
+        <span class="block text-[10px] uppercase text-[#A6853B] font-bold">Khuyến Mãi</span>
+        <a href="/khuyen-mai" class="hover:text-[#BA2D27] transition-colors">Voucher & Ưu Đãi →</a>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<%- include('partials/footer') %>

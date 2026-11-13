@@ -93,6 +93,17 @@
       <!-- Right Column: Profile Edit, Vouchers & Password (Span 8) -->
       <div class="lg:col-span-8 space-y-8">
         
+        <% if (typeof error !== 'undefined' && error) { %>
+          <div class="p-4 bg-[#F9EBEA] border-l-4 border-[#BA2D27] text-[#BA2D27] text-xs font-['JetBrains_Mono'] flex items-center justify-between shadow-sm">
+            <span>⚠ <%= error %></span>
+          </div>
+        <% } %>
+        <% if (typeof success !== 'undefined' && success) { %>
+          <div class="p-4 bg-[#EAFaf1] border-l-4 border-[#10B981] text-[#10B981] text-xs font-['JetBrains_Mono'] flex items-center justify-between shadow-sm">
+            <span>✓ <%= success %></span>
+          </div>
+        <% } %>
+
         <!-- SECTION A: PROFILE EDIT FORM & FAVORITE GENRES -->
         <div id="section-profile" class="bg-white border border-[#E5E0D5] p-6 sm:p-8 space-y-6">
           <div class="border-b border-[#E5E0D5] pb-4 flex items-center justify-between">

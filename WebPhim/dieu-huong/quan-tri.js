@@ -181,37 +181,47 @@ router.post('/phim/xoa/:id', async (req, res) => {
     try { await Movie.findByIdAndDelete(req.params.id); res.redirect('/admin/phim'); } catch (error) { res.send('Lỗi xóa phim!'); }
 });
 
-router.get('/quan-ly-rap', async (req, res) => {
+router.get('/quan-ly-rap', async (req, res, next) => {
     try {
-        const dsRap = [
-            { name: 'Starlight Quy Nhơn', location: 'Tầng 4, TTTM Nguyễn Kim', totalSeats: 50 }, 
-            { name: 'CGV Quy Nhơn', location: 'Tầng 3, Kim Cúc Plaza', totalSeats: 50 }, 
-            { name: 'Dcine Quy Nhơn', location: 'Tòa nhà Phú Tài Center', totalSeats: 50 }
-        ];
-        
-        // [ĐÃ SỬA] Lấy tất cả vé kèm theo dữ liệu phim
-        const allTickets = await Ticket.find().populate('movie');
-        
-        // [ĐÃ SỬA] Bộ lọc quan trọng: Chỉ giữ lại vé của những phim VẪN ĐANG TỒN TẠI trong database
+        let dbCinemas = await Cinema.find().lean();
+        if (dbCinemas.length === 0) {
+            // Tự động khởi tạo dữ liệu 3 rạp chuẩn Quy Nhơn nếu collection trống
+            await Cinema.insertMany([
+                { name: 'CGV Kim Cúc Plaza', code: 'cgv-kim-cuc', location: 'Tầng 3, Kim Cúc Plaza, TP. Quy Nhơn', totalSeats: 270, phone: '1900 6017' },
+                { name: 'Starlight Nguyễn Kim', code: 'starlight-nguyen-kim', location: 'Tầng 8 TTTM Nguyễn Kim, TP. Quy Nhơn', totalSeats: 210, phone: '1900 1722' },
+                { name: 'DCine Quy Nhơn', code: 'dcine-quy-nhon', location: 'Tòa nhà Phú Tài Center, TP. Quy Nhơn', totalSeats: 200, phone: '0256 6555 888' }
+            ]);
+            dbCinemas = await Cinema.find().lean();
+        }
+
+        const allTickets = await Ticket.find().populate('movie').lean();
         const validTickets = allTickets.filter(t => t.movie != null);
 
-        const cinemas = dsRap.map(cinema => {
-            // Thay vì dùng allTickets, ta dùng validTickets đã được lọc sạch
-            const ticketsInCinema = validTickets.filter(t => t.cinema === cinema.name);
+        const cinemas = dbCinemas.map(cinema => {
+            const cinemaName = cinema.name;
+            const ticketsInCinema = validTickets.filter(t => t.cinema && (t.cinema.includes(cinemaName) || cinemaName.includes(t.cinema)));
             let bookedSeats = [];
-            ticketsInCinema.forEach(t => bookedSeats = bookedSeats.concat(t.seats));
-            
-            return { 
-                ...cinema, 
-                occupiedSeats: bookedSeats.length, 
-                emptySeats: cinema.totalSeats - bookedSeats.length, 
-                occupancyRate: (bookedSeats.length / cinema.totalSeats) * 100, 
-                bookedSeats: JSON.stringify(bookedSeats) 
+            ticketsInCinema.forEach(t => {
+                if (t.seats) bookedSeats = bookedSeats.concat(t.seats);
+            });
+            const cap = cinema.totalSeats || 50;
+            const occupied = bookedSeats.length;
+            const empty = Math.max(0, cap - occupied);
+            const rate = Math.min(100, Math.round((occupied / cap) * 100));
+
+            return {
+                ...cinema,
+                totalSeats: cap,
+                occupiedSeats: occupied,
+                emptySeats: empty,
+                occupancyRate: rate,
+                bookedSeats: JSON.stringify(bookedSeats)
             };
         });
-        res.render('admin-quanlyrap', { cinemas });
+        res.render('admin-quanlyrap', { user: req.session.user, cinemas });
     } catch (error) { 
-        res.status(500).send("Lỗi server"); 
+        console.error("Lỗi Quản Lý Rạp:", error);
+        next(error); 
     }
 });
 

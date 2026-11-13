@@ -5,10 +5,13 @@ const checkLogin = (req, res, next) => {
 };
 
 const checkAdmin = (req, res, next) => {
-    if (req.session.user && req.session.user.vaiTro === 'admin') {
+    if (!req.session.user) {
+        return res.redirect('/dang-nhap');
+    }
+    if (req.session.user.vaiTro === 'admin') {
         return next();
     }
-    res.status(403).send('<h1 style="color:red; text-align:center; margin-top:50px;">CẢNH BÁO: Chỉ Admin mới được vào khu vực này!</h1><p style="text-align:center;"><a href="/">Về trang chủ</a></p>');
+    res.status(403).render('403', { title: '403 — Từ Chối Truy Cập Quản Trị' });
 };
 
 module.exports = { checkLogin, checkAdmin };

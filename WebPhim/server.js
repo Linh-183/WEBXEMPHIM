@@ -72,6 +72,20 @@ app.use('/admin', checkAdmin, duongDanQuanTri);
 app.use('/', duongDanKhachHang);
 
 // ==========================================
+// 5.1. XỬ LÝ NGOẠI LỆ 404 & 500 CHUẨN CINEGO EDITORIAL
+// ==========================================
+// Bắt toàn bộ các đường dẫn không tồn tại (404 Not Found)
+app.use((req, res, next) => {
+    res.status(404).render('404', { title: '404 — Không Tìm Thấy Trang' });
+});
+
+// Bắt lỗi máy chủ nội bộ (500 Error Recovery Handler)
+app.use((err, req, res, next) => {
+    console.error('[SERVER ERROR]:', err);
+    res.status(500).render('500', { title: '500 — Sự Cố Kỹ Thuật Máy Chủ', error: err });
+});
+
+// ==========================================
 // 6. HỆ THỐNG TỰ ĐỘNG HÓA (CRON JOB)
 // ==========================================
 // Chạy tự động vào đúng 00:00 mỗi ngày để bảo trì dữ liệu

@@ -23,18 +23,22 @@
         </div>
         <div class="text-right font-['JetBrains_Mono']">
           <span class="block text-[9px] text-[#7A7E8B] uppercase">MÃ ĐẶT CHỖ</span>
-          <span class="text-sm font-bold text-[#BA2D27] tracking-wider" id="ticketCodeDisplay">CNE-8921-QN</span>
+          <span class="text-sm font-bold text-[#BA2D27] tracking-wider" id="ticketCodeDisplay">
+            <%= (typeof ticket !== 'undefined' && ticket && ticket._id) ? 'CNE-' + ticket._id.toString().slice(-6).toUpperCase() : 'CNE-8921-QN' %>
+          </span>
         </div>
       </div>
 
       <!-- Film Title & Format -->
       <div class="space-y-1">
-        <span class="px-2 py-0.5 bg-[#BA2D27] text-white text-[10px] font-['JetBrains_Mono'] font-bold inline-block">T16</span>
+        <span class="px-2 py-0.5 bg-[#BA2D27] text-white text-[10px] font-['JetBrains_Mono'] font-bold inline-block">
+          <%= (typeof ticket !== 'undefined' && ticket && ticket.movie && ticket.movie.ageRating) ? ticket.movie.ageRating : 'P' %>
+        </span>
         <h2 class="font-['Georgia'] text-3xl sm:text-4xl font-bold text-[#121316] leading-tight" id="ticketMovieTitle">
-          Dune: Hành Tinh Cát (Phần Hai)
+          <%= (typeof ticket !== 'undefined' && ticket && ticket.movie && ticket.movie.title) ? ticket.movie.title : 'Dune: Hành Tinh Cát (Phần Hai)' %>
         </h2>
         <span class="font-['JetBrains_Mono'] text-xs text-[#7A7E8B] block mt-1">
-          Định dạng: IMAX LASER 70MM • Phụ đề tiếng Việt
+          Định dạng: 2D Laser Digital • Âm thanh vòm Dolby Surround
         </span>
       </div>
 
@@ -42,20 +46,40 @@
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-[#FAF8F5] border border-[#E5E0D5] font-['JetBrains_Mono'] text-center">
         <div>
           <span class="block text-[9px] text-[#7A7E8B] uppercase">Cụm rạp</span>
-          <span class="text-xs font-bold text-[#121316] mt-0.5 block" id="ticketCinemaDisplay">CGV Kim Cúc</span>
+          <span class="text-xs font-bold text-[#121316] mt-0.5 block truncate" id="ticketCinemaDisplay">
+            <%= (typeof ticket !== 'undefined' && ticket && ticket.cinema) ? ticket.cinema : 'CGV Kim Cúc' %>
+          </span>
         </div>
         <div>
           <span class="block text-[9px] text-[#7A7E8B] uppercase">Phòng chiếu</span>
-          <span class="text-xs font-bold text-[#121316] mt-0.5 block">Phòng 1 (IMAX)</span>
+          <span class="text-xs font-bold text-[#121316] mt-0.5 block">Phòng 1 (Standard)</span>
         </div>
         <div>
           <span class="block text-[9px] text-[#7A7E8B] uppercase">Suất chiếu</span>
-          <span class="text-xs font-bold text-[#121316] mt-0.5 block" id="ticketTimeDisplay">19:30</span>
+          <span class="text-xs font-bold text-[#121316] mt-0.5 block" id="ticketTimeDisplay">
+            <%= (typeof ticket !== 'undefined' && ticket && ticket.showTime) ? ticket.showTime : '19:30' %><% if (typeof ticket !== 'undefined' && ticket && ticket.showDate) { %><br><span class="text-[10px] text-[#7A7E8B] font-normal"><%= ticket.showDate %></span><% } %>
+          </span>
         </div>
         <div>
           <span class="block text-[9px] text-[#7A7E8B] uppercase">Ghế ngồi</span>
-          <span class="text-xs font-bold text-[#BA2D27] mt-0.5 block" id="ticketSeatsDisplay">D5, D6</span>
+          <span class="text-xs font-bold text-[#BA2D27] mt-0.5 block" id="ticketSeatsDisplay">
+            <%= (typeof ticket !== 'undefined' && ticket && ticket.seats) ? (Array.isArray(ticket.seats) ? ticket.seats.join(', ') : ticket.seats) : 'D5, D6' %>
+          </span>
         </div>
+      </div>
+
+      <% if (typeof ticket !== 'undefined' && ticket && ticket.comboDetails) { %>
+        <div class="p-3 bg-[#FAF8F5] border border-[#E5E0D5] text-xs font-['JetBrains_Mono'] text-[#474A54] flex items-center justify-between">
+          <span>Bắp nước kèm: <strong class="text-[#121316]"><%= ticket.comboDetails %></strong></span>
+          <span class="text-[#121316] font-bold"><%= (ticket.comboTotal || 0).toLocaleString('vi-VN') %> đ</span>
+        </div>
+      <% } %>
+
+      <div class="p-3 bg-[#FAF8F5] border border-[#E5E0D5] text-xs font-['JetBrains_Mono'] text-[#474A54] flex items-center justify-between">
+        <span class="uppercase text-[10px] text-[#7A7E8B]">Tổng thanh toán:</span>
+        <span class="text-sm font-bold text-[#BA2D27]">
+          <%= (typeof ticket !== 'undefined' && ticket && ticket.totalPrice) ? ticket.totalPrice.toLocaleString('vi-VN') + ' đ' : '190.000 đ' %>
+        </span>
       </div>
 
       <!-- Perforated Line -->

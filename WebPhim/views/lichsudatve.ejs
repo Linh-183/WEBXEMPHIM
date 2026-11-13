@@ -81,11 +81,16 @@
                 <span class="text-base font-bold text-[#121316]"><%= (ticket.totalPrice || 95000).toLocaleString('vi-VN') %> đ</span>
               </div>
 
-              <button type="button" 
-                      onclick="openTicketQRModal('<%= ticket._id.toString().substring(18).toUpperCase() %>', '<%= ticket.movie ? ticket.movie.title : 'Phim Điện Ảnh' %>', '<%= ticket.cinema %>', '<%= ticket.showDate %>', '<%= ticket.showTime %>', '<%= ticket.seats ? (Array.isArray(ticket.seats) ? ticket.seats.join(', ') : ticket.seats) : 'D5' %>')"
-                      class="btn-editorial-primary text-xs !py-2.5 !px-4">
-                Xem Mã QR Vé
-              </button>
+              <div class="flex items-center gap-2">
+                <a href="/ve/<%= ticket._id %>" class="btn-editorial-secondary text-xs !py-2.5 !px-3 font-semibold" title="Xem thẻ vé điện tử chuẩn">
+                  Thẻ Vé →
+                </a>
+                <button type="button" 
+                        onclick="openTicketQRModal('<%= ticket._id.toString().substring(18).toUpperCase() %>', '<%= ticket.movie ? ticket.movie.title : 'Phim Điện Ảnh' %>', '<%= ticket.cinema %>', '<%= ticket.showDate %>', '<%= ticket.showTime %>', '<%= ticket.seats ? (Array.isArray(ticket.seats) ? ticket.seats.join(', ') : ticket.seats) : 'D5' %>')"
+                        class="btn-editorial-primary text-xs !py-2.5 !px-4">
+                  Xem Mã QR
+                </button>
+              </div>
             </div>
 
           </div>

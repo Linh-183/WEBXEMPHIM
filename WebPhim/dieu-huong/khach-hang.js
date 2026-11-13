@@ -1,6 +1,7 @@
 // File: dieu-huong/khach-hang.js
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const Movie = require('../models/Movie');
 const User = require('../models/User'); 
@@ -9,6 +10,11 @@ const Voucher = require('../models/Voucher');
 const FoodCombo = require('../models/FoodCombo');
 const SeatLock = require('../models/SeatLock');
 const { checkLogin } = require('../trung-gian/xac-thuc');
+
+// Hàm kiểm tra ObjectId MongoDB hợp lệ chống lỗi 500 CastError
+function isValidObjectId(id) {
+    return mongoose.Types.ObjectId.isValid(id) && (String(new mongoose.Types.ObjectId(id)) === String(id));
+}
 
 router.get('/', async (req, res) => {
     try {
@@ -40,12 +46,15 @@ router.get(['/bap-nuoc', '/combo', '/am-thuc'], async (req, res) => {
     }
 });
 
-router.get(['/chi-tiet-phim/:id', '/phim/:id'], async (req, res) => {
+router.get(['/chi-tiet-phim/:id', '/phim/:id'], async (req, res, next) => {
     try {
+        if (!isValidObjectId(req.params.id)) {
+            return res.status(404).render('404', { title: '404 — Không Tìm Thấy Phim' });
+        }
         const phim = await Movie.findById(req.params.id);
-        if (!phim) return res.status(404).send("Phim không tồn tại!");
+        if (!phim) return res.status(404).render('404', { title: '404 — Không Tìm Thấy Phim' });
         res.render('trangchitietphim', { phim, user: req.session.user || null, title: phim.title });
-    } catch (error) { res.status(500).send("Lỗi Server"); }
+    } catch (error) { next(error); }
 });
 
 // Hàm bảo mật: Thoát ký tự đặc biệt trong Regex chống tấn công ReDoS
@@ -73,30 +82,42 @@ router.get('/tim-kiem', async (req, res) => {
 // [VÁ LỖ HỔNG IDOR] Kiểm tra quyền sở hữu vé trước khi cho phép xóa
 router.post('/tai-khoan/ve-cua-toi/xoa/:id', checkLogin, async (req, res) => {
     try {
+        if (!isValidObjectId(req.params.id)) {
+            return res.redirect('/tai-khoan/ve-cua-toi');
+        }
         const ticket = await Ticket.findById(req.params.id).populate('movie');
-        if (!ticket) return res.status(404).send("Không tìm thấy vé!");
+        if (!ticket) return res.redirect('/tai-khoan/ve-cua-toi');
         
         // Chỉ chính chủ tài khoản mua vé hoặc Admin mới có quyền xóa
         const isOwner = ticket.user && ticket.user.toString() === req.session.user._id.toString();
         const isAdmin = req.session.user.vaiTro === 'admin';
         if (!isOwner && !isAdmin) {
-            return res.status(403).send('<script>alert("Bạn không có quyền thao tác trên vé của người khác!"); window.location.href="/tai-khoan/ve-cua-toi";</script>');
+            return res.redirect('/tai-khoan/ve-cua-toi?error=unauthorized');
         }
         
         const today = new Date(); today.setHours(0, 0, 0, 0); 
         const showDate = new Date(ticket.showDate); showDate.setHours(0, 0, 0, 0);
         
         if (ticket.movie && showDate > today) {
-            return res.send('<script>alert("Không thể xóa vé phim chưa chiếu!"); window.location.href="/tai-khoan/ve-cua-toi";</script>');
+            return res.redirect('/tai-khoan/ve-cua-toi?error=active_showtime');
         }
         
         await Ticket.findByIdAndDelete(req.params.id);
         res.redirect('/tai-khoan/ve-cua-toi');
-    } catch (error) { res.status(500).send("Lỗi xóa vé: " + error.message); }
+    } catch (error) { 
+        res.redirect('/tai-khoan/ve-cua-toi?error=' + encodeURIComponent(error.message)); 
+    }
 });
 
-router.get('/dat-ve/:id', async (req, res) => {
-    try { res.render('trangdatvephim', { phim: await Movie.findById(req.params.id) }); } catch (error) { res.status(500).send("Lỗi tải dữ liệu"); }
+router.get('/dat-ve/:id', async (req, res, next) => {
+    try { 
+        if (!isValidObjectId(req.params.id)) {
+            return res.status(404).render('404', { title: '404 — Không Tìm Thấy Suất Chiếu' });
+        }
+        const phim = await Movie.findById(req.params.id);
+        if (!phim) return res.status(404).render('404', { title: '404 — Không Tìm Thấy Suất Chiếu' });
+        res.render('trangdatvephim', { phim, error: req.query.error || null }); 
+    } catch (error) { next(error); }
 });
 
 router.post('/thanh-toan', checkLogin, async (req, res) => {
@@ -117,7 +138,7 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
                 seats: { $in: seatList }
             });
             if (soldTickets) {
-                return res.send('<script>alert("Rất tiếc! Một trong các ghế bạn chọn đã được khách hàng khác thanh toán trước."); window.history.back();</script>');
+                return res.redirect(`/dat-ve/${movieId}?error=${encodeURIComponent('Rất tiếc! Một trong các ghế bạn chọn đã được khách hàng khác thanh toán trước.')}`);
             }
 
             // 2. Kiểm tra xem có người khác đang giữ ghế trong 5 phút không
@@ -131,7 +152,7 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
             });
             if (lockedByOthers.length > 0) {
                 const names = lockedByOthers.map(l => l.seat).join(', ');
-                return res.send(`<script>alert("Ghế (${names}) đang được giữ chỗ trong 5 phút bởi khách hàng khác. Vui lòng chọn ghế khác!"); window.history.back();</script>`);
+                return res.redirect(`/dat-ve/${movieId}?error=${encodeURIComponent(`Ghế (${names}) đang được giữ chỗ trong 5 phút bởi khách hàng khác. Vui lòng chọn ghế khác!`)}`);
             }
 
             // 3. Khóa ghế an toàn trong MongoDB SeatLock (5 phút TTL tự động xóa)
@@ -153,12 +174,12 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
 });
 
 // [GIA CỐ BẢO MẬT & CHỐNG DOUBLE BOOKING] Xác thực giá tiền và kiểm tra trùng ghế ở Backend
-router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res) => {
+router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
     try {
         const { phimId, cinema, showDate, showTime, seats, total, finalAmount, payment_method, comboDetails, comboTotal } = req.body;
         
         if (!seats || seats.trim() === '') {
-            return res.send('<script>alert("Vui lòng chọn ít nhất 1 ghế!"); window.history.back();</script>');
+            return res.redirect(`/dat-ve/${phimId}?error=${encodeURIComponent('Vui lòng chọn ít nhất 1 ghế trước khi thanh toán!')}`);
         }
 
         const seatList = seats.split(',').map(s => s.trim()).filter(Boolean);
@@ -174,7 +195,7 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res) => {
         });
 
         if (duplicateBooking) {
-            return res.send('<script>alert("Rất tiếc! Một trong các ghế bạn chọn vừa được khách hàng khác thanh toán trước. Vui lòng chọn ghế khác."); window.history.back();</script>');
+            return res.redirect(`/dat-ve/${phimId}?error=${encodeURIComponent('Rất tiếc! Một trong các ghế bạn chọn vừa được khách hàng khác thanh toán trước. Vui lòng chọn ghế khác.')}`);
         }
 
         // 2. Tính toán lại giá vé ở Backend (Chống gian lận Client sửa giá POST request)
@@ -199,7 +220,7 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res) => {
             verifiedTotalPrice = expectedBaseTotal;
         }
 
-        await new Ticket({
+        const savedTicket = await new Ticket({
             user: req.session.user._id,
             movie: phimId,
             cinema: selectedCinema,
@@ -221,11 +242,45 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res) => {
             seat: { $in: seatList }
         });
 
-        res.redirect('/tai-khoan/ve-cua-toi');
+        // Chuyển hướng trực tiếp đến trang Thẻ Vé Điện Tử có mã QR CineGo Pass
+        res.redirect(`/ve/${savedTicket._id}`);
     } catch (error) { 
         console.error("Lỗi xác nhận thanh toán:", error);
-        res.status(500).send("Giao dịch thất bại: " + error.message); 
+        next(error); 
     }
+});
+
+// [MỚI] THẺ VÉ ĐIỆN TỬ CÓ MÃ QR CINEGO PASS
+router.get(['/ve/:id', '/ve-dien-tu/:id'], checkLogin, async (req, res, next) => {
+    try {
+        if (!isValidObjectId(req.params.id)) {
+            return res.status(404).render('404', { title: '404 — Không Tìm Thấy Vé' });
+        }
+        const ticket = await Ticket.findById(req.params.id).populate('movie').populate('user');
+        if (!ticket) {
+            return res.status(404).render('404', { title: '404 — Không Tìm Thấy Vé' });
+        }
+        // Kiểm tra quyền: Chỉ chính chủ mua vé hoặc Admin mới xem được vé điện tử
+        const isOwner = ticket.user && ticket.user._id.toString() === req.session.user._id.toString();
+        const isAdmin = req.session.user.vaiTro === 'admin';
+        if (!isOwner && !isAdmin) {
+            return res.redirect('/tai-khoan/ve-cua-toi');
+        }
+        res.render('trangve', { ticket, user: req.session.user, title: `Vé Điện Tử — ${ticket.movie ? ticket.movie.title : 'CineGo Pass'}` });
+    } catch (error) { next(error); }
+});
+
+// [MỚI] CÁC ROUTE PHỤ TRỢ: HỒ SƠ RẠP, FLASH SALE, BÌNH PHẨM ĐIỆN ẢNH
+router.get(['/he-thong-rap/:id', '/chi-tiet-rap/:id', '/rap/:id'], async (req, res) => {
+    res.render('trangchitietrap', { user: req.session.user || null, title: 'Hồ Sơ Cụm Rạp — CineGo Quy Nhơn' });
+});
+
+router.get('/flash-sale', (req, res) => {
+    res.render('trangflashsale', { user: req.session.user || null, title: 'Khung Giờ Vàng Flash Sale — CineGo' });
+});
+
+router.get('/danh-gia', (req, res) => {
+    res.render('trangdanhgia', { user: req.session.user || null, title: 'Bình Phẩm & Đánh Giá Điện Ảnh — CineGo' });
 });
 
 // [ĐÃ SỬA] API Kiểm tra Voucher
@@ -324,19 +379,23 @@ router.post('/tai-khoan/cap-nhat', async (req, res) => {
     } catch (error) { res.status(500).send("Lỗi cập nhật: " + error.message); }
 });
 
-// [ĐÃ SỬA] Route Đổi mật khẩu hoàn thiện xử lý lỗi "Cannot POST"
-router.post('/tai-khoan/doi-mat-khau', checkLogin, async (req, res) => {
+// [ĐÃ SỬA] Route Đổi mật khẩu an toàn, dùng flash message thay cho script alert
+router.post('/tai-khoan/doi-mat-khau', checkLogin, async (req, res, next) => {
     try {
         const { currentPassword, newPassword, confirmPassword } = req.body;
         const user = await User.findById(req.session.user._id);
         
-        if (!user) return res.send('<script>alert("Người dùng không tồn tại!"); window.history.back();</script>');
+        if (!user) return res.redirect('/dang-nhap');
 
         const isMatch = await bcrypt.compare(currentPassword, user.matKhau);
-        if (!isMatch) return res.send('<script>alert("Mật khẩu hiện tại không chính xác!"); window.history.back();</script>');
+        if (!isMatch) return res.render('thongtincanhan', { user, error: 'Mật khẩu hiện tại không chính xác! Vui lòng thử lại.', success: null });
 
         if (newPassword !== confirmPassword) {
-            return res.send('<script>alert("Mật khẩu mới và xác nhận không khớp!"); window.history.back();</script>');
+            return res.render('thongtincanhan', { user, error: 'Mật khẩu mới và xác nhận không khớp!', success: null });
+        }
+
+        if (newPassword.length < 6) {
+            return res.render('thongtincanhan', { user, error: 'Mật khẩu mới phải có tối thiểu 6 ký tự!', success: null });
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -344,10 +403,14 @@ router.post('/tai-khoan/doi-mat-khau', checkLogin, async (req, res) => {
         await user.save();
         
         req.session.destroy(); // Đổi mật khẩu xong bắt đăng nhập lại cho an toàn
-        res.send('<script>alert("Đổi mật khẩu thành công! Vui lòng đăng nhập lại."); window.location.href="/dang-nhap";</script>');
+        res.render('trangdangnhap', { 
+            success: 'Đổi mật khẩu thành công! Vui lòng đăng nhập lại.', 
+            error: null, 
+            email: user.email 
+        });
     } catch (err) {
         console.error(err);
-        res.status(500).send("Lỗi máy chủ nội bộ");
+        next(err);
     }
 });
 
