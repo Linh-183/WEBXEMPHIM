@@ -215,12 +215,12 @@
               <span class="text-[10px] font-['JetBrains_Mono'] text-[#10B981] font-bold">XÁC THỰC TỨC THÌ</span>
             </div>
 
-            <div class="space-y-3 text-xs">
+            <div class="space-y-3 text-xs" id="paymentMethodContainer">
               
               <!-- VietQR -->
-              <label class="flex items-center justify-between p-4 bg-[#FAF8F5] border-2 border-[#121316] cursor-pointer transition-all">
+              <label class="payment-method-card flex items-center justify-between p-4 bg-[#FAF8F5] border-2 border-[#121316] cursor-pointer transition-all has-[:checked]:border-2 has-[:checked]:border-[#121316] has-[:checked]:bg-[#FAF8F5]">
                 <div class="flex items-center gap-3">
-                  <input type="radio" name="payment_method" value="vietqr" checked class="accent-[#BA2D27]" />
+                  <input type="radio" name="payment_method" value="vietqr" checked class="accent-[#BA2D27] cursor-pointer" />
                   <div>
                     <span class="block font-bold text-[#121316] font-['Plus_Jakarta_Sans']">Chuyển Khoản Nhanh VietQR (Khuyên dùng)</span>
                     <span class="text-[11px] text-[#7A7E8B]">Quét mã QR tự động trên mọi ứng dụng ngân hàng di động</span>
@@ -230,9 +230,9 @@
               </label>
 
               <!-- MoMo -->
-              <label class="flex items-center justify-between p-4 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#121316] cursor-pointer transition-all">
+              <label class="payment-method-card flex items-center justify-between p-4 bg-white border border-[#E5E0D5] hover:border-[#121316] cursor-pointer transition-all has-[:checked]:border-2 has-[:checked]:border-[#121316] has-[:checked]:bg-[#FAF8F5]">
                 <div class="flex items-center gap-3">
-                  <input type="radio" name="payment_method" value="momo" class="accent-[#BA2D27]" />
+                  <input type="radio" name="payment_method" value="momo" class="accent-[#BA2D27] cursor-pointer" />
                   <div>
                     <span class="block font-bold text-[#121316] font-['Plus_Jakarta_Sans']">Ví Điện Tử MoMo</span>
                     <span class="text-[11px] text-[#7A7E8B]">Thanh toán 1 chạm qua ứng dụng ví MoMo</span>
@@ -242,9 +242,9 @@
               </label>
 
               <!-- VNPay -->
-              <label class="flex items-center justify-between p-4 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#121316] cursor-pointer transition-all">
+              <label class="payment-method-card flex items-center justify-between p-4 bg-white border border-[#E5E0D5] hover:border-[#121316] cursor-pointer transition-all has-[:checked]:border-2 has-[:checked]:border-[#121316] has-[:checked]:bg-[#FAF8F5]">
                 <div class="flex items-center gap-3">
-                  <input type="radio" name="payment_method" value="vnpay" class="accent-[#BA2D27]" />
+                  <input type="radio" name="payment_method" value="vnpay" class="accent-[#BA2D27] cursor-pointer" />
                   <div>
                     <span class="block font-bold text-[#121316] font-['Plus_Jakarta_Sans']">Cổng Thanh Toán VNPay</span>
                     <span class="text-[11px] text-[#7A7E8B]">Thẻ ATM nội địa, QR Pay, Thẻ quốc tế Visa/Master</span>
@@ -254,9 +254,9 @@
               </label>
 
               <!-- ZaloPay -->
-              <label class="flex items-center justify-between p-4 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#121316] cursor-pointer transition-all">
+              <label class="payment-method-card flex items-center justify-between p-4 bg-white border border-[#E5E0D5] hover:border-[#121316] cursor-pointer transition-all has-[:checked]:border-2 has-[:checked]:border-[#121316] has-[:checked]:bg-[#FAF8F5]">
                 <div class="flex items-center gap-3">
-                  <input type="radio" name="payment_method" value="zalopay" class="accent-[#BA2D27]" />
+                  <input type="radio" name="payment_method" value="zalopay" class="accent-[#BA2D27] cursor-pointer" />
                   <div>
                     <span class="block font-bold text-[#121316] font-['Plus_Jakarta_Sans']">Ví Điện Tử ZaloPay</span>
                     <span class="text-[11px] text-[#7A7E8B]">Thanh toán liên kết Zalo và ngân hàng</span>
@@ -568,6 +568,47 @@
 
     if (window.cinegoToast) window.cinegoToast.success(msg);
   }
+
+  // ==========================================
+  // DYNAMIC PAYMENT METHOD SELECTION & HIGHLIGHT
+  // ==========================================
+  function updatePaymentMethodCards() {
+    const cards = document.querySelectorAll('.payment-method-card');
+    cards.forEach(card => {
+      const radio = card.querySelector('input[name="payment_method"]');
+      if (radio && radio.checked) {
+        card.classList.remove('border-[#E5E0D5]', 'bg-white');
+        card.classList.add('border-2', 'border-[#121316]', 'bg-[#FAF8F5]');
+        card.style.borderWidth = '2px';
+        card.style.borderColor = '#121316';
+        card.style.backgroundColor = '#FAF8F5';
+      } else {
+        card.classList.remove('border-2', 'border-[#121316]', 'bg-[#FAF8F5]');
+        card.classList.add('border', 'border-[#E5E0D5]', 'bg-white');
+        card.style.borderWidth = '1px';
+        card.style.borderColor = '#E5E0D5';
+        card.style.backgroundColor = '#FFFFFF';
+      }
+    });
+  }
+
+  document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+    radio.addEventListener('change', updatePaymentMethodCards);
+  });
+
+  document.querySelectorAll('.payment-method-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      const radio = card.querySelector('input[name="payment_method"]');
+      if (radio && !radio.checked) {
+        radio.checked = true;
+        updatePaymentMethodCards();
+      }
+    });
+  });
+
+  // Run on ready to sync active card
+  document.addEventListener('DOMContentLoaded', updatePaymentMethodCards);
+  updatePaymentMethodCards();
 </script>
 
 <%- include('partials/footer') %>

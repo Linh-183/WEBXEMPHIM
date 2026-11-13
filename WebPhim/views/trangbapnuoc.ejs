@@ -397,12 +397,12 @@
           <!-- Payment Options -->
           <div class="space-y-2 text-xs">
             <label class="block font-bold text-[#121316]">Phương thức thanh toán:</label>
-            <div class="grid grid-cols-2 gap-2">
-              <label class="p-2.5 bg-[#FAF8F5] border border-[#121316] flex items-center gap-2 cursor-pointer font-semibold text-[11px]">
+            <div class="grid grid-cols-2 gap-2" id="concessionPaymentGroup">
+              <label class="concession-payment-card p-2.5 bg-[#FAF8F5] border-2 border-[#121316] flex items-center gap-2 cursor-pointer font-semibold text-[11px] transition-all has-[:checked]:border-2 has-[:checked]:border-[#121316] has-[:checked]:bg-[#FAF8F5]">
                 <input type="radio" name="concessionPayment" value="vietqr" checked class="accent-[#BA2D27]" />
                 <span>VietQR (Khuyên dùng)</span>
               </label>
-              <label class="p-2.5 bg-[#FAF8F5] border border-[#E5E0D5] flex items-center gap-2 cursor-pointer text-[11px]">
+              <label class="concession-payment-card p-2.5 bg-white border border-[#E5E0D5] hover:border-[#121316] flex items-center gap-2 cursor-pointer text-[11px] transition-all has-[:checked]:border-2 has-[:checked]:border-[#121316] has-[:checked]:bg-[#FAF8F5]">
                 <input type="radio" name="concessionPayment" value="momo" class="accent-[#BA2D27]" />
                 <span>Ví MoMo</span>
               </label>
@@ -646,6 +646,46 @@
     concessionCart = [];
     renderCart();
   }
+
+  // ==========================================
+  // CONCESSION PAYMENT METHOD HIGHLIGHT SYNC
+  // ==========================================
+  function updateConcessionPaymentCards() {
+    const cards = document.querySelectorAll('.concession-payment-card');
+    cards.forEach(card => {
+      const radio = card.querySelector('input[name="concessionPayment"]');
+      if (radio && radio.checked) {
+        card.classList.remove('border-[#E5E0D5]', 'bg-white');
+        card.classList.add('border-2', 'border-[#121316]', 'bg-[#FAF8F5]');
+        card.style.borderWidth = '2px';
+        card.style.borderColor = '#121316';
+        card.style.backgroundColor = '#FAF8F5';
+      } else {
+        card.classList.remove('border-2', 'border-[#121316]', 'bg-[#FAF8F5]');
+        card.classList.add('border', 'border-[#E5E0D5]', 'bg-white');
+        card.style.borderWidth = '1px';
+        card.style.borderColor = '#E5E0D5';
+        card.style.backgroundColor = '#FFFFFF';
+      }
+    });
+  }
+
+  document.querySelectorAll('input[name="concessionPayment"]').forEach(radio => {
+    radio.addEventListener('change', updateConcessionPaymentCards);
+  });
+
+  document.querySelectorAll('.concession-payment-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const radio = card.querySelector('input[name="concessionPayment"]');
+      if (radio) {
+        radio.checked = true;
+        updateConcessionPaymentCards();
+      }
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', updateConcessionPaymentCards);
+  updateConcessionPaymentCards();
 </script>
 
 <%- include('partials/footer') %>
