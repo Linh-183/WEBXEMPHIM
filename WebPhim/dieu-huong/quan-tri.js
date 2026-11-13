@@ -187,27 +187,54 @@ router.post('/phim/them', async (req, res) => {
             return res.redirect('/admin/phim?action=them&error=' + encodeURIComponent('Vui lòng nhập tên phim!'));
         }
 
+        // Chuẩn hóa giờ chiếu bảo đảm có dấu : ở giữa (HH:MM)
+        const normalizeTimeSlot = (t) => {
+            t = (t || '').toString().trim();
+            if (!t) return null;
+            if (/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(t)) {
+                const [h, m] = t.split(':');
+                return h.padStart(2, '0') + ':' + m;
+            }
+            if (/^\d{3,4}$/.test(t)) {
+                const padded = t.padStart(4, '0');
+                const h = padded.slice(0, 2);
+                const m = padded.slice(2);
+                if (parseInt(h) <= 23 && parseInt(m) <= 59) return h + ':' + m;
+            }
+            if (/^\d{1,2}$/.test(t)) {
+                const h = t.padStart(2, '0');
+                if (parseInt(h) <= 23) return h + ':00';
+            }
+            return t;
+        };
+
         let formattedShowtimes = [];
         if (Array.isArray(show_date)) {
             for (let i = 0; i < show_date.length; i++) {
                 const cVal = Array.isArray(cinema) ? (cinema[i] || 'CGV Kim Cúc Plaza') : (cinema || 'CGV Kim Cúc Plaza');
                 const rVal = Array.isArray(room) ? (room[i] || 'Phòng 1 (IMAX)') : (room || 'Phòng 1 (IMAX)');
                 if (show_date[i] && show_times && show_times[i]) {
-                    formattedShowtimes.push({
-                        cinema: cVal,
-                        room: rVal,
-                        date: show_date[i],
-                        times: show_times[i].split(',').map(t => t.trim()).filter(Boolean)
-                    });
+                    const timesParsed = show_times[i].split(',').map(normalizeTimeSlot).filter(Boolean);
+                    if (timesParsed.length > 0) {
+                        formattedShowtimes.push({
+                            cinema: cVal,
+                            room: rVal,
+                            date: show_date[i],
+                            times: timesParsed
+                        });
+                    }
                 }
             }
         } else if (show_date && show_times) {
-            formattedShowtimes.push({
-                cinema: cinema || 'CGV Kim Cúc Plaza',
-                room: room || 'Phòng 1 (IMAX)',
-                date: show_date,
-                times: show_times.split(',').map(t => t.trim()).filter(Boolean)
-            });
+            const timesParsed = show_times.split(',').map(normalizeTimeSlot).filter(Boolean);
+            if (timesParsed.length > 0) {
+                formattedShowtimes.push({
+                    cinema: cinema || 'CGV Kim Cúc Plaza',
+                    room: room || 'Phòng 1 (IMAX)',
+                    date: show_date,
+                    times: timesParsed
+                });
+            }
         }
 
         const safeReleaseDate = (releaseDate && !isNaN(new Date(releaseDate).getTime())) ? new Date(releaseDate) : new Date();
@@ -248,32 +275,56 @@ router.post('/phim/sua/:id', async (req, res) => {
         const cinemas = req.body.cinema || [];
         const rooms = req.body.room || [];
 
+        const normalizeTimeSlot = (t) => {
+            t = (t || '').toString().trim();
+            if (!t) return null;
+            if (/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(t)) {
+                const [h, m] = t.split(':');
+                return h.padStart(2, '0') + ':' + m;
+            }
+            if (/^\d{3,4}$/.test(t)) {
+                const padded = t.padStart(4, '0');
+                const h = padded.slice(0, 2);
+                const m = padded.slice(2);
+                if (parseInt(h) <= 23 && parseInt(m) <= 59) return h + ':' + m;
+            }
+            if (/^\d{1,2}$/.test(t)) {
+                const h = t.padStart(2, '0');
+                if (parseInt(h) <= 23) return h + ':00';
+            }
+            return t;
+        };
+
         const showtimes = [];
         
         if (Array.isArray(showDates)) {
             for (let i = 0; i < showDates.length; i++) {
                 if (showDates[i]) { 
-                    const timesArray = showTimesRaw[i] ? showTimesRaw[i].split(',').map(t => t.trim()).filter(Boolean) : [];
+                    const timesArray = showTimesRaw[i] ? showTimesRaw[i].split(',').map(normalizeTimeSlot).filter(Boolean) : [];
                     const cVal = Array.isArray(cinemas) ? (cinemas[i] || 'Starlight Nguyễn Kim') : (cinemas || 'Starlight Nguyễn Kim');
-                    const rVal = Array.isArray(rooms) ? (rooms[i] || 'Phòng 1') : (rooms || 'Phòng 1');
-                    showtimes.push({ 
-                        date: showDates[i], 
-                        times: timesArray,
-                        cinema: cVal,
-                        room: rVal
-                    });
+                    const rVal = Array.isArray(rooms) ? (rooms[i] || 'Phòng 1 (IMAX)') : (rooms || 'Phòng 1 (IMAX)');
+                    if (timesArray.length > 0) {
+                        showtimes.push({ 
+                            date: showDates[i], 
+                            times: timesArray,
+                            cinema: cVal,
+                            room: rVal
+                        });
+                    }
                 }
             }
         } else if (showDates) {
-            const timesArray = showTimesRaw ? showTimesRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+            const timesArray = showTimesRaw ? showTimesRaw.split(',').map(normalizeTimeSlot).filter(Boolean) : [];
             const cVal = Array.isArray(cinemas) ? (cinemas[0] || 'Starlight Nguyễn Kim') : (cinemas || 'Starlight Nguyễn Kim');
-            const rVal = Array.isArray(rooms) ? (rooms[0] || 'Phòng 1') : (rooms || 'Phòng 1');
-            showtimes.push({ 
-                date: showDates, 
-                times: timesArray,
-                cinema: cVal,
-                room: rVal
-            });
+            const rVal = Array.isArray(rooms) ? (rooms[0] || 'Phòng 1 (IMAX)') : (rooms || 'Phòng 1 (IMAX)');
+            if (timesArray.length > 0) {
+                showtimes.push({ 
+                    date: showDates, 
+                    times: timesArray,
+                    cinema: cVal,
+                    room: rVal
+                });
+            }
         }
 
         await Movie.findByIdAndUpdate(idPhim, {

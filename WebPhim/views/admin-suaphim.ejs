@@ -83,31 +83,58 @@
           2. Suất Chiếu Tại Rạp
         </h2>
 
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 p-4 bg-[#FAF8F5] border border-[#E5E0D5]">
-          <div class="flex flex-col">
-            <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1.5 h-5 flex items-center whitespace-nowrap truncate" title="Cụm rạp">Cụm rạp</label>
-            <select name="cinema" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs text-[#121316] font-semibold focus:outline-none focus:border-[#121316]">
-              <option value="CGV Kim Cúc Plaza">CGV Kim Cúc Plaza</option>
-              <option value="Starlight Nguyễn Kim">Starlight Nguyễn Kim</option>
-              <option value="Dcine Quy Nhơn">Dcine Phú Tài Center</option>
-            </select>
+        <div class="space-y-4" id="showtimeRowsContainer">
+          <% 
+            const existingSts = (phim.showtimes && Array.isArray(phim.showtimes) && phim.showtimes.length > 0) ? phim.showtimes : [{ cinema: 'CGV Kim Cúc Plaza', room: 'Phòng 1 (IMAX)', date: new Date().toISOString().split('T')[0], times: ['09:30', '13:15', '19:30'] }];
+            existingSts.forEach((st, idx) => {
+              const timesStr = (st.times && Array.isArray(st.times)) ? st.times.join(', ') : (st.times || '09:30, 13:15, 19:30');
+          %>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 p-4 bg-[#FAF8F5] border border-[#E5E0D5] relative">
+            <div class="flex flex-col">
+              <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1.5 h-5 flex items-center whitespace-nowrap truncate" title="Cụm rạp">Cụm rạp</label>
+              <select name="cinema" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs text-[#121316] font-semibold focus:outline-none focus:border-[#121316]">
+                <option value="CGV Kim Cúc Plaza" <%= st.cinema === 'CGV Kim Cúc Plaza' ? 'selected' : '' %>>CGV Kim Cúc Plaza</option>
+                <option value="Starlight Nguyễn Kim" <%= st.cinema === 'Starlight Nguyễn Kim' ? 'selected' : '' %>>Starlight Nguyễn Kim</option>
+                <option value="DCine Quy Nhơn" <%= (st.cinema === 'DCine Quy Nhơn' || st.cinema === 'Dcine Quy Nhơn') ? 'selected' : '' %>>DCine Quy Nhơn (Phú Tài Center)</option>
+              </select>
+            </div>
+            <div class="flex flex-col">
+              <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1.5 h-5 flex items-center whitespace-nowrap truncate" title="Phòng chiếu">Phòng chiếu</label>
+              <select name="room" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs text-[#121316] font-semibold focus:outline-none focus:border-[#121316]">
+                <option value="Phòng 1 (IMAX)" <%= (st.room === 'Phòng 1' || st.room === 'Phòng 1 (IMAX)') ? 'selected' : '' %>>Phòng 1 (IMAX)</option>
+                <option value="Phòng 2 (2D)" <%= (st.room === 'Phòng 2' || st.room === 'Phòng 2 (2D)') ? 'selected' : '' %>>Phòng 2 (2D)</option>
+                <option value="Phòng 3 (VIP)" <%= (st.room === 'Phòng 3' || st.room === 'Phòng 3 (VIP)') ? 'selected' : '' %>>Phòng 3 (VIP)</option>
+              </select>
+            </div>
+            <div class="flex flex-col">
+              <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1.5 h-5 flex items-center whitespace-nowrap truncate" title="Ngày chiếu">Ngày chiếu</label>
+              <input type="date" name="show_date" value="<%= st.date || new Date().toISOString().split('T')[0] %>" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs font-['JetBrains_Mono'] focus:outline-none focus:border-[#121316]" />
+            </div>
+            <div class="flex flex-col">
+              <div class="flex items-center justify-between h-5 mb-1.5">
+                <label class="font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] whitespace-nowrap truncate" title="Các suất chiếu">Các suất chiếu (HH:MM)</label>
+                <% if (idx > 0) { %>
+                  <button type="button" onclick="this.closest('.grid').remove()" class="text-[10px] font-bold text-[#BA2D27] hover:underline">✕ Xóa</button>
+                <% } %>
+              </div>
+              <input type="text" name="show_times" value="<%= timesStr %>" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs font-['JetBrains_Mono'] font-bold text-[#121316] focus:outline-none focus:border-[#121316]" onblur="formatShowtimeInput(this)" />
+              <div class="flex items-center gap-1 mt-1.5 flex-wrap">
+                <span class="text-[9px] text-[#7A7E8B] font-['JetBrains_Mono']">Thêm:</span>
+                <button type="button" onclick="appendTimeChip(this, '09:30')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+09:30</button>
+                <button type="button" onclick="appendTimeChip(this, '13:15')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+13:15</button>
+                <button type="button" onclick="appendTimeChip(this, '16:45')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+16:45</button>
+                <button type="button" onclick="appendTimeChip(this, '19:30')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+19:30</button>
+                <button type="button" onclick="appendTimeChip(this, '21:45')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+21:45</button>
+              </div>
+            </div>
           </div>
-          <div class="flex flex-col">
-            <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1.5 h-5 flex items-center whitespace-nowrap truncate" title="Phòng chiếu">Phòng chiếu</label>
-            <select name="room" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs text-[#121316] font-semibold focus:outline-none focus:border-[#121316]">
-              <option value="Phòng 1 (IMAX)">Phòng 1 (IMAX)</option>
-              <option value="Phòng 2 (2D)">Phòng 2 (2D)</option>
-              <option value="Phòng 3 (VIP)">Phòng 3 (VIP)</option>
-            </select>
-          </div>
-          <div class="flex flex-col">
-            <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1.5 h-5 flex items-center whitespace-nowrap truncate" title="Ngày chiếu">Ngày chiếu</label>
-            <input type="date" name="show_date" value="<%= (phim.showtimes && phim.showtimes[0] && phim.showtimes[0].date) ? phim.showtimes[0].date : new Date().toISOString().split('T')[0] %>" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs font-['JetBrains_Mono'] focus:outline-none focus:border-[#121316]" />
-          </div>
-          <div class="flex flex-col">
-            <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1.5 h-5 flex items-center whitespace-nowrap truncate" title="Các suất chiếu cách nhau bởi dấu phẩy (VD: 09:30, 13:15, 19:30)">Các suất chiếu</label>
-            <input type="text" name="show_times" value="<%= (phim.showtimes && phim.showtimes[0] && phim.showtimes[0].times) ? phim.showtimes[0].times.join(', ') : '09:30, 13:15, 19:30' %>" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs font-['JetBrains_Mono'] font-bold text-[#121316] focus:outline-none focus:border-[#121316]" />
-          </div>
+          <% }); %>
+        </div>
+
+        <div class="pt-2 border-t border-[#E5E0D5]">
+          <button type="button" onclick="addShowtimeRow()" class="px-3 py-2 bg-white border border-[#121316] hover:bg-[#121316] hover:text-white text-xs font-['JetBrains_Mono'] font-bold text-[#121316] transition-all flex items-center gap-1.5">
+            <span>+ Thêm Lịch Chiếu Khác (Rạp hoặc Ngày khác)</span>
+          </button>
         </div>
       </div>
 
@@ -153,5 +180,92 @@
   </form>
 
 </main>
+
+<script>
+  function appendTimeChip(btn, timeStr) {
+    const row = btn.closest('.grid');
+    if (!row) return;
+    const input = row.querySelector('input[name="show_times"]');
+    if (!input) return;
+    let cur = input.value.trim();
+    if (!cur) {
+      input.value = timeStr;
+    } else {
+      const existing = cur.split(',').map(s => s.trim());
+      if (!existing.includes(timeStr)) {
+        input.value = cur + ', ' + timeStr;
+      }
+    }
+    formatShowtimeInput(input);
+  }
+
+  function formatShowtimeInput(input) {
+    let val = input.value;
+    let parts = val.split(/[,;\s]+/).map(p => p.trim()).filter(Boolean);
+    let formatted = parts.map(p => {
+      if (/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(p)) {
+        const [h, m] = p.split(':');
+        return h.padStart(2, '0') + ':' + m;
+      }
+      if (/^\d{3,4}$/.test(p)) {
+        const padded = p.padStart(4, '0');
+        const h = padded.slice(0, 2);
+        const m = padded.slice(2);
+        if (parseInt(h) <= 23 && parseInt(m) <= 59) return h + ':' + m;
+      }
+      if (/^\d{1,2}$/.test(p)) {
+        const h = p.padStart(2, '0');
+        if (parseInt(h) <= 23) return h + ':00';
+      }
+      return p;
+    });
+    input.value = formatted.join(', ');
+  }
+
+  function addShowtimeRow() {
+    const container = document.getElementById('showtimeRowsContainer');
+    if (!container) return;
+    const newRow = document.createElement('div');
+    newRow.className = 'grid grid-cols-1 sm:grid-cols-4 gap-3 p-4 bg-[#FAF8F5] border border-[#E5E0D5] relative';
+    newRow.innerHTML = `
+      <div class="flex flex-col">
+        <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1.5 h-5 flex items-center whitespace-nowrap truncate">Cụm rạp</label>
+        <select name="cinema" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs text-[#121316] font-semibold focus:outline-none focus:border-[#121316]">
+          <option value="CGV Kim Cúc Plaza">CGV Kim Cúc Plaza</option>
+          <option value="Starlight Nguyễn Kim">Starlight Nguyễn Kim</option>
+          <option value="DCine Quy Nhơn">DCine Quy Nhơn (Phú Tài Center)</option>
+        </select>
+      </div>
+      <div class="flex flex-col">
+        <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1.5 h-5 flex items-center whitespace-nowrap truncate">Phòng chiếu</label>
+        <select name="room" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs text-[#121316] font-semibold focus:outline-none focus:border-[#121316]">
+          <option value="Phòng 1 (IMAX)">Phòng 1 (IMAX)</option>
+          <option value="Phòng 2 (2D)">Phòng 2 (2D)</option>
+          <option value="Phòng 3 (VIP)">Phòng 3 (VIP)</option>
+        </select>
+      </div>
+      <div class="flex flex-col">
+        <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1.5 h-5 flex items-center whitespace-nowrap truncate">Ngày chiếu</label>
+        <input type="date" name="show_date" value="<%= new Date().toISOString().split('T')[0] %>" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs font-['JetBrains_Mono'] focus:outline-none focus:border-[#121316]" />
+      </div>
+      <div class="flex flex-col">
+        <div class="flex items-center justify-between h-5 mb-1.5">
+          <label class="font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] whitespace-nowrap truncate">Các suất chiếu (HH:MM)</label>
+          <button type="button" onclick="this.closest('.grid').remove()" class="text-[10px] font-bold text-[#BA2D27] hover:underline">✕ Xóa</button>
+        </div>
+        <input type="text" name="show_times" placeholder="09:30, 13:15, 19:30" value="09:30, 13:15, 19:30" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs font-['JetBrains_Mono'] font-bold text-[#121316] focus:outline-none focus:border-[#121316]" onblur="formatShowtimeInput(this)" />
+        <div class="flex items-center gap-1 mt-1.5 flex-wrap">
+          <span class="text-[9px] text-[#7A7E8B] font-['JetBrains_Mono']">Thêm:</span>
+          <button type="button" onclick="appendTimeChip(this, '09:30')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+09:30</button>
+          <button type="button" onclick="appendTimeChip(this, '13:15')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+13:15</button>
+          <button type="button" onclick="appendTimeChip(this, '16:45')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+16:45</button>
+          <button type="button" onclick="appendTimeChip(this, '19:30')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+19:30</button>
+          <button type="button" onclick="appendTimeChip(this, '21:45')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+21:45</button>
+        </div>
+      </div>
+    `;
+    container.appendChild(newRow);
+  }
+</script>
 
 <%- include('partials/admin-footer') %>
