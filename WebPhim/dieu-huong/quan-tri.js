@@ -111,10 +111,17 @@ router.post('/nguoi-dung/xoa/:id', async (req, res) => {
 });
 
 router.get('/phim', async (req, res) => {
-    try { res.render('admin-quanlyphim', { movies: await Movie.find().sort({ createdAt: -1 }) }); } catch (error) { res.status(500).send("Lỗi tải trang quản lý phim"); }
+    try { 
+        res.render('admin-quanlyphim', { 
+            movies: await Movie.find().sort({ createdAt: -1 }),
+            action: req.query.action || req.query.tab || null,
+            success: req.query.success || null,
+            error: req.query.error || null
+        }); 
+    } catch (error) { res.status(500).send("Lỗi tải trang quản lý phim"); }
 });
 
-router.get('/phim/them', (req, res) => res.render('admin-themphim'));
+router.get('/phim/them', (req, res) => res.redirect('/admin/phim?action=them'));
 
 router.post('/phim/them', async (req, res) => {
     try {
@@ -128,7 +135,7 @@ router.post('/phim/them', async (req, res) => {
             formattedShowtimes.push({ cinema, room, date: show_date, times: show_times.split(',').map(t => t.trim()) });
         }
         await new Movie({ title, genre, duration, director, releaseDate, posterUrl, trailerUrl, ageRating, status, description, showtimes: formattedShowtimes }).save();
-        res.redirect('/admin/phim');
+        res.redirect('/admin/phim?success=' + encodeURIComponent(`Đã thêm phim "${title}" vào hệ thống thành công!`));
     } catch (error) { res.status(500).send('Lỗi thêm phim!'); }
 });
 

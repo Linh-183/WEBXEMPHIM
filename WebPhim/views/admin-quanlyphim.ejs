@@ -1,19 +1,225 @@
 <%- include('partials/admin-header') %>
 
+<%
+  const allMovies = (typeof movies !== 'undefined' && Array.isArray(movies)) ? movies : [];
+%>
+
 <main class="p-6 sm:p-10 space-y-8 max-w-7xl">
   
+  <!-- Flash Messages -->
+  <% if (typeof success !== 'undefined' && success) { %>
+    <div class="p-4 bg-[#EAFaf1] border-l-4 border-[#10B981] text-[#10B981] text-xs font-['JetBrains_Mono'] flex items-center justify-between shadow-sm">
+      <span>✓ <%= success %></span>
+    </div>
+  <% } %>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="p-4 bg-[#F9EBEA] border-l-4 border-[#BA2D27] text-[#BA2D27] text-xs font-['JetBrains_Mono'] flex items-center justify-between shadow-sm">
+      <span>⚠ <%= error %></span>
+    </div>
+  <% } %>
+
   <!-- Header Title & Add Action -->
   <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E5E0D5]">
     <div>
       <span class="archival-index">QUẢN LÝ DANH MỤC ĐIỆN ẢNH</span>
-      <h1 class="editorial-headline text-3xl font-bold mt-1">Danh Sách Phim Chiếu Rạp</h1>
-      <p class="text-xs text-[#7A7E8B] mt-0.5 font-light">Cập nhật, điều chỉnh thông tin và lịch chiếu phim tại 3 rạp Quy Nhơn.</p>
+      <h1 class="editorial-headline text-3xl font-bold mt-1">Danh Mục & Thêm Phim Chiếu Rạp</h1>
+      <p class="text-xs text-[#7A7E8B] mt-0.5 font-light">Thêm phim mới trực tiếp tại chỗ, điều chỉnh thông tin và quản lý lịch chiếu tại 3 rạp Quy Nhơn.</p>
     </div>
 
-    <a href="/admin/phim/them" class="btn-editorial-primary text-xs !py-3 !px-5 flex items-center gap-2">
-      <span class="material-symbols-outlined text-base">add</span>
-      <span>Thêm Phim Mới</span>
-    </a>
+    <div class="flex items-center gap-3">
+      <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B] hidden sm:inline">
+        TỔNG CỘNG: <strong class="text-[#BA2D27]"><%= allMovies.length %> PHIM</strong>
+      </span>
+      <button type="button" 
+              onclick="toggleAddMovieForm()" 
+              id="btnToggleAddMovie" 
+              class="btn-editorial-primary text-xs !py-3 !px-5 flex items-center gap-2 cursor-pointer transition-all">
+        <span class="material-symbols-outlined text-base" id="toggleIcon">add_circle</span>
+        <span id="toggleText">+ Thêm Phim Mới</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       EXPANDABLE INLINE FORM: THÊM PHIM MỚI TRỰC TIẾP TRONG DANH MỤC
+       ========================================================================= -->
+  <div id="addMovieSection" class="hidden transition-all duration-300">
+    <div class="bg-white border-2 border-[#121316] p-6 sm:p-8 space-y-6 shadow-xl relative">
+      
+      <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-4">
+        <div>
+          <span class="archival-index">BIỂU MẪU ĐIỆN ẢNH NHANH</span>
+          <h2 class="font-['Georgia'] text-lg font-bold text-[#121316] uppercase tracking-wider mt-0.5">
+            Thêm Phim Mới Vào Hệ Thống Rạp
+          </h2>
+        </div>
+        <button type="button" 
+                onclick="toggleAddMovieForm(false)" 
+                class="px-3 py-1.5 border border-[#E5E0D5] hover:border-[#BA2D27] text-[#7A7E8B] hover:text-[#BA2D27] text-xs font-['JetBrains_Mono'] font-bold flex items-center gap-1 transition-colors">
+          <span class="material-symbols-outlined text-sm">close</span>
+          <span>Thu gọn form</span>
+        </button>
+      </div>
+
+      <form action="/admin/phim/them" method="POST" class="grid grid-cols-1 lg:grid-cols-12 gap-8 text-xs font-['Plus_Jakarta_Sans']">
+        
+        <!-- LEFT 8 COLS: GENERAL INFO & SHOWTIME SLOTS -->
+        <div class="lg:col-span-8 space-y-6">
+          
+          <!-- Basic Movie Information Card -->
+          <div class="p-5 bg-[#FAF8F5] border border-[#E5E0D5] space-y-4">
+            <h3 class="font-['Georgia'] text-xs font-bold text-[#121316] uppercase tracking-wider pb-2 border-b border-[#E5E0D5]">
+              1. Thông Tin Cơ Bản Của Phim
+            </h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              
+              <!-- Tên phim -->
+              <div class="sm:col-span-2">
+                <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
+                  Tên phim <span class="text-[#BA2D27]">*</span>
+                </label>
+                <input name="title" required placeholder="Nhập tiêu đề phim tiếng Việt hoặc tiếng Anh..." class="w-full bg-white border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-bold focus:outline-none focus:border-[#121316]" />
+              </div>
+
+              <!-- Đạo diễn -->
+              <div>
+                <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Đạo diễn</label>
+                <input name="director" placeholder="Họ tên đạo diễn..." class="w-full bg-white border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] focus:outline-none focus:border-[#121316]" />
+              </div>
+
+              <!-- Thể loại -->
+              <div>
+                <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Thể loại</label>
+                <input name="genre" placeholder="Hành động, Hoạt hình, Viễn tưởng..." class="w-full bg-white border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] focus:outline-none focus:border-[#121316]" />
+              </div>
+
+              <!-- Thời lượng -->
+              <div>
+                <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
+                  Thời lượng (Phút) <span class="text-[#BA2D27]">*</span>
+                </label>
+                <input name="duration" type="number" required placeholder="120" class="w-full bg-white border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
+              </div>
+
+              <!-- Ngày khởi chiếu -->
+              <div>
+                <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Ngày khởi chiếu</label>
+                <input name="releaseDate" type="date" class="w-full bg-white border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-['JetBrains_Mono'] focus:outline-none focus:border-[#121316]" />
+              </div>
+
+              <!-- Trạng thái -->
+              <div>
+                <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Trạng thái phát hành</label>
+                <select name="status" class="w-full bg-white border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-bold focus:outline-none focus:border-[#121316]">
+                  <option value="DangChieu">Đang chiếu (Now Showing)</option>
+                  <option value="SapChieu">Sắp chiếu (Coming Soon)</option>
+                </select>
+              </div>
+
+              <!-- Phân loại độ tuổi -->
+              <div>
+                <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Giới hạn độ tuổi</label>
+                <select name="ageRating" class="w-full bg-white border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-bold focus:outline-none focus:border-[#121316]">
+                  <option value="P">P — Mọi lứa tuổi</option>
+                  <option value="K">K — Dưới 13 tuổi có người lớn đi kèm</option>
+                  <option value="T13">T13 — Khán giả từ 13 tuổi</option>
+                  <option value="T16" selected>T16 — Khán giả từ 16 tuổi</option>
+                  <option value="T18">T18 — Khán giả từ 18 tuổi</option>
+                </select>
+              </div>
+
+              <!-- Mô tả tóm tắt nội dung -->
+              <div class="sm:col-span-2">
+                <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Tóm tắt nội dung phim</label>
+                <textarea name="description" rows="3" placeholder="Nội dung, cốt truyện chính..." class="w-full bg-white border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] focus:outline-none focus:border-[#121316]"></textarea>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Showtime Schedule Generator -->
+          <div class="p-5 bg-[#FAF8F5] border border-[#E5E0D5] space-y-3">
+            <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-2">
+              <h3 class="font-['Georgia'] text-xs font-bold text-[#121316] uppercase tracking-wider">
+                2. Xếp Lịch Chiếu Tại 3 Rạp Quy Nhơn
+              </h3>
+              <span class="text-[10px] font-['JetBrains_Mono'] text-[#10B981] font-bold">CHỐNG TRÙNG LỊCH</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 p-3 bg-white border border-[#E5E0D5]">
+              <div>
+                <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1">Cụm rạp</label>
+                <select name="cinema" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] p-2 text-xs text-[#121316] font-semibold">
+                  <option value="CGV Kim Cúc Plaza">CGV Kim Cúc Plaza</option>
+                  <option value="Starlight Nguyễn Kim">Starlight Nguyễn Kim</option>
+                  <option value="Dcine Quy Nhơn">Dcine Phú Tài Center</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1">Phòng chiếu</label>
+                <select name="room" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] p-2 text-xs text-[#121316] font-semibold">
+                  <option value="Phòng 1 (IMAX)">Phòng 1 (IMAX)</option>
+                  <option value="Phòng 2 (2D)">Phòng 2 (2D)</option>
+                  <option value="Phòng 3 (VIP)">Phòng 3 (VIP)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1">Ngày chiếu</label>
+                <input type="date" name="show_date" value="<%= new Date().toISOString().split('T')[0] %>" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] p-2 text-xs font-['JetBrains_Mono']" />
+              </div>
+              <div>
+                <label class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] mb-1">Các suất chiếu (cách dấu phẩy)</label>
+                <input type="text" name="show_times" placeholder="09:30, 13:15, 19:30" value="09:30, 13:15, 19:30" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] p-2 text-xs font-['JetBrains_Mono'] font-bold text-[#121316]" />
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT 4 COLS: POSTER & TRAILER MEDIA -->
+        <div class="lg:col-span-4 space-y-5">
+          
+          <div class="p-5 bg-[#FAF8F5] border border-[#E5E0D5] space-y-3">
+            <h3 class="font-['Georgia'] text-xs font-bold text-[#121316] uppercase tracking-wider pb-2 border-b border-[#E5E0D5]">
+              3. Hình Ảnh & Video Trailer
+            </h3>
+
+            <div>
+              <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
+                Đường dẫn Poster URL (Tỷ lệ 3:4) <span class="text-[#BA2D27]">*</span>
+              </label>
+              <input name="posterUrl" id="inlinePosterUrlInput" required placeholder="https://images.unsplash.com/..." class="w-full bg-white border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] focus:outline-none focus:border-[#121316]" oninput="previewInlinePoster(this.value)" />
+            </div>
+
+            <!-- Poster Preview Box -->
+            <div class="relative aspect-[3/4] bg-[#EFEBE3] border border-[#E5E0D5] overflow-hidden flex items-center justify-center">
+              <img id="inlinePosterPreviewImg" src="" alt="Xem trước Poster" class="w-full h-full object-cover hidden" />
+              <span id="inlinePosterPlaceholderText" class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">Xem trước poster</span>
+            </div>
+
+            <div>
+              <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
+                Đường dẫn Video Trailer (YouTube)
+              </label>
+              <input name="trailerUrl" placeholder="https://www.youtube.com/watch?v=..." class="w-full bg-white border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] focus:outline-none focus:border-[#121316]" />
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="p-4 bg-white border border-[#E5E0D5] space-y-2">
+            <button type="submit" class="btn-editorial-primary w-full py-3 text-xs font-bold uppercase tracking-wider block text-center !bg-[#BA2D27]">
+              LƯU VÀ XUẤT BẢN PHIM MỚI →
+            </button>
+            <button type="button" onclick="toggleAddMovieForm(false)" class="btn-editorial-secondary w-full py-2 text-xs font-bold uppercase tracking-wider block text-center">
+              HỦY / THU GỌN FORM
+            </button>
+          </div>
+
+        </div>
+
+      </form>
+    </div>
   </div>
 
   <!-- Filter & Search Toolbar -->
@@ -25,7 +231,7 @@
 
     <!-- Quick Status Tabs -->
     <div class="flex items-center gap-1.5 text-xs font-['JetBrains_Mono']">
-      <button onclick="filterMovieStatus('all', this)" class="movie-status-btn px-3 py-1.5 bg-[#121316] text-white font-bold">Tất Cả</button>
+      <button onclick="filterMovieStatus('all', this)" class="movie-status-btn px-3 py-1.5 bg-[#121316] text-white font-bold">Tất Cả (<%= allMovies.length %>)</button>
       <button onclick="filterMovieStatus('DangChieu', this)" class="movie-status-btn px-3 py-1.5 bg-[#FAF8F5] border border-[#E5E0D5] text-[#474A54] hover:text-[#121316]">Đang Chiếu</button>
       <button onclick="filterMovieStatus('SapChieu', this)" class="movie-status-btn px-3 py-1.5 bg-[#FAF8F5] border border-[#E5E0D5] text-[#474A54] hover:text-[#121316]">Sắp Chiếu</button>
     </div>
@@ -46,8 +252,8 @@
         </tr>
       </thead>
       <tbody class="divide-y divide-[#E5E0D5]" id="adminMoviesTbody">
-        <% if (typeof movies !== 'undefined' && movies && movies.length > 0) { %>
-          <% movies.forEach((phim, index) => { %>
+        <% if (allMovies.length > 0) { %>
+          <% allMovies.forEach((phim, index) => { %>
             <tr class="hover:bg-[#FAF8F5] transition-colors movie-row" data-status="<%= phim.status %>" data-title="<%= (phim.title || '').toLowerCase() %>">
               <td class="py-3.5 px-4 text-center font-['JetBrains_Mono'] font-bold text-[#7A7E8B]"><%= index + 1 %></td>
               <td class="py-3.5 px-4">
@@ -94,7 +300,7 @@
         <% } else { %>
           <tr>
             <td colspan="7" class="py-12 text-center text-[#7A7E8B] font-['JetBrains_Mono']">
-              Chưa có phim nào trong danh mục cơ sở dữ liệu.
+              Chưa có phim nào trong danh mục cơ sở dữ liệu. Bấm "+ Thêm Phim Mới" ở trên để thêm phim vào rạp.
             </td>
           </tr>
         <% } %>
@@ -105,6 +311,47 @@
 </main>
 
 <script>
+  function toggleAddMovieForm(forcedState) {
+    const section = document.getElementById('addMovieSection');
+    const btn = document.getElementById('btnToggleAddMovie');
+    const icon = document.getElementById('toggleIcon');
+    const text = document.getElementById('toggleText');
+    if (!section) return;
+
+    const isHidden = section.classList.contains('hidden');
+    const shouldOpen = (typeof forcedState === 'boolean') ? forcedState : isHidden;
+
+    if (shouldOpen) {
+      section.classList.remove('hidden');
+      if (btn) {
+        btn.classList.add('!bg-[#121316]', '!border-[#121316]');
+        if (icon) icon.innerText = 'close';
+        if (text) text.innerText = 'Đóng Form';
+      }
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      section.classList.add('hidden');
+      if (btn) {
+        btn.classList.remove('!bg-[#121316]', '!border-[#121316]');
+        if (icon) icon.innerText = 'add_circle';
+        if (text) text.innerText = '+ Thêm Phim Mới';
+      }
+    }
+  }
+
+  function previewInlinePoster(url) {
+    const img = document.getElementById('inlinePosterPreviewImg');
+    const txt = document.getElementById('inlinePosterPlaceholderText');
+    if (url && url.startsWith('http')) {
+      img.src = url;
+      img.classList.remove('hidden');
+      if (txt) txt.classList.add('hidden');
+    } else {
+      img.classList.add('hidden');
+      if (txt) txt.classList.remove('hidden');
+    }
+  }
+
   function filterMovieStatus(status, btn) {
     document.querySelectorAll('.movie-status-btn').forEach(b => {
       b.classList.remove('bg-[#121316]', 'text-white', 'font-bold');
@@ -133,6 +380,14 @@
       }
     });
   }
+
+  // Tự động mở form nếu URL chứa query action=them hoặc them=1 hoặc tab=them
+  window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('action') === 'them' || params.get('them') === '1' || params.get('tab') === 'them') {
+      toggleAddMovieForm(true);
+    }
+  });
 </script>
 
 <%- include('partials/admin-footer') %>
