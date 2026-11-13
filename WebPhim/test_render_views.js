@@ -120,6 +120,8 @@ const pagesToTest = [
   { file: 'admin-khuyenmai.ejs (voucher tab)', target: 'admin-khuyenmai.ejs', data: { user: mockUser, vouchers: [mockVoucher], flashSales: [mockFlashSale], movies: [mockMovie], tab: 'voucher' } },
   { file: 'admin-khuyenmai.ejs (flashsale tab)', target: 'admin-khuyenmai.ejs', data: { user: mockUser, vouchers: [mockVoucher], flashSales: [mockFlashSale], movies: [mockMovie], tab: 'flashsale' } },
   { file: 'admin-quanlynguoidung.ejs', data: { user: mockUser, users: [mockUser] } },
+  { file: 'admin-quanlygiaodich.ejs (has tickets)', target: 'admin-quanlygiaodich.ejs', data: { user: mockUser, tickets: [mockTicket] } },
+  { file: 'admin-quanlygiaodich.ejs (empty tickets)', target: 'admin-quanlygiaodich.ejs', data: { user: mockUser, tickets: [] } },
   { file: 'admin-baocaodoanhthu.ejs', data: { user: mockUser, totalRevenue: 12500000, totalFnb: 3500000, aov: 250000, avgSeatsPerOrder: '2.0', cinemaReports: [{ name: 'CGV Kim Cúc Plaza', showCount: 5, ticketCount: 20, occupancyRate: 28, ticketRevenue: 9000000, fnbRevenue: 3500000, totalRevenue: 12500000 }] } }
 ];
 

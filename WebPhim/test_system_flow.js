@@ -45,6 +45,7 @@ const requiredFiles = [
   'views/partials/admin-footer.ejs',
   'views/admin-dashboard.ejs',
   'views/admin-quanlyphim.ejs',
+  'views/admin-quanlygiaodich.ejs',
   'views/thongtincanhan.ejs',
   'views/trangkhuyenmai.ejs',
   'views/trangthanhtoan.ejs',
@@ -95,16 +96,21 @@ assert(adminMovieContent.includes('previewInlinePoster'), 'admin-quanlyphim has 
 assert(!adminMovieContent.includes('+ Thêm Phim Mới</span>'), 'admin-quanlyphim has NO duplicate plus sign in button');
 assert(!adminHeaderContent.includes('Thêm Phim Nhanh'), 'Admin sidebar has NO redundant Thêm Phim Nhanh link');
 
-// 5. CHECK REMOVAL OF QUAN LY GIAO DICH & ZERO FAKE DATA
-console.log('\n--- TEST GROUP 5: Removal of Quan Ly Giao Dich & Real-Time Data ---');
+// 5. CHECK QUAN LY GIAO DICH & ZERO FAKE DATA IN REAL-TIME
+console.log('\n--- TEST GROUP 5: Quan Ly Giao Dich & Real-Time Data Verification ---');
 const adminBaoCaoContent = fs.readFileSync(path.join(__dirname, 'views/admin-baocaodoanhthu.ejs'), 'utf8');
 const adminSuatChieuContent = fs.readFileSync(path.join(__dirname, 'views/admin-quanlysuatchieu.ejs'), 'utf8');
+const adminGiaoDichContent = fs.readFileSync(path.join(__dirname, 'views/admin-quanlygiaodich.ejs'), 'utf8');
 const cinemaModelContent = fs.readFileSync(path.join(__dirname, 'models/Cinema.js'), 'utf8');
 
-assert(!adminHeaderContent.includes('/admin/giao-dich'), 'Admin sidebar NO LONGER has Quản Lý Giao Dịch link');
-assert(!dashboardContent.includes('href="/admin/giao-dich"'), 'Admin dashboard NO LONGER links to /admin/giao-dich');
-assert(adminRouteContent.includes("res.redirect('/admin')"), '/admin/giao-dich route cleanly redirects to /admin');
-assert(!fs.existsSync(path.join(__dirname, 'views/admin-quanlygiaodich.ejs')), 'admin-quanlygiaodich.ejs file is completely removed');
+assert(adminHeaderContent.includes('/admin/giao-dich'), 'Admin sidebar HAS Quản Lý Giao Dịch link');
+assert(dashboardContent.includes('href="/admin/giao-dich"'), 'Admin dashboard links to /admin/giao-dich');
+assert(adminRouteContent.includes("router.get('/giao-dich'"), '/admin/giao-dich route renders real database tickets');
+assert(adminRouteContent.includes("router.post('/giao-dich/xoa/:id'"), '/admin/giao-dich/xoa/:id allows deleting/canceling tickets');
+assert(fs.existsSync(path.join(__dirname, 'views/admin-quanlygiaodich.ejs')), 'admin-quanlygiaodich.ejs file is present');
+assert(!adminGiaoDichContent.includes('CNE-8921-QN'), 'Quản lý giao dịch has NO hardcoded CNE-8921-QN fallback');
+assert(!adminGiaoDichContent.includes('CNE-7714-QN'), 'Quản lý giao dịch has NO hardcoded CNE-7714-QN fallback');
+assert(adminGiaoDichContent.includes('/admin/giao-dich/xoa/'), 'Quản lý giao dịch has ticket deletion form');
 
 // Zero fake data in Báo Cáo
 assert(!adminBaoCaoContent.includes('42 suất'), 'Báo cáo doanh thu has NO fake 42 suất fallback');

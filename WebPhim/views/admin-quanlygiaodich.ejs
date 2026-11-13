@@ -1,0 +1,141 @@
+<%- include('partials/admin-header') %>
+
+<main class="p-6 sm:p-10 space-y-8 max-w-7xl">
+  
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E5E0D5]">
+    <div>
+      <span class="archival-index">QUẢN TRỊ BÁN VÉ & GIAO DỊCH</span>
+      <h1 class="editorial-headline text-3xl font-bold mt-1">Quản Lý Giao Dịch & Đơn Vé</h1>
+      <p class="text-xs text-[#7A7E8B] mt-0.5 font-light">Theo dõi luồng thanh toán, xử lý hoàn hủy vé và kiểm soát doanh thu trực tuyến.</p>
+    </div>
+  </div>
+
+  <!-- Search & Filter Bar -->
+  <div class="bg-white border border-[#E5E0D5] p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-2 w-full sm:w-80 bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs">
+      <span class="material-symbols-outlined text-[#7A7E8B] text-lg">search</span>
+      <input type="text" id="txSearchInput" placeholder="Tìm theo mã vé (#CNE...), tên khách..." class="bg-transparent border-none text-xs text-[#121316] placeholder-[#A6AAB6] focus:outline-none w-full" oninput="filterAdminTx()" />
+    </div>
+
+    <div class="flex items-center gap-2 text-xs font-['JetBrains_Mono']">
+      <button onclick="filterTx('all', this)" class="tx-filter-btn px-3 py-1.5 bg-[#121316] text-white font-bold">Tất Cả</button>
+      <button onclick="filterTx('success', this)" class="tx-filter-btn px-3 py-1.5 bg-[#FAF8F5] border border-[#E5E0D5] text-[#474A54] hover:text-[#121316]">Thành Công</button>
+      <button onclick="filterTx('refunded', this)" class="tx-filter-btn px-3 py-1.5 bg-[#FAF8F5] border border-[#E5E0D5] text-[#474A54] hover:text-[#121316]">Đã Hoàn Tiền</button>
+    </div>
+  </div>
+
+  <!-- Transactions Table -->
+  <div class="bg-white border border-[#E5E0D5] overflow-x-auto shadow-sm">
+    <table class="w-full text-left text-xs font-['Plus_Jakarta_Sans'] border-collapse">
+      <thead>
+        <tr class="border-b border-[#E5E0D5] text-[#7A7E8B] uppercase font-bold text-[10px] bg-[#FAF8F5] font-['JetBrains_Mono']">
+          <th class="py-3.5 px-4">Mã Đặt Chỗ</th>
+          <th class="py-3.5 px-4">Khách Hàng</th>
+          <th class="py-3.5 px-4">Phim & Cụm Rạp</th>
+          <th class="py-3.5 px-4">Suất & Ghế</th>
+          <th class="py-3.5 px-4">Phương Thức</th>
+          <th class="py-3.5 px-4">Tổng Tiền</th>
+          <th class="py-3.5 px-4">Trạng Thái</th>
+          <th class="py-3.5 px-4 text-right">Thao Tác</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-[#E5E0D5]" id="txTableBody">
+        <% if (typeof tickets !== 'undefined' && tickets && tickets.length > 0) { %>
+          <% tickets.forEach(function(t) { 
+              const code = 'CNE-' + t._id.toString().slice(-6).toUpperCase();
+              const custName = (t.user && t.user.hoTen) ? t.user.hoTen : 'Khách vãng lai';
+              const custPhone = (t.user && t.user.soDienThoai) ? t.user.soDienThoai : '---';
+              const movieTitle = (t.movie && t.movie.title) ? t.movie.title : 'Phim chiếu rạp';
+              const cinemaName = t.cinema || 'CGV Kim Cúc Plaza';
+              const seatList = (t.seats && t.seats.length > 0) ? t.seats.join(', ') : 'Chưa xếp ghế';
+              const searchStr = (code + ' ' + custName + ' ' + movieTitle + ' ' + cinemaName).toLowerCase();
+          %>
+            <tr class="hover:bg-[#FAF8F5] transition-colors tx-row" data-status="success" data-search="<%= searchStr %>">
+              <td class="py-3.5 px-4 font-['JetBrains_Mono'] font-bold text-[#BA2D27]">#<%= code %></td>
+              <td class="py-3.5 px-4">
+                <strong class="text-[#121316] block"><%= custName %></strong>
+                <span class="text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B]"><%= custPhone %></span>
+              </td>
+              <td class="py-3.5 px-4">
+                <span class="font-bold text-[#121316] block"><%= movieTitle %></span>
+                <span class="text-[11px] text-[#7A7E8B]"><%= cinemaName %></span>
+              </td>
+              <td class="py-3.5 px-4 font-['JetBrains_Mono']">
+                <span class="text-[#121316] block"><%= t.showTime || '19:30' %> • <%= t.showDate || '12/11/2026' %></span>
+                <span class="text-[#BA2D27] font-bold"><%= seatList %></span>
+              </td>
+              <td class="py-3.5 px-4 font-['JetBrains_Mono'] text-[#7A7E8B] uppercase"><%= t.paymentMethod || 'VietQR' %></td>
+              <td class="py-3.5 px-4 font-['JetBrains_Mono'] font-bold text-[#121316]"><%= (t.totalPrice || 0).toLocaleString('vi-VN') %> đ</td>
+              <td class="py-3.5 px-4">
+                <span class="px-2 py-0.5 bg-[#E8F8F0] text-[#10B981] font-['JetBrains_Mono'] text-[10px] font-bold uppercase">
+                  Thành Công
+                </span>
+              </td>
+              <td class="py-3.5 px-4 text-right font-['JetBrains_Mono']">
+                <div class="flex items-center justify-end gap-2">
+                  <button type="button" onclick="showTicketDetail('<%= code %>', '<%= custName %>', '<%= movieTitle %>', '<%= seatList %>', '<%= (t.totalPrice || 0).toLocaleString() %> đ')" class="px-2 py-1 bg-white border border-[#E5E0D5] hover:border-[#121316] text-xs">
+                    Chi Tiết
+                  </button>
+                  <form action="/admin/giao-dich/xoa/<%= t._id %>" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đơn vé #<%= code %> này khỏi hệ thống?')" class="inline">
+                    <button type="submit" class="px-2 py-1 bg-white border border-[#BA2D27]/30 hover:border-[#BA2D27] text-[#BA2D27] text-xs font-bold">
+                      Xóa Vé
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="8" class="py-12 text-center text-[#7A7E8B] font-['Plus_Jakarta_Sans']">
+              <span class="material-symbols-outlined text-3xl text-[#7A7E8B]/60 block mb-2">receipt_long</span>
+              Chưa phát sinh giao dịch đặt vé nào trong cơ sở dữ liệu hệ thống.
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<script>
+  function filterTx(status, btn) {
+    document.querySelectorAll('.tx-filter-btn').forEach(b => {
+      b.classList.remove('bg-[#121316]', 'text-white', 'font-bold');
+      b.classList.add('bg-[#FAF8F5]', 'text-[#474A54]');
+    });
+    btn.classList.remove('bg-[#FAF8F5]', 'text-[#474A54]');
+    btn.classList.add('bg-[#121316]', 'text-white', 'font-bold');
+
+    document.querySelectorAll('.tx-row').forEach(row => {
+      if (status === 'all' || row.dataset.status === status) {
+        row.classList.remove('hidden');
+      } else {
+        row.classList.add('hidden');
+      }
+    });
+  }
+
+  function showTicketDetail(code, name, movie, seats, price) {
+    alert('CHI TIẾT ĐƠN VÉ #' + code + '\n' +
+          'Khách hàng: ' + name + '\n' +
+          'Phim: ' + movie + '\n' +
+          'Ghế ngồi: ' + seats + '\n' +
+          'Tổng thanh toán: ' + price);
+  }
+
+  function filterAdminTx() {
+    const q = document.getElementById('txSearchInput').value.toLowerCase();
+    document.querySelectorAll('.tx-row').forEach(row => {
+      const search = row.dataset.search || '';
+      if (search.includes(q)) {
+        row.classList.remove('hidden');
+      } else {
+        row.classList.add('hidden');
+      }
+    });
+  }
+</script>
+
+<%- include('partials/admin-footer') %>

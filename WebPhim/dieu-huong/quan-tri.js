@@ -431,9 +431,30 @@ router.get('/bao-cao', async (req, res) => {
     }
 });
 
-// 2. Quản lý Giao dịch & Đơn vé (Đã bỏ theo yêu cầu, tự động chuyển hướng về Dashboard Tổng Quan)
-router.get('/giao-dich', (req, res) => {
-    res.redirect('/admin');
+// 2. Quản lý Giao dịch & Đơn vé (Dữ liệu thời gian thực từ MongoDB)
+router.get('/giao-dich', async (req, res) => {
+    try {
+        const tickets = await Ticket.find()
+            .sort({ _id: -1 })
+            .populate('movie')
+            .populate('user')
+            .lean();
+        res.render('admin-quanlygiaodich', { user: req.session.user, tickets });
+    } catch (error) {
+        console.error("Lỗi Giao Dịch:", error);
+        res.status(500).send("Lỗi tải trang quản lý giao dịch: " + error.message);
+    }
+});
+
+// Xóa giao dịch / Hủy vé (Cho phép Admin dọn dẹp các đơn vé thử nghiệm hoặc hoàn hủy)
+router.post('/giao-dich/xoa/:id', async (req, res) => {
+    try {
+        await Ticket.findByIdAndDelete(req.params.id);
+        res.redirect('/admin/giao-dich');
+    } catch (error) {
+        console.error("Lỗi xóa đơn vé:", error);
+        res.redirect('/admin/giao-dich');
+    }
 });
 
 // 3. Quản lý Lịch chiếu & Chống xung đột (Dữ liệu thời gian thực từ MongoDB)
