@@ -92,25 +92,35 @@
           <span class="w-6 h-6 bg-[#121316] text-white font-['JetBrains_Mono'] text-xs font-bold flex items-center justify-center">2</span>
           <h2 class="font-['Georgia'] text-lg font-bold text-[#121316]">Chọn Thời Gian (Ngày Chiếu & Suất Chiếu)</h2>
         </div>
-        <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]" id="activeScreeningLabel">Hôm nay • 19:30</span>
+        <% 
+          const todayBooking = new Date();
+          const daysOfWeekVi = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+          let initDateIso = todayBooking.toISOString().split('T')[0];
+          let initDateLabel = 'Hôm nay (' + todayBooking.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) + ')';
+        %>
+        <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]" id="activeScreeningLabel"><%= initDateLabel %> • 19:30</span>
       </div>
 
-      <!-- Date Pills -->
+      <!-- Date Pills (Tự động cập nhật theo thời gian thực - 7 ngày liên tiếp từ hôm nay) -->
       <div class="mb-5">
         <span class="block text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B] uppercase tracking-wider mb-2">Ngày chiếu:</span>
         <div class="flex flex-wrap items-center gap-3" id="datePickerContainer">
-          <button type="button" onclick="setBookingDate('2026-11-12', 'Hôm nay (12/11)', this)" class="date-btn px-4 py-2 bg-[#121316] text-white font-['JetBrains_Mono'] text-xs font-bold">
-            Hôm nay (12/11)
-          </button>
-          <button type="button" onclick="setBookingDate('2026-11-13', 'Ngày mai (13/11)', this)" class="date-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-['JetBrains_Mono'] text-xs">
-            Ngày mai (13/11)
-          </button>
-          <button type="button" onclick="setBookingDate('2026-11-14', 'Thứ Bảy (14/11)', this)" class="date-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-['JetBrains_Mono'] text-xs">
-            Thứ Bảy (14/11)
-          </button>
-          <button type="button" onclick="setBookingDate('2026-11-15', 'Chủ Nhật (15/11)', this)" class="date-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-['JetBrains_Mono'] text-xs">
-            Chủ Nhật (15/11)
-          </button>
+          <% 
+            for (let i = 0; i < 7; i++) {
+              const d = new Date(todayBooking);
+              d.setDate(todayBooking.getDate() + i);
+              const isToday = (i === 0);
+              const isTomorrow = (i === 1);
+              const dayLabel = isToday ? 'Hôm nay' : (isTomorrow ? 'Ngày mai' : daysOfWeekVi[d.getDay()]);
+              const dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+              const fullIso = d.toISOString().split('T')[0];
+          %>
+            <button type="button" 
+                    onclick="setBookingDate('<%= fullIso %>', '<%= dayLabel %> (<%= dateStr %>)', this)" 
+                    class="date-btn px-4 py-2 border font-['JetBrains_Mono'] text-xs <%= isToday ? 'bg-[#121316] text-white font-bold border-[#121316]' : 'bg-white border-[#E5E0D5] text-[#121316] hover:border-[#121316]' %>">
+              <%= dayLabel %> (<%= dateStr %>)
+            </button>
+          <% } %>
         </div>
       </div>
 
@@ -374,7 +384,7 @@
     <!-- Hidden inputs matching Express Route requirements -->
     <input type="hidden" name="movieId" value="<%= phim._id %>" />
     <input type="hidden" name="cinema" id="input_cinema" value="CGV Kim Cúc Plaza" />
-    <input type="hidden" name="showDate" id="input_showDate" value="2026-11-12" />
+    <input type="hidden" name="showDate" id="input_showDate" value="<%= initDateIso %>" />
     <input type="hidden" name="showTime" id="input_showTime" value="19:30" />
     <input type="hidden" name="seats" id="input_seats" value="" />
     <input type="hidden" name="total" id="input_total" value="0" />
@@ -423,7 +433,7 @@
   let comboItems = {};
   let comboTotal = 0;
   let currentCinema = 'CGV Kim Cúc Plaza';
-  let currentDate = '2026-11-12';
+  let currentDate = '<%= initDateIso %>';
   let currentTime = '19:30';
 
   function setBookingCinema(name, btnEl) {

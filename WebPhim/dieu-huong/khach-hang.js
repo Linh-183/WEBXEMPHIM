@@ -20,6 +20,14 @@ function isValidObjectId(id) {
 
 router.get('/', async (req, res) => {
     try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        // Tự động chuyển đổi phim sắp chiếu sang đang chiếu trong thời gian thực khi đến ngày khởi chiếu
+        await Movie.updateMany(
+            { status: 'SapChieu', releaseDate: { $lte: today } },
+            { $set: { status: 'DangChieu' } }
+        );
+
         const movies = await Movie.find({ status: 'DangChieu' }).sort({ createdAt: -1 }).limit(4);
         const topVouchers = await Voucher.find({ $or: [{ expiryDate: { $gte: new Date() } }, { expiryDate: null }] }).limit(2);
         res.render('trangchu', { movies, vouchers: topVouchers });
@@ -28,6 +36,13 @@ router.get('/', async (req, res) => {
 
 router.get('/phim', async (req, res) => {
     try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        await Movie.updateMany(
+            { status: 'SapChieu', releaseDate: { $lte: today } },
+            { $set: { status: 'DangChieu' } }
+        );
+
         const currentStatus = req.query.status;
         const query = (!currentStatus || currentStatus === 'TatCa') ? {} : { status: currentStatus };
         const movies = await Movie.find(query).sort({ createdAt: -1 });
@@ -130,6 +145,15 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
         const selectedCinema = cinema || 'CGV Kim Cúc Plaza';
         const seatList = seats ? seats.split(',').map(s => s.trim()).filter(Boolean) : [];
         const currentUserId = req.session.user._id ? req.session.user._id.toString() : 'guest';
+
+        // 0. Chống đặt vé các suất chiếu trong quá khứ (Thời gian thực)
+        const todayZero = new Date();
+        todayZero.setHours(0, 0, 0, 0);
+        const bookingDate = new Date(showDate);
+        bookingDate.setHours(0, 0, 0, 0);
+        if (bookingDate < todayZero) {
+            return res.redirect(`/dat-ve/${movieId}?error=${encodeURIComponent('Suất chiếu này đã thuộc về quá khứ! Vui lòng chọn lịch chiếu từ hôm nay trở đi.')}`);
+        }
 
         if (seatList.length > 0) {
             // 1. Kiểm tra xem các ghế này đã được xuất vé trong DB chưa
@@ -234,7 +258,7 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
             user: req.session.user._id,
             movie: phimId,
             cinema: selectedCinema,
-            showDate: showDate || '2026-11-12',
+            showDate: showDate || new Date().toISOString().split('T')[0],
             showTime: showTime || '19:30',
             seats: seatList,
             comboDetails: comboDetails || '',

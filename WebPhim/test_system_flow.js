@@ -125,6 +125,15 @@ assert(!adminSuatChieuContent.includes('Mai (Trấn Thành Phim)</td>'), 'Quản
 assert(adminSuatChieuContent.includes('showtimesList'), 'Quản lý suất chiếu dynamically iterates showtimesList');
 assert(cinemaModelContent.includes('phone: { type: String, default: \'12345678\' }'), 'Cinema model default phone is 12345678');
 
+// Dynamic real-time date handling & past date prevention
+const bookingViewContent = fs.readFileSync(path.join(__dirname, 'views/trangdatvephim.ejs'), 'utf8');
+const custRouteContent = fs.readFileSync(path.join(__dirname, 'dieu-huong/khach-hang.js'), 'utf8');
+
+assert(bookingViewContent.includes('todayBooking.getDate() + i'), 'Booking page dynamically generates consecutive 7 days from today');
+assert(!bookingViewContent.includes("setBookingDate('2026-11-12'"), 'Booking page NO LONGER hardcodes 2026-11-12');
+assert(custRouteContent.includes('bookingDate < todayZero'), 'Customer router rejects past date booking requests');
+assert(custRouteContent.includes("status: 'SapChieu', releaseDate: { $lte: today }"), 'Customer router auto-promotes upcoming movies to now-showing on release date');
+
 // 6. CHECK VOUCHER WALLET & SAVING MECHANISM
 console.log('\n--- TEST GROUP 6: Voucher Wallet & Saving Mechanism ---');
 const userModelContent = fs.readFileSync(path.join(__dirname, 'models/User.js'), 'utf8');
