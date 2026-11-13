@@ -101,8 +101,16 @@
           const daysOfWeekVi = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
           let initDateIso = todayBooking.toISOString().split('T')[0];
           let initDateLabel = 'Hôm nay (' + todayBooking.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) + ')';
+          let initShowtimesList = ['09:30', '13:15', '16:45', '19:30', '21:45'];
+          if (typeof phim !== 'undefined' && phim && Array.isArray(phim.showtimes) && phim.showtimes.length > 0) {
+            const foundSt = phim.showtimes.find(s => s && s.times && s.times.length > 0);
+            if (foundSt) {
+              initShowtimesList = Array.isArray(foundSt.times) ? foundSt.times : [foundSt.times];
+            }
+          }
+          let initDefaultTime = initShowtimesList[0] || '19:30';
         %>
-        <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]" id="activeScreeningLabel"><%= initDateLabel %> • 19:30</span>
+        <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]" id="activeScreeningLabel"><%= initDateLabel %> • <%= initDefaultTime %></span>
       </div>
 
       <!-- Date Pills (Tự động cập nhật theo thời gian thực - 7 ngày liên tiếp từ hôm nay) -->
@@ -128,25 +136,17 @@
         </div>
       </div>
 
-      <!-- Time Pills -->
+      <!-- Time Pills (Tự động tải theo cấu hình suất chiếu thực tế của rạp và ngày) -->
       <div>
         <span class="block text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B] uppercase tracking-wider mb-2">Suất chiếu:</span>
         <div class="flex flex-wrap items-center gap-3" id="timePickerContainer">
-          <button type="button" onclick="setBookingTime('10:00', this)" class="time-btn px-4 py-2.5 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-['JetBrains_Mono'] text-xs font-bold">
-            10:00 <span class="text-[10px] text-[#7A7E8B] block font-normal">2D Phụ Đề</span>
-          </button>
-          <button type="button" onclick="setBookingTime('14:30', this)" class="time-btn px-4 py-2.5 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-['JetBrains_Mono'] text-xs font-bold">
-            14:30 <span class="text-[10px] text-[#7A7E8B] block font-normal">2D Lồng Tiếng</span>
-          </button>
-          <button type="button" onclick="setBookingTime('19:30', this)" class="time-btn px-4 py-2.5 bg-[#BA2D27] text-white border border-[#BA2D27] font-['JetBrains_Mono'] text-xs font-bold">
-            19:30 <span class="text-[10px] text-white/80 block font-normal">2D Phụ Đề</span>
-          </button>
-          <button type="button" onclick="setBookingTime('20:45', this)" class="time-btn px-4 py-2.5 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-['JetBrains_Mono'] text-xs font-bold">
-            20:45 <span class="text-[10px] text-[#7A7E8B] block font-normal">2D Phụ Đề</span>
-          </button>
-          <button type="button" onclick="setBookingTime('22:15', this)" class="time-btn px-4 py-2.5 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-['JetBrains_Mono'] text-xs font-bold">
-            22:15 <span class="text-[10px] text-[#7A7E8B] block font-normal">2D Phụ Đề</span>
-          </button>
+          <% initShowtimesList.forEach((t, idx) => { 
+            const isSelected = (idx === 0);
+          %>
+            <button type="button" onclick="setBookingTime('<%= t %>', this)" class="time-btn px-4 py-2.5 border font-['JetBrains_Mono'] text-xs font-bold transition-all <%= isSelected ? 'bg-[#BA2D27] text-white border-[#BA2D27]' : 'bg-white border-[#E5E0D5] text-[#121316] hover:border-[#121316]' %>">
+              <%= t %> <span class="text-[10px] <%= isSelected ? 'text-white/80' : 'text-[#7A7E8B]' %> block font-normal">2D Phụ Đề</span>
+            </button>
+          <% }); %>
         </div>
       </div>
     </div>
@@ -184,25 +184,16 @@
         <!-- Row B (Standard 75k) -->
         <div class="flex items-center justify-center gap-2">
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">B</span>
-          <div class="seat-unit seat-sold" data-seat="B1">✕</div>
-          <div class="seat-unit seat-sold" data-seat="B2">✕</div>
-          <% for(let i=3; i<=8; i++) { %>
+          <% for(let i=1; i<=10; i++) { %>
             <div class="seat-unit seat-free" data-seat="B<%= i %>" data-price="75000" data-type="standard">B<%= i %></div>
           <% } %>
-          <div class="seat-unit seat-free" data-seat="B9" data-price="75000" data-type="standard">B9</div>
-          <div class="seat-unit seat-free" data-seat="B10" data-price="75000" data-type="standard">B10</div>
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">B</span>
         </div>
 
         <!-- Row C (Standard 75k) -->
         <div class="flex items-center justify-center gap-2">
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">C</span>
-          <% for(let i=1; i<=4; i++) { %>
-            <div class="seat-unit seat-free" data-seat="C<%= i %>" data-price="75000" data-type="standard">C<%= i %></div>
-          <% } %>
-          <div class="seat-unit seat-sold" data-seat="C5">✕</div>
-          <div class="seat-unit seat-sold" data-seat="C6">✕</div>
-          <% for(let i=7; i<=10; i++) { %>
+          <% for(let i=1; i<=10; i++) { %>
             <div class="seat-unit seat-free" data-seat="C<%= i %>" data-price="75000" data-type="standard">C<%= i %></div>
           <% } %>
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">C</span>
@@ -225,13 +216,9 @@
         <!-- Row E (VIP 95k) -->
         <div class="flex items-center justify-center gap-2">
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-[#D97706]">E</span>
-          <div class="seat-unit seat-sold is-vip" data-seat="E1">✕</div>
-          <div class="seat-unit seat-sold is-vip" data-seat="E2">✕</div>
-          <% for(let i=3; i<=8; i++) { %>
+          <% for(let i=1; i<=10; i++) { %>
             <div class="seat-unit seat-free is-vip" data-seat="E<%= i %>" data-price="95000" data-type="vip">E<%= i %></div>
           <% } %>
-          <div class="seat-unit seat-sold is-vip" data-seat="E9">✕</div>
-          <div class="seat-unit seat-sold is-vip" data-seat="E10">✕</div>
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-[#D97706]">E</span>
         </div>
 
@@ -245,8 +232,9 @@
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">F</span>
           <div class="seat-unit seat-free is-couple" data-seat="F1-F2" data-price="170000" data-type="couple">F1-F2</div>
           <div class="seat-unit seat-free is-couple" data-seat="F3-F4" data-price="170000" data-type="couple">F3-F4</div>
-          <div class="seat-unit seat-sold is-couple" data-seat="F5-F6">✕</div>
+          <div class="seat-unit seat-free is-couple" data-seat="F5-F6" data-price="170000" data-type="couple">F5-F6</div>
           <div class="seat-unit seat-free is-couple" data-seat="F7-F8" data-price="170000" data-type="couple">F7-F8</div>
+          <div class="seat-unit seat-free is-couple" data-seat="F9-F10" data-price="170000" data-type="couple">F9-F10</div>
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">F</span>
         </div>
 
@@ -389,7 +377,7 @@
     <input type="hidden" name="movieId" value="<%= phim._id %>" />
     <input type="hidden" name="cinema" id="input_cinema" value="CGV Kim Cúc Plaza" />
     <input type="hidden" name="showDate" id="input_showDate" value="<%= initDateIso %>" />
-    <input type="hidden" name="showTime" id="input_showTime" value="19:30" />
+    <input type="hidden" name="showTime" id="input_showTime" value="<%= initDefaultTime %>" />
     <input type="hidden" name="seats" id="input_seats" value="" />
     <input type="hidden" name="total" id="input_total" value="0" />
     <input type="hidden" name="comboDetails" id="input_comboDetails" value="" />
@@ -402,7 +390,7 @@
         <div>
           <span class="block text-[10px] text-[#7A7E8B] uppercase tracking-wider">Suất chiếu đã chọn:</span>
           <div class="text-[#121316] font-bold mt-0.5" id="summaryScreening">
-            CGV Kim Cúc Plaza • 19:30
+            CGV Kim Cúc Plaza • <%= initDefaultTime %>
           </div>
         </div>
         <div class="border-l border-[#E5E0D5] pl-6">
@@ -432,13 +420,146 @@
 </main>
 
 <script>
+  const currentMovieId = '<%= (typeof phim !== "undefined" && phim && phim._id) ? phim._id : "" %>';
+  const movieShowtimes = <%- JSON.stringify((typeof phim !== 'undefined' && phim && phim.showtimes) ? phim.showtimes : []) %>;
+
   let selectedSeats = [];
   let seatTotal = 0;
   let comboItems = {};
   let comboTotal = 0;
   let currentCinema = 'CGV Kim Cúc Plaza';
   let currentDate = '<%= initDateIso %>';
-  let currentTime = '19:30';
+  let currentTime = '<%= initDefaultTime %>';
+
+  function getAvailableShowtimes(cinemaName, dateIso) {
+    if (!Array.isArray(movieShowtimes) || movieShowtimes.length === 0) {
+      return ['09:30', '13:15', '16:45', '19:30', '21:45'];
+    }
+
+    const norm = (s) => (s || '').toString().toLowerCase().trim();
+    const targetCin = norm(cinemaName);
+
+    // 1. Khớp chính xác cả rạp và ngày
+    const matchDateAndCin = movieShowtimes.find(st => {
+      const cin = norm(st.cinema);
+      const isCinMatch = cin.includes(targetCin) || targetCin.includes(cin);
+      let isDateMatch = false;
+      if (st.date) {
+        if (st.date === dateIso) isDateMatch = true;
+        else {
+          try {
+            const parsed = new Date(st.date).toISOString().split('T')[0];
+            if (parsed === dateIso) isDateMatch = true;
+          } catch(e) {}
+        }
+      }
+      return isCinMatch && isDateMatch;
+    });
+
+    if (matchDateAndCin && matchDateAndCin.times) {
+      const times = Array.isArray(matchDateAndCin.times) ? matchDateAndCin.times : [matchDateAndCin.times];
+      const valid = times.map(t => (t || '').trim()).filter(Boolean);
+      if (valid.length > 0) return valid;
+    }
+
+    // 2. Khớp theo rạp chiếu
+    const matchCin = movieShowtimes.find(st => {
+      const cin = norm(st.cinema);
+      return (cin.includes(targetCin) || targetCin.includes(cin)) && st.times;
+    });
+
+    if (matchCin && matchCin.times) {
+      const times = Array.isArray(matchCin.times) ? matchCin.times : [matchCin.times];
+      const valid = times.map(t => (t || '').trim()).filter(Boolean);
+      if (valid.length > 0) return valid;
+    }
+
+    // 3. Fallback lấy suất chiếu đầu tiên trong phim
+    if (movieShowtimes[0] && movieShowtimes[0].times) {
+      const times = Array.isArray(movieShowtimes[0].times) ? movieShowtimes[0].times : [movieShowtimes[0].times];
+      const valid = times.map(t => (t || '').trim()).filter(Boolean);
+      if (valid.length > 0) return valid;
+    }
+
+    return ['09:30', '13:15', '16:45', '19:30', '21:45'];
+  }
+
+  function renderShowtimes() {
+    const container = document.getElementById('timePickerContainer');
+    if (!container) return;
+
+    const availableTimes = getAvailableShowtimes(currentCinema, currentDate);
+    if (!availableTimes.includes(currentTime)) {
+      currentTime = availableTimes[0] || '19:30';
+      const inputTime = document.getElementById('input_showTime');
+      if (inputTime) inputTime.value = currentTime;
+    }
+
+    container.innerHTML = '';
+    availableTimes.forEach(t => {
+      const isSelected = (t === currentTime);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.onclick = function() { setBookingTime(t, this); };
+      btn.className = `time-btn px-4 py-2.5 border font-['JetBrains_Mono'] text-xs font-bold transition-all ${
+        isSelected ? 'bg-[#BA2D27] text-white border-[#BA2D27]' : 'bg-white border-[#E5E0D5] text-[#121316] hover:border-[#121316]'
+      }`;
+      btn.innerHTML = `${t} <span class="text-[10px] ${isSelected ? 'text-white/80' : 'text-[#7A7E8B]'} block font-normal">2D Phụ Đề</span>`;
+      container.appendChild(btn);
+    });
+
+    updateSummaryScreening();
+    loadOccupiedSeats();
+  }
+
+  async function loadOccupiedSeats() {
+    if (!currentMovieId) return;
+
+    // Reset danh sách ghế đã chọn khi đổi suất/rạp/ngày
+    selectedSeats = [];
+    seatTotal = 0;
+    updateBottomSummary();
+
+    // Đặt lại toàn bộ ghế về trạng thái trống
+    document.querySelectorAll('.seat-unit').forEach(el => {
+      const code = el.getAttribute('data-seat');
+      el.classList.remove('seat-sold', 'seat-held', 'seat-selected');
+      el.classList.add('seat-free');
+      el.innerText = code;
+      el.title = `Ghế ${code} - Trống`;
+    });
+
+    try {
+      const url = `/api/ghe-da-dat?movieId=${encodeURIComponent(currentMovieId)}&cinema=${encodeURIComponent(currentCinema)}&showDate=${encodeURIComponent(currentDate)}&showTime=${encodeURIComponent(currentTime)}`;
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const data = await res.json();
+      const booked = Array.isArray(data.bookedSeats) ? data.bookedSeats : [];
+      const locked = Array.isArray(data.tempLocked) ? data.tempLocked : [];
+
+      booked.forEach(code => {
+        const el = document.querySelector(`.seat-unit[data-seat="${code}"]`);
+        if (el) {
+          el.classList.remove('seat-free', 'seat-held', 'seat-selected');
+          el.classList.add('seat-sold');
+          el.innerText = '✕';
+          el.title = `Ghế ${code} - Đã bán`;
+        }
+      });
+
+      locked.forEach(code => {
+        const el = document.querySelector(`.seat-unit[data-seat="${code}"]`);
+        if (el && !el.classList.contains('seat-sold')) {
+          el.classList.remove('seat-free', 'seat-selected');
+          el.classList.add('seat-held');
+          el.innerText = code;
+          el.title = `Ghế ${code} - Đang giữ chỗ (5 phút)`;
+        }
+      });
+    } catch(err) {
+      console.warn('Lỗi kiểm tra ghế đã đặt:', err);
+    }
+  }
 
   function setBookingCinema(name, btnEl) {
     currentCinema = name;
@@ -454,14 +575,16 @@
       }
     });
 
-    btnEl.className = 'booking-cinema-btn p-4 border-2 border-[#121316] bg-[#F3EFE6] text-left transition-all';
-    const check = btnEl.querySelector('.cinema-check');
-    if (check) {
-      check.className = 'cinema-check text-[#BA2D27] font-bold text-xs font-[\'JetBrains_Mono\']';
-      check.innerText = '✓ Đang Chọn';
+    if (btnEl) {
+      btnEl.className = 'booking-cinema-btn p-4 border-2 border-[#121316] bg-[#F3EFE6] text-left transition-all';
+      const check = btnEl.querySelector('.cinema-check');
+      if (check) {
+        check.className = 'cinema-check text-[#BA2D27] font-bold text-xs font-[\'JetBrains_Mono\']';
+        check.innerText = '✓ Đang Chọn';
+      }
     }
 
-    updateSummaryScreening();
+    renderShowtimes();
   }
 
   function setBookingDate(dateVal, dateLabel, btnEl) {
@@ -471,9 +594,11 @@
     document.querySelectorAll('.date-btn').forEach(btn => {
       btn.className = 'date-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-[\'JetBrains_Mono\'] text-xs';
     });
-    btnEl.className = 'date-btn px-4 py-2 bg-[#121316] text-white font-[\'JetBrains_Mono\'] text-xs font-bold';
+    if (btnEl) {
+      btnEl.className = 'date-btn px-4 py-2 bg-[#121316] text-white font-[\'JetBrains_Mono\'] text-xs font-bold';
+    }
 
-    updateSummaryScreening();
+    renderShowtimes();
   }
 
   function setBookingTime(timeVal, btnEl) {
@@ -486,16 +611,21 @@
       if (sub) sub.className = 'text-[10px] text-[#7A7E8B] block font-normal';
     });
 
-    btnEl.className = 'time-btn px-4 py-2.5 bg-[#BA2D27] text-white border border-[#BA2D27] font-[\'JetBrains_Mono\'] text-xs font-bold';
-    const sub = btnEl.querySelector('span');
-    if (sub) sub.className = 'text-[10px] text-white/80 block font-normal';
+    if (btnEl) {
+      btnEl.className = 'time-btn px-4 py-2.5 bg-[#BA2D27] text-white border border-[#BA2D27] font-[\'JetBrains_Mono\'] text-xs font-bold';
+      const sub = btnEl.querySelector('span');
+      if (sub) sub.className = 'text-[10px] text-white/80 block font-normal';
+    }
 
     updateSummaryScreening();
+    loadOccupiedSeats();
   }
 
   function updateSummaryScreening() {
-    document.getElementById('activeScreeningLabel').innerText = currentDate + ' • ' + currentTime;
-    document.getElementById('summaryScreening').innerText = currentCinema + ' • ' + currentTime;
+    const scrLabel = document.getElementById('activeScreeningLabel');
+    if (scrLabel) scrLabel.innerText = currentDate + ' • ' + currentTime;
+    const sumScreening = document.getElementById('summaryScreening');
+    if (sumScreening) sumScreening.innerText = currentCinema + ' • ' + currentTime;
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -505,38 +635,61 @@
     const preTime = urlParams.get('time');
     if (preCinema) {
       const targetBtn = Array.from(document.querySelectorAll('.booking-cinema-btn')).find(b => b.innerText.includes(preCinema));
-      if (targetBtn) setBookingCinema(preCinema, targetBtn);
+      if (targetBtn) {
+        currentCinema = preCinema;
+        document.getElementById('input_cinema').value = preCinema;
+        document.getElementById('activeCinemaLabel').innerText = preCinema;
+        document.querySelectorAll('.booking-cinema-btn').forEach(btn => {
+          btn.className = 'booking-cinema-btn p-4 border border-[#E5E0D5] bg-white hover:border-[#121316] text-left transition-all';
+        });
+        targetBtn.className = 'booking-cinema-btn p-4 border-2 border-[#121316] bg-[#F3EFE6] text-left transition-all';
+      }
     }
     if (preTime) {
-      const targetTimeBtn = Array.from(document.querySelectorAll('.time-btn')).find(b => b.innerText.includes(preTime));
-      if (targetTimeBtn) setBookingTime(preTime, targetTimeBtn);
+      currentTime = preTime;
+      document.getElementById('input_showTime').value = preTime;
     }
-    updateSummaryScreening();
 
-    // Client-side seat click handlers
-    const seatUnits = document.querySelectorAll('.seat-unit.seat-free');
-    seatUnits.forEach(seat => {
-      seat.addEventListener('click', () => {
-        const seatCode = seat.getAttribute('data-seat');
-        const price = parseInt(seat.getAttribute('data-price') || '75000', 10);
+    renderShowtimes();
 
-        if (seat.classList.contains('seat-selected')) {
-          seat.classList.remove('seat-selected');
-          selectedSeats = selectedSeats.filter(s => s.code !== seatCode);
-          seatTotal -= price;
-        } else {
-          if (selectedSeats.length >= 8) {
-            if (window.cinegoToast) window.cinegoToast.warning('Bạn chỉ có thể chọn tối đa 8 ghế trong một lần đặt vé.');
-            else alert('Bạn chỉ có thể chọn tối đa 8 ghế trong một lần đặt vé.');
-            return;
-          }
-          seat.classList.add('seat-selected');
-          selectedSeats.push({ code: seatCode, price: price });
-          seatTotal += price;
+    // Delegated seat click handlers
+    document.addEventListener('click', (e) => {
+      const seat = e.target.closest('.seat-unit');
+      if (!seat) return;
+
+      const seatCode = seat.getAttribute('data-seat');
+      if (!seatCode) return;
+
+      if (seat.classList.contains('seat-sold')) {
+        if (window.cinegoToast) window.cinegoToast.error(`Ghế ${seatCode} đã được bán! Vui lòng chọn ghế khác.`);
+        else alert(`Ghế ${seatCode} đã được bán!`);
+        return;
+      }
+
+      if (seat.classList.contains('seat-held')) {
+        if (window.cinegoToast) window.cinegoToast.warning(`Ghế ${seatCode} đang có khách giữ trong 5 phút!`);
+        else alert(`Ghế ${seatCode} đang có khách giữ!`);
+        return;
+      }
+
+      const price = parseInt(seat.getAttribute('data-price') || '75000', 10);
+
+      if (seat.classList.contains('seat-selected')) {
+        seat.classList.remove('seat-selected');
+        selectedSeats = selectedSeats.filter(s => s.code !== seatCode);
+        seatTotal -= price;
+      } else {
+        if (selectedSeats.length >= 8) {
+          if (window.cinegoToast) window.cinegoToast.warning('Bạn chỉ có thể chọn tối đa 8 ghế trong một lần đặt vé.');
+          else alert('Bạn chỉ có thể chọn tối đa 8 ghế trong một lần đặt vé.');
+          return;
         }
+        seat.classList.add('seat-selected');
+        selectedSeats.push({ code: seatCode, price: price });
+        seatTotal += price;
+      }
 
-        updateBottomSummary();
-      });
+      updateBottomSummary();
     });
   });
 

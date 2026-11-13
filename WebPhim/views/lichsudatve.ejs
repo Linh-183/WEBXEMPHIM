@@ -62,7 +62,7 @@
               <div class="font-['JetBrains_Mono'] text-xs text-[#7A7E8B] flex flex-wrap items-center gap-3">
                 <span>Suất: <strong class="text-[#121316]"><%= ticket.showTime || '19:30' %></strong></span>
                 <span>•</span>
-                <span>Ngày: <strong class="text-[#121316]"><%= ticket.showDate || '2026-11-12' %></strong></span>
+                <span>Ngày: <strong class="text-[#121316]"><%= ticket.showDate || new Date().toISOString().split('T')[0] %></strong></span>
                 <span>•</span>
                 <span>Ghế: <strong class="text-[#BA2D27]"><%= ticket.seats ? (Array.isArray(ticket.seats) ? ticket.seats.join(', ') : ticket.seats) : 'D5' %></strong></span>
               </div>
@@ -176,7 +176,7 @@
         </div>
         <div class="flex justify-between">
           <span class="text-[#7A7E8B]">Suất & Ngày:</span>
-          <span id="qrTimeDate" class="font-bold text-[#121316]">19:30 • 2026-11-12</span>
+          <span id="qrTimeDate" class="font-bold text-[#121316]">--:-- • ----</span>
         </div>
         <div class="flex justify-between">
           <span class="text-[#7A7E8B]">Ghế ngồi:</span>

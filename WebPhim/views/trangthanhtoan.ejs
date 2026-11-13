@@ -46,7 +46,7 @@
       <!-- Hidden Required Inputs for Express Handler -->
       <input type="hidden" name="phimId" value="<%= phim ? phim._id : '' %>" />
       <input type="hidden" name="cinema" id="input_cinema" value="<%= typeof cinema !== 'undefined' ? cinema : 'CGV Kim Cúc Plaza' %>" />
-      <input type="hidden" name="showDate" id="input_showDate" value="<%= typeof showDate !== 'undefined' ? showDate : '2026-11-12' %>" />
+      <input type="hidden" name="showDate" id="input_showDate" value="<%= typeof showDate !== 'undefined' && showDate ? showDate : new Date().toISOString().split('T')[0] %>" />
       <input type="hidden" name="showTime" id="input_showTime" value="<%= typeof showTime !== 'undefined' ? showTime : '19:30' %>" />
       <input type="hidden" name="seats" id="input_seats" value="<%= typeof seats !== 'undefined' && Array.isArray(seats) ? seats.join(',') : (typeof seats !== 'undefined' ? seats : '') %>" />
       <input type="hidden" name="total" id="input_base_total" value="<%= typeof total !== 'undefined' ? total : 0 %>" />
@@ -85,7 +85,7 @@
                 MÀN HÌNH CHIẾU
               </div>
 
-              <!-- Seat Rows Visualizer -->
+              <!-- Seat Rows Visualizer (Full 10 Seats for Rows A-E & Row F Sweetbox Couple) -->
               <div class="space-y-2 max-w-md mx-auto text-center" id="checkoutSeatVisualizer">
                 <% 
                   var activeSeats = (typeof seats !== 'undefined' && Array.isArray(seats)) ? seats : ((typeof seats === 'string' && seats) ? seats.split(',') : []);
@@ -93,7 +93,7 @@
                 <!-- Row A -->
                 <div class="flex items-center justify-center gap-1.5">
                   <span class="w-4 font-['JetBrains_Mono'] text-[10px] text-white/40">A</span>
-                  <% for(let i=1; i<=8; i++) { 
+                  <% for(let i=1; i<=10; i++) { 
                     var code = 'A' + i;
                     var isSelected = activeSeats.includes(code);
                   %>
@@ -107,7 +107,7 @@
                 <!-- Row B -->
                 <div class="flex items-center justify-center gap-1.5">
                   <span class="w-4 font-['JetBrains_Mono'] text-[10px] text-white/40">B</span>
-                  <% for(let i=1; i<=8; i++) { 
+                  <% for(let i=1; i<=10; i++) { 
                     var code = 'B' + i;
                     var isSelected = activeSeats.includes(code);
                   %>
@@ -121,7 +121,7 @@
                 <!-- Row C -->
                 <div class="flex items-center justify-center gap-1.5">
                   <span class="w-4 font-['JetBrains_Mono'] text-[10px] text-white/40">C</span>
-                  <% for(let i=1; i<=8; i++) { 
+                  <% for(let i=1; i<=10; i++) { 
                     var code = 'C' + i;
                     var isSelected = activeSeats.includes(code);
                   %>
@@ -135,7 +135,7 @@
                 <!-- Row D (VIP) -->
                 <div class="flex items-center justify-center gap-1.5">
                   <span class="w-4 font-['JetBrains_Mono'] text-[10px] text-[#D97706]">D</span>
-                  <% for(let i=1; i<=8; i++) { 
+                  <% for(let i=1; i<=10; i++) { 
                     var code = 'D' + i;
                     var isSelected = activeSeats.includes(code);
                   %>
@@ -149,7 +149,7 @@
                 <!-- Row E (VIP) -->
                 <div class="flex items-center justify-center gap-1.5">
                   <span class="w-4 font-['JetBrains_Mono'] text-[10px] text-[#D97706]">E</span>
-                  <% for(let i=1; i<=8; i++) { 
+                  <% for(let i=1; i<=10; i++) { 
                     var code = 'E' + i;
                     var isSelected = activeSeats.includes(code);
                   %>
@@ -158,6 +158,20 @@
                     </div>
                   <% } %>
                   <span class="w-4 font-['JetBrains_Mono'] text-[10px] text-[#D97706]">E</span>
+                </div>
+
+                <!-- Row F (Sweetbox Couple) -->
+                <div class="flex items-center justify-center gap-1.5 pt-1">
+                  <span class="w-4 font-['JetBrains_Mono'] text-[10px] text-white/40">F</span>
+                  <% const checkoutCouples = ['F1-F2', 'F3-F4', 'F5-F6', 'F7-F8', 'F9-F10']; %>
+                  <% checkoutCouples.forEach(code => { 
+                    var isSelected = activeSeats.includes(code);
+                  %>
+                    <div class="w-12 h-5 rounded-sm flex items-center justify-center text-[9px] font-['JetBrains_Mono'] font-bold <%= isSelected ? 'bg-[#BA2D27] text-white ring-1 ring-white' : 'bg-white/10 text-white/40' %>">
+                      <%= code %>
+                    </div>
+                  <% }); %>
+                  <span class="w-4 font-['JetBrains_Mono'] text-[10px] text-white/40">F</span>
                 </div>
               </div>
 
@@ -337,7 +351,7 @@
               </div>
               <div>
                 <span class="text-[#7A7E8B] block text-[10px] uppercase">Ngày Chiếu:</span>
-                <span class="font-bold text-[#121316]"><%= typeof showDate !== 'undefined' ? showDate : '2026-11-12' %></span>
+                <span class="font-bold text-[#121316]"><%= typeof showDate !== 'undefined' && showDate ? showDate : new Date().toISOString().split('T')[0] %></span>
               </div>
               <div class="col-span-2">
                 <span class="text-[#7A7E8B] block text-[10px] uppercase">Ghế Ngồi Đã Chọn:</span>

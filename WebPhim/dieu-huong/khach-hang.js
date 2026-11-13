@@ -517,17 +517,43 @@ router.get('/api/ghe-da-dat', async (req, res) => {
         if (movieId && !isValidObjectId(movieId)) {
             return res.json({ bookedSeats: [], tempLocked: [] });
         }
-        const tickets = await Ticket.find({ movie: movieId, cinema: cinema, showDate, showTime });
-        let bookedSeats = [];
-        tickets.forEach(t => bookedSeats.push(...t.seats));
+        const cinemaRegex = cinema ? new RegExp(cinema.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null;
+        const ticketQuery = { movie: movieId, showDate, showTime };
+        if (cinemaRegex) ticketQuery.cinema = cinemaRegex;
+        const tickets = await Ticket.find(ticketQuery);
 
-        const lockQuery = { movieId, cinema, showDate, showTime };
+        let bookedSeats = [];
+        tickets.forEach(t => {
+            if (Array.isArray(t.seats)) {
+                t.seats.forEach(s => {
+                    if (typeof s === 'string' && s.includes(',')) {
+                        s.split(',').forEach(sub => {
+                            const trimmed = sub.trim();
+                            if (trimmed) bookedSeats.push(trimmed);
+                        });
+                    } else if (s && typeof s === 'string') {
+                        bookedSeats.push(s.trim());
+                    }
+                });
+            } else if (typeof t.seats === 'string') {
+                t.seats.split(',').forEach(sub => {
+                    const trimmed = sub.trim();
+                    if (trimmed) bookedSeats.push(trimmed);
+                });
+            }
+        });
+        bookedSeats = [...new Set(bookedSeats)];
+
+        const lockQuery = { movieId, showDate, showTime };
+        if (cinemaRegex) lockQuery.cinema = cinemaRegex;
         if (userId) lockQuery.userId = { $ne: userId };
         const activeLocks = await SeatLock.find(lockQuery);
-        const tempLocked = activeLocks.map(l => l.seat);
+        const tempLocked = [...new Set(activeLocks.map(l => (l.seat ? l.seat.trim() : '')).filter(Boolean))];
 
         res.json({ bookedSeats, tempLocked });
-    } catch (error) { res.status(500).json({ error: "Lỗi tải sơ đồ ghế" }); }
+    } catch (error) { 
+        res.status(500).json({ error: "Lỗi tải sơ đồ ghế" }); 
+    }
 });
 
 // [MỚI] API ĐẶT BẮP NƯỚC RIÊNG LẺ (CONCESSIONS FAST-TRACK)
