@@ -505,9 +505,13 @@
     }
   }
 
-  async function cancelAndReturnToSeats() {
-    await releaseSeatsImmediately();
-    const returnUrl = `/dat-ve/${bookingMeta.movieId}?cinema=${encodeURIComponent(bookingMeta.cinema)}&time=${encodeURIComponent(bookingMeta.showTime)}`;
+  function cancelAndReturnToSeats() {
+    const seatsStr = Array.isArray(bookingMeta.seats) ? bookingMeta.seats.join(',') : (bookingMeta.seats || '');
+    const returnUrl = `/dat-ve/${bookingMeta.movieId}?release=true&cinema=${encodeURIComponent(bookingMeta.cinema)}&date=${encodeURIComponent(bookingMeta.showDate)}&time=${encodeURIComponent(bookingMeta.showTime)}&seats=${encodeURIComponent(seatsStr)}`;
+    
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon('/api/huy-giu-ghe', JSON.stringify(bookingMeta));
+    }
     window.location.href = returnUrl;
   }
 

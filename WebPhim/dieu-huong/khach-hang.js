@@ -132,9 +132,25 @@ router.get('/dat-ve/:id', async (req, res, next) => {
         if (!isValidObjectId(req.params.id)) {
             return res.status(404).render('404', { title: '404 — Không Tìm Thấy Suất Chiếu' });
         }
-        // Dọn dẹp ghế giữ quá hạn 5 phút mỗi khi khách tải trang đặt vé
+        // 1. Dọn dẹp ghế giữ quá hạn 5 phút trong toàn hệ thống
         const lockThreshold = new Date(Date.now() - 5 * 60 * 1000);
         await SeatLock.deleteMany({ createdAt: { $lt: lockThreshold } });
+
+        // 2. Tự động giải phóng ghế của chính tài khoản này khi họ quay về trang chọn ghế
+        // (Xử lý dứt điểm khi người dùng bấm 'Hủy giữ ghế & đổi suất', reload trang, mất wifi quay lại)
+        const currentUserId = req.session.user && req.session.user._id 
+            ? req.session.user._id.toString() 
+            : (req.session.id || 'guest');
+
+        if (currentUserId && currentUserId !== 'guest') {
+            await SeatLock.deleteMany({ movieId: req.params.id, userId: currentUserId });
+        }
+        if (req.query.seats) {
+            const seatsToClear = req.query.seats.split(',').map(s => s.trim()).filter(Boolean);
+            if (seatsToClear.length > 0) {
+                await SeatLock.deleteMany({ movieId: req.params.id, seat: { $in: seatsToClear } });
+            }
+        }
 
         const phim = await Movie.findById(req.params.id);
         if (!phim) return res.status(404).render('404', { title: '404 — Không Tìm Thấy Suất Chiếu' });
@@ -557,6 +573,11 @@ router.get('/api/ghe-da-dat', async (req, res) => {
         const lockThreshold = new Date(Date.now() - 5 * 60 * 1000);
         await SeatLock.deleteMany({ createdAt: { $lt: lockThreshold } });
 
+        // Lấy ID người dùng từ session hiện tại
+        const currentUserId = req.session.user && req.session.user._id 
+            ? req.session.user._id.toString() 
+            : (userId || 'guest');
+
         const lockQuery = { 
             movieId, 
             showDate, 
@@ -564,7 +585,12 @@ router.get('/api/ghe-da-dat', async (req, res) => {
             createdAt: { $gte: lockThreshold }
         };
         if (cinemaRegex) lockQuery.cinema = cinemaRegex;
-        if (userId) lockQuery.userId = { $ne: userId };
+        // Loại trừ ghế của chính người dùng hiện tại để họ không bao giờ bị chặn bởi chính mình khi reload/quay lại
+        if (currentUserId && currentUserId !== 'guest') {
+            lockQuery.userId = { $ne: currentUserId };
+        } else if (userId) {
+            lockQuery.userId = { $ne: userId };
+        }
         const activeLocks = await SeatLock.find(lockQuery);
         const tempLocked = [...new Set(activeLocks.map(l => (l.seat ? l.seat.trim() : '')).filter(Boolean))];
 

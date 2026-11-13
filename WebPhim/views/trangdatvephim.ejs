@@ -736,10 +736,16 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    // Parse URL params for preselected cinema/time
+    // Parse URL params for preselected cinema/date/time
     const urlParams = new URLSearchParams(window.location.search);
     const preCinema = urlParams.get('cinema');
+    const preDate = urlParams.get('date');
     const preTime = urlParams.get('time');
+
+    if (urlParams.get('release') === 'true') {
+      if (window.cinegoToast) window.cinegoToast.info('Đã hủy giữ ghế và hoàn tất giải phóng. Bạn có thể chọn lại ghế mới.');
+    }
+
     if (preCinema) {
       const targetBtn = Array.from(document.querySelectorAll('.booking-cinema-btn')).find(b => b.innerText.includes(preCinema));
       if (targetBtn) {
@@ -752,6 +758,19 @@
         targetBtn.className = 'booking-cinema-btn p-4 border-2 border-[#121316] bg-[#F3EFE6] text-left transition-all';
       }
     }
+
+    if (preDate) {
+      const targetDateBtn = Array.from(document.querySelectorAll('.date-btn')).find(b => b.getAttribute('data-iso') === preDate);
+      if (targetDateBtn) {
+        currentDate = preDate;
+        document.getElementById('input_showDate').value = preDate;
+        document.querySelectorAll('.date-btn').forEach(btn => {
+          btn.className = 'date-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-[\'JetBrains_Mono\'] text-xs transition-all';
+        });
+        targetDateBtn.className = 'date-btn px-4 py-2 bg-[#121316] text-white font-[\'JetBrains_Mono\'] text-xs font-bold transition-all';
+      }
+    }
+
     if (preTime) {
       currentTime = preTime;
       document.getElementById('input_showTime').value = preTime;
