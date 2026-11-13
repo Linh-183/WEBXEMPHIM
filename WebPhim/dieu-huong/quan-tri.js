@@ -181,14 +181,28 @@ router.post('/phim/them', async (req, res) => {
         let formattedShowtimes = [];
         if (Array.isArray(show_date)) {
             for (let i = 0; i < show_date.length; i++) {
-                if(show_date[i] && show_times[i]) formattedShowtimes.push({ cinema: cinema ? cinema[i] : '', room: room ? room[i] : '', date: show_date[i], times: show_times[i].split(',').map(t => t.trim()) });
+                const cVal = Array.isArray(cinema) ? (cinema[i] || 'CGV Kim Cúc Plaza') : (cinema || 'CGV Kim Cúc Plaza');
+                const rVal = Array.isArray(room) ? (room[i] || 'Phòng 1') : (room || 'Phòng 1');
+                if (show_date[i] && show_times && show_times[i]) {
+                    formattedShowtimes.push({
+                        cinema: cVal,
+                        room: rVal,
+                        date: show_date[i],
+                        times: show_times[i].split(',').map(t => t.trim()).filter(Boolean)
+                    });
+                }
             }
         } else if (show_date && show_times) {
-            formattedShowtimes.push({ cinema, room, date: show_date, times: show_times.split(',').map(t => t.trim()) });
+            formattedShowtimes.push({
+                cinema: cinema || 'CGV Kim Cúc Plaza',
+                room: room || 'Phòng 1',
+                date: show_date,
+                times: show_times.split(',').map(t => t.trim()).filter(Boolean)
+            });
         }
         await new Movie({ title, genre, duration, director, releaseDate, posterUrl, trailerUrl, ageRating, status, description, showtimes: formattedShowtimes }).save();
         res.redirect('/admin/phim?success=' + encodeURIComponent(`Đã thêm phim "${title}" vào hệ thống thành công!`));
-    } catch (error) { res.status(500).send('Lỗi thêm phim!'); }
+    } catch (error) { res.status(500).send('Lỗi thêm phim: ' + error.message); }
 });
 
 router.get('/phim/sua/:id', async (req, res) => {
@@ -210,22 +224,26 @@ router.post('/phim/sua/:id', async (req, res) => {
         if (Array.isArray(showDates)) {
             for (let i = 0; i < showDates.length; i++) {
                 if (showDates[i]) { 
-                    const timesArray = showTimesRaw[i] ? showTimesRaw[i].split(',').map(t => t.trim()).filter(t => t !== "") : [];
+                    const timesArray = showTimesRaw[i] ? showTimesRaw[i].split(',').map(t => t.trim()).filter(Boolean) : [];
+                    const cVal = Array.isArray(cinemas) ? (cinemas[i] || 'Starlight Nguyễn Kim') : (cinemas || 'Starlight Nguyễn Kim');
+                    const rVal = Array.isArray(rooms) ? (rooms[i] || 'Phòng 1') : (rooms || 'Phòng 1');
                     showtimes.push({ 
                         date: showDates[i], 
                         times: timesArray,
-                        cinema: cinemas[i] || 'Starlight Quy Nhơn',
-                        room: rooms[i] || 'Phòng 1'
+                        cinema: cVal,
+                        room: rVal
                     });
                 }
             }
         } else if (showDates) {
-            const timesArray = showTimesRaw ? showTimesRaw.split(',').map(t => t.trim()).filter(t => t !== "") : [];
+            const timesArray = showTimesRaw ? showTimesRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+            const cVal = Array.isArray(cinemas) ? (cinemas[0] || 'Starlight Nguyễn Kim') : (cinemas || 'Starlight Nguyễn Kim');
+            const rVal = Array.isArray(rooms) ? (rooms[0] || 'Phòng 1') : (rooms || 'Phòng 1');
             showtimes.push({ 
                 date: showDates, 
                 times: timesArray,
-                cinema: cinemas || 'Starlight Quy Nhơn',
-                room: rooms || 'Phòng 1'
+                cinema: cVal,
+                room: rVal
             });
         }
 
@@ -247,9 +265,9 @@ router.get('/quan-ly-rap', async (req, res, next) => {
         if (dbCinemas.length === 0) {
             // Tự động khởi tạo dữ liệu 3 rạp chuẩn Quy Nhơn nếu collection trống
             await Cinema.insertMany([
-                { name: 'CGV Kim Cúc Plaza', code: 'cgv-kim-cuc', location: 'Tầng 3, Kim Cúc Plaza, TP. Quy Nhơn', totalSeats: 270, phone: '1900 6017' },
-                { name: 'Starlight Nguyễn Kim', code: 'starlight-nguyen-kim', location: 'Tầng 8 TTTM Nguyễn Kim, TP. Quy Nhơn', totalSeats: 210, phone: '1900 1722' },
-                { name: 'DCine Quy Nhơn', code: 'dcine-quy-nhon', location: 'Tòa nhà Phú Tài Center, TP. Quy Nhơn', totalSeats: 200, phone: '0256 6555 888' }
+                { name: 'CGV Kim Cúc Plaza', code: 'cgv-kim-cuc', location: 'Tầng 3, Kim Cúc Plaza, TP. Quy Nhơn', totalSeats: 270, phone: '12345678' },
+                { name: 'Starlight Nguyễn Kim', code: 'starlight-nguyen-kim', location: 'Tầng 8 TTTM Nguyễn Kim, TP. Quy Nhơn', totalSeats: 210, phone: '12345678' },
+                { name: 'DCine Quy Nhơn', code: 'dcine-quy-nhon', location: 'Tòa nhà Phú Tài Center, TP. Quy Nhơn', totalSeats: 200, phone: '12345678' }
             ]);
             dbCinemas = await Cinema.find().lean();
         }

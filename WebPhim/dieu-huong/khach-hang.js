@@ -777,7 +777,13 @@ router.post('/dang-nhap', async (req, res) => {
     }
 });
 
-router.get('/dang-xuat', (req, res) => { req.session.destroy(); res.redirect('/'); });
+router.get('/dang-xuat', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) console.error("Lỗi hủy session khi đăng xuất:", err);
+        res.clearCookie('connect.sid');
+        res.redirect('/');
+    });
+});
 
 router.post('/quen-mat-khau', async (req, res) => {
     try {

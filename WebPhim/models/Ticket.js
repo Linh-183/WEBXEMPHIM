@@ -13,6 +13,10 @@ const ticketSchema = new mongoose.Schema({
     comboTotal: { type: Number, default: 0 },
     totalPrice: { type: Number, required: true },
     paymentMethod: { type: String }
-});
+}, { timestamps: true });
+
+ticketSchema.index({ user: 1 });
+ticketSchema.index({ movie: 1, cinema: 1, showDate: 1, showTime: 1 });
+ticketSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('Ticket', ticketSchema);

@@ -8,7 +8,7 @@ const movieSchema = new mongoose.Schema({
     releaseDate: { type: Date },       // Ngày khởi chiếu
     trailerUrl: { type: String },      // Link Trailer (Youtube)
     posterUrl: { type: String },       // Link Ảnh Poster
-    ageRating: { type: String, enum: ['P', 'T13', 'T16', 'T18'], default: 'P' },
+    ageRating: { type: String, enum: ['P', 'K', 'T13', 'T16', 'T18', 'C'], default: 'P' },
     status: { type: String, enum: ['DangChieu', 'SapChieu', 'NgungChieu'], default: 'DangChieu' },
     description: { type: String },
     
@@ -20,5 +20,8 @@ const movieSchema = new mongoose.Schema({
         times: [String]                           // Mảng giờ (["19:00", "21:00"])
     }]
 }, { timestamps: true });
+
+movieSchema.index({ status: 1 });
+movieSchema.index({ releaseDate: 1 });
 
 module.exports = mongoose.model('Movie', movieSchema);
