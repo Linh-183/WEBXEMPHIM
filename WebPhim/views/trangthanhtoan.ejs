@@ -20,17 +20,27 @@
           </p>
         </div>
 
-        <!-- 5-Minute Cancellation Countdown Widget -->
-        <div class="bg-white border border-[#E5E0D5] p-3.5 px-5 flex items-center gap-4 shadow-sm">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-[#BA2D27] text-xl animate-spin" style="animation-duration: 4s;">timer</span>
-            <div>
-              <span class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] uppercase">Thời gian giữ đơn:</span>
-              <span id="countdownTimer" class="font-['JetBrains_Mono'] text-lg font-black text-[#BA2D27]">05:00</span>
+        <!-- Actions: Cancel hold & 5-Minute Timer -->
+        <div class="flex flex-wrap items-center gap-3">
+          <button type="button" 
+                  onclick="cancelAndReturnToSeats()" 
+                  class="bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[#BA2D27] p-3 px-4 flex items-center gap-2 text-xs font-bold font-['JetBrains_Mono'] transition-all shadow-sm">
+            <span class="material-symbols-outlined text-base">close</span>
+            <span>HỦY GIỮ GHẾ & ĐỔI SUẤT</span>
+          </button>
+
+          <!-- 5-Minute Cancellation Countdown Widget -->
+          <div class="bg-white border border-[#E5E0D5] p-3.5 px-5 flex items-center gap-4 shadow-sm">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-[#BA2D27] text-xl animate-spin" style="animation-duration: 4s;">timer</span>
+              <div>
+                <span class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] uppercase">Thời gian giữ đơn:</span>
+                <span id="countdownTimer" class="font-['JetBrains_Mono'] text-lg font-black text-[#BA2D27]">05:00</span>
+              </div>
             </div>
-          </div>
-          <div class="hidden sm:block border-l border-[#E5E0D5] pl-4 text-[11px] text-[#7A7E8B] font-['Plus_Jakarta_Sans']">
-            Đơn hàng sẽ tự động hủy nếu<br>quá thời gian thanh toán 5 phút.
+            <div class="hidden sm:block border-l border-[#E5E0D5] pl-4 text-[11px] text-[#7A7E8B] font-['Plus_Jakarta_Sans']">
+              Đơn hàng sẽ tự động hủy & nhả ghế<br>nếu quá thời gian 5 phút.
+            </div>
           </div>
         </div>
       </div>
@@ -217,49 +227,61 @@
 
             <div class="space-y-3 text-xs" id="paymentMethodContainer">
               
-              <!-- VietQR -->
+              <!-- 1. Chuyển Khoản Ngân Hàng (VietQR 24/7) -->
               <label class="payment-method-card flex items-center justify-between p-4 bg-[#FAF8F5] border-2 border-[#121316] cursor-pointer transition-all has-[:checked]:border-2 has-[:checked]:border-[#121316] has-[:checked]:bg-[#FAF8F5]">
                 <div class="flex items-center gap-3">
                   <input type="radio" name="payment_method" value="vietqr" checked class="accent-[#BA2D27] cursor-pointer" />
                   <div>
-                    <span class="block font-bold text-[#121316] font-['Plus_Jakarta_Sans']">Chuyển Khoản Nhanh VietQR (Khuyên dùng)</span>
-                    <span class="text-[11px] text-[#7A7E8B]">Quét mã QR tự động trên mọi ứng dụng ngân hàng di động</span>
+                    <span class="block font-bold text-[#121316] font-['Plus_Jakarta_Sans']">Chuyển Khoản Ngân Hàng 24/7 (VietQR - Khuyên dùng)</span>
+                    <span class="text-[11px] text-[#7A7E8B]">Quét mã QR tự động trên mọi App Ngân Hàng (Vietcombank, MB, Techcombank, BIDV, Agribank, ACB...)</span>
                   </div>
                 </div>
-                <span class="font-['JetBrains_Mono'] text-[10px] text-[#10B981] font-bold uppercase">Miễn phí</span>
+                <span class="font-['JetBrains_Mono'] text-[10px] text-[#10B981] font-bold uppercase">Miễn phí 24/7</span>
               </label>
 
-              <!-- MoMo -->
+              <!-- 2. Thẻ ATM & Tài Khoản Ngân Hàng Nội Địa -->
+              <label class="payment-method-card flex items-center justify-between p-4 bg-white border border-[#E5E0D5] hover:border-[#121316] cursor-pointer transition-all has-[:checked]:border-2 has-[:checked]:border-[#121316] has-[:checked]:bg-[#FAF8F5]">
+                <div class="flex items-center gap-3">
+                  <input type="radio" name="payment_method" value="atm" class="accent-[#BA2D27] cursor-pointer" />
+                  <div>
+                    <span class="block font-bold text-[#121316] font-['Plus_Jakarta_Sans']">Thẻ ATM & Tài Khoản Ngân Hàng Nội Địa (Internet Banking)</span>
+                    <span class="text-[11px] text-[#7A7E8B]">Thanh toán trực tiếp bằng thẻ ATM / Internet Banking của hơn 40 ngân hàng Việt Nam</span>
+                  </div>
+                </div>
+                <span class="font-['JetBrains_Mono'] text-[10px] text-[#BA2D27] font-bold uppercase">Xác thực OTP</span>
+              </label>
+
+              <!-- 3. Cổng Thanh Toán VNPay -->
+              <label class="payment-method-card flex items-center justify-between p-4 bg-white border border-[#E5E0D5] hover:border-[#121316] cursor-pointer transition-all has-[:checked]:border-2 has-[:checked]:border-[#121316] has-[:checked]:bg-[#FAF8F5]">
+                <div class="flex items-center gap-3">
+                  <input type="radio" name="payment_method" value="vnpay" class="accent-[#BA2D27] cursor-pointer" />
+                  <div>
+                    <span class="block font-bold text-[#121316] font-['Plus_Jakarta_Sans']">Cổng Thanh Toán Quốc Tế & VNPAY</span>
+                    <span class="text-[11px] text-[#7A7E8B]">VNPAY-QR, Thẻ quốc tế Visa, MasterCard, JCB, American Express</span>
+                  </div>
+                </div>
+                <span class="font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] uppercase">Bảo mật SSL</span>
+              </label>
+
+              <!-- 4. MoMo -->
               <label class="payment-method-card flex items-center justify-between p-4 bg-white border border-[#E5E0D5] hover:border-[#121316] cursor-pointer transition-all has-[:checked]:border-2 has-[:checked]:border-[#121316] has-[:checked]:bg-[#FAF8F5]">
                 <div class="flex items-center gap-3">
                   <input type="radio" name="payment_method" value="momo" class="accent-[#BA2D27] cursor-pointer" />
                   <div>
                     <span class="block font-bold text-[#121316] font-['Plus_Jakarta_Sans']">Ví Điện Tử MoMo</span>
-                    <span class="text-[11px] text-[#7A7E8B]">Thanh toán 1 chạm qua ứng dụng ví MoMo</span>
+                    <span class="text-[11px] text-[#7A7E8B]">Thanh toán 1 chạm siêu tốc qua ứng dụng ví điện tử MoMo</span>
                   </div>
                 </div>
                 <span class="font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] uppercase">Tức thời</span>
               </label>
 
-              <!-- VNPay -->
-              <label class="payment-method-card flex items-center justify-between p-4 bg-white border border-[#E5E0D5] hover:border-[#121316] cursor-pointer transition-all has-[:checked]:border-2 has-[:checked]:border-[#121316] has-[:checked]:bg-[#FAF8F5]">
-                <div class="flex items-center gap-3">
-                  <input type="radio" name="payment_method" value="vnpay" class="accent-[#BA2D27] cursor-pointer" />
-                  <div>
-                    <span class="block font-bold text-[#121316] font-['Plus_Jakarta_Sans']">Cổng Thanh Toán VNPay</span>
-                    <span class="text-[11px] text-[#7A7E8B]">Thẻ ATM nội địa, QR Pay, Thẻ quốc tế Visa/Master</span>
-                  </div>
-                </div>
-                <span class="font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] uppercase">Bảo mật</span>
-              </label>
-
-              <!-- ZaloPay -->
+              <!-- 5. ZaloPay -->
               <label class="payment-method-card flex items-center justify-between p-4 bg-white border border-[#E5E0D5] hover:border-[#121316] cursor-pointer transition-all has-[:checked]:border-2 has-[:checked]:border-[#121316] has-[:checked]:bg-[#FAF8F5]">
                 <div class="flex items-center gap-3">
                   <input type="radio" name="payment_method" value="zalopay" class="accent-[#BA2D27] cursor-pointer" />
                   <div>
                     <span class="block font-bold text-[#121316] font-['Plus_Jakarta_Sans']">Ví Điện Tử ZaloPay</span>
-                    <span class="text-[11px] text-[#7A7E8B]">Thanh toán liên kết Zalo và ngân hàng</span>
+                    <span class="text-[11px] text-[#7A7E8B]">Thanh toán liên kết ví ZaloPay và ứng dụng Zalo</span>
                   </div>
                 </div>
                 <span class="font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] uppercase">Tiện lợi</span>
@@ -451,9 +473,9 @@
     </p>
 
     <div class="pt-2">
-      <a href="/phim" class="btn-editorial-primary w-full py-3.5 text-xs font-bold block text-center !bg-[#BA2D27]">
+      <button type="button" onclick="cancelAndReturnToSeats()" class="btn-editorial-primary w-full py-3.5 text-xs font-bold block text-center !bg-[#BA2D27]">
         Quay Lại Chọn Suất Chiếu Khác →
-      </a>
+      </button>
     </div>
   </div>
 </div>
@@ -461,6 +483,51 @@
 <script>
   let baseTotal = <%= typeof total !== 'undefined' ? Number(total) : 0 %>;
   let currentFinal = baseTotal;
+
+  const bookingMeta = {
+    movieId: '<%= phim ? phim._id : "" %>',
+    cinema: '<%= typeof cinema !== "undefined" ? cinema : "" %>',
+    showDate: '<%= typeof showDate !== "undefined" ? showDate : "" %>',
+    showTime: '<%= typeof showTime !== "undefined" ? showTime : "" %>',
+    seats: <%- JSON.stringify(typeof seats !== 'undefined' ? seats : []) %>
+  };
+
+  async function releaseSeatsImmediately() {
+    try {
+      await fetch('/api/huy-giu-ghe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingMeta),
+        keepalive: true
+      });
+    } catch(e) {
+      console.warn('Lỗi giải phóng giữ ghế:', e);
+    }
+  }
+
+  async function cancelAndReturnToSeats() {
+    await releaseSeatsImmediately();
+    const returnUrl = `/dat-ve/${bookingMeta.movieId}?cinema=${encodeURIComponent(bookingMeta.cinema)}&time=${encodeURIComponent(bookingMeta.showTime)}`;
+    window.location.href = returnUrl;
+  }
+
+  let isPaymentSubmitted = false;
+  const mainPaymentForm = document.getElementById('checkoutForm');
+  if (mainPaymentForm) {
+    mainPaymentForm.addEventListener('submit', () => {
+      isPaymentSubmitted = true;
+    });
+  }
+
+  // Tự động nhả ghế nếu người dùng đóng tab, back trang hoặc out khỏi thanh toán
+  window.addEventListener('pagehide', () => {
+    if (!isPaymentSubmitted && bookingMeta.seats && bookingMeta.seats.length > 0) {
+      const payload = JSON.stringify(bookingMeta);
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/api/huy-giu-ghe', payload);
+      }
+    }
+  });
 
   // ==========================================
   // 5-MINUTE COUNTDOWN TIMER & AUTO-CANCEL LOGIC
@@ -478,6 +545,8 @@
       clearInterval(countdownInterval);
       if (timerDisplay) timerDisplay.innerText = '00:00';
       if (progressBar) progressBar.style.width = '0%';
+      // Giải phóng ghế giữ chỗ tức thì trong MongoDB
+      releaseSeatsImmediately();
       // Trigger timeout cancellation
       if (timeoutModal) timeoutModal.classList.remove('hidden');
       document.getElementById('btnSubmitPayment').disabled = true;

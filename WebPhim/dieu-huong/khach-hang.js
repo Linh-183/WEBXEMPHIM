@@ -132,6 +132,10 @@ router.get('/dat-ve/:id', async (req, res, next) => {
         if (!isValidObjectId(req.params.id)) {
             return res.status(404).render('404', { title: '404 — Không Tìm Thấy Suất Chiếu' });
         }
+        // Dọn dẹp ghế giữ quá hạn 5 phút mỗi khi khách tải trang đặt vé
+        const lockThreshold = new Date(Date.now() - 5 * 60 * 1000);
+        await SeatLock.deleteMany({ createdAt: { $lt: lockThreshold } });
+
         const phim = await Movie.findById(req.params.id);
         if (!phim) return res.status(404).render('404', { title: '404 — Không Tìm Thấy Suất Chiếu' });
         res.render('trangdatvephim', { phim, error: req.query.error || null }); 
@@ -156,6 +160,10 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
         }
 
         if (seatList.length > 0) {
+            // 0.1 Tự động giải phóng toàn bộ các ghế giữ đã quá hạn 5 phút (300s) trong DB
+            const lockThreshold = new Date(Date.now() - 5 * 60 * 1000);
+            await SeatLock.deleteMany({ createdAt: { $lt: lockThreshold } });
+
             // 1. Kiểm tra xem các ghế này đã được xuất vé trong DB chưa
             const soldTickets = await Ticket.findOne({
                 movie: movieId,
@@ -175,7 +183,8 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
                 showDate,
                 showTime,
                 seat: { $in: seatList },
-                userId: { $ne: currentUserId }
+                userId: { $ne: currentUserId },
+                createdAt: { $gte: lockThreshold }
             });
             if (lockedByOthers.length > 0) {
                 const names = lockedByOthers.map(l => l.seat).join(', ');
@@ -544,7 +553,16 @@ router.get('/api/ghe-da-dat', async (req, res) => {
         });
         bookedSeats = [...new Set(bookedSeats)];
 
-        const lockQuery = { movieId, showDate, showTime };
+        // Tự động giải phóng toàn bộ các ghế giữ đã quá hạn 5 phút (300 giây) trong MongoDB
+        const lockThreshold = new Date(Date.now() - 5 * 60 * 1000);
+        await SeatLock.deleteMany({ createdAt: { $lt: lockThreshold } });
+
+        const lockQuery = { 
+            movieId, 
+            showDate, 
+            showTime,
+            createdAt: { $gte: lockThreshold }
+        };
         if (cinemaRegex) lockQuery.cinema = cinemaRegex;
         if (userId) lockQuery.userId = { $ne: userId };
         const activeLocks = await SeatLock.find(lockQuery);
@@ -553,6 +571,45 @@ router.get('/api/ghe-da-dat', async (req, res) => {
         res.json({ bookedSeats, tempLocked });
     } catch (error) { 
         res.status(500).json({ error: "Lỗi tải sơ đồ ghế" }); 
+    }
+});
+
+// [MỚI] API GIẢI PHÓNG GHẾ GIỮ CHỖ TỨC THÌ (Khi hết 5 phút hoặc khi khách rời khỏi trang thanh toán)
+router.post('/api/huy-giu-ghe', async (req, res) => {
+    try {
+        let { movieId, cinema, showDate, showTime, seats } = req.body;
+        
+        // Hỗ trợ cả navigator.sendBeacon dạng chuỗi JSON hoặc text/plain
+        if (typeof req.body === 'string') {
+            try { 
+                const parsed = JSON.parse(req.body);
+                movieId = parsed.movieId;
+                cinema = parsed.cinema;
+                showDate = parsed.showDate;
+                showTime = parsed.showTime;
+                seats = parsed.seats;
+            } catch(e) {}
+        }
+
+        const seatList = Array.isArray(seats)
+            ? seats
+            : (typeof seats === 'string' ? seats.split(',').map(s => s.trim()).filter(Boolean) : []);
+
+        const filter = {};
+        if (movieId) filter.movieId = movieId;
+        if (cinema) {
+            const escaped = escapeRegex(cinema);
+            filter.cinema = { $regex: new RegExp(`^${escaped}$`, 'i') };
+        }
+        if (showDate) filter.showDate = showDate;
+        if (showTime) filter.showTime = showTime;
+        if (seatList.length > 0) filter.seat = { $in: seatList };
+
+        const result = await SeatLock.deleteMany(filter);
+        res.json({ success: true, released: result.deletedCount });
+    } catch (error) {
+        console.error("Lỗi giải phóng giữ ghế:", error);
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 

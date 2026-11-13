@@ -780,8 +780,20 @@
       }
 
       if (seat.classList.contains('seat-held')) {
-        if (window.cinegoToast) window.cinegoToast.warning(`Ghế ${seatCode} đang có khách giữ trong 5 phút!`);
-        else alert(`Ghế ${seatCode} đang có khách giữ!`);
+        // Tái kiểm tra ngay lập tức với Backend: nếu phiên giữ 5 phút đã hết hạn thì cho phép chọn ngay
+        loadOccupiedSeats().then(() => {
+          const freshSeat = document.querySelector(`.seat-unit[data-seat="${seatCode}"]`);
+          if (freshSeat && !freshSeat.classList.contains('seat-held') && !freshSeat.classList.contains('seat-sold')) {
+            if (window.cinegoToast) window.cinegoToast.success(`Ghế ${seatCode} vừa được giải phóng! Đã chọn ghế thành công.`);
+            freshSeat.classList.add('seat-selected');
+            selectedSeats.push({ code: seatCode, price: price });
+            seatTotal += price;
+            updateBottomSummary();
+          } else {
+            if (window.cinegoToast) window.cinegoToast.warning(`Ghế ${seatCode} đang có khách giữ trong 5 phút!`);
+            else alert(`Ghế ${seatCode} đang có khách giữ!`);
+          }
+        });
         return;
       }
 
@@ -804,6 +816,14 @@
 
       updateBottomSummary();
     });
+
+    // Tự động đồng bộ ghế real-time: khi người dùng quay lại tab hoặc định kỳ mỗi 10 giây
+    window.addEventListener('focus', () => {
+      if (currentTime) loadOccupiedSeats();
+    });
+    setInterval(() => {
+      if (currentTime) loadOccupiedSeats();
+    }, 10000);
   });
 
   function adjustCombo(id, name, price, delta) {
