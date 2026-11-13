@@ -27,7 +27,7 @@
         <%= (typeof totalRevenue !== 'undefined' ? totalRevenue : 0).toLocaleString('vi-VN') %> đ
       </strong>
       <span class="text-[11px] text-[#10B981] font-semibold flex items-center gap-1.5">
-        <span class="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span> Trực tiếp từ đơn vé hệ thống
+        <span class="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span> <%= typeof totalRevenue !== 'undefined' && totalRevenue > 0 ? 'Tổng hợp trực tiếp từ đơn vé thật' : 'Chưa phát sinh doanh thu' %>
       </span>
     </div>
     <div class="bg-white border border-[#E5E0D5] p-6 space-y-1">
@@ -35,14 +35,18 @@
       <strong class="text-3xl font-black text-[#A6853B] font-['Georgia'] block">
         <%= (typeof totalFnb !== 'undefined' ? totalFnb : 0).toLocaleString('vi-VN') %> đ
       </strong>
-      <span class="text-[11px] text-[#7A7E8B] block font-medium">Chiếm <%= typeof totalRevenue !== 'undefined' && totalRevenue > 0 ? Math.round((totalFnb / totalRevenue) * 100) : 0 %>% tổng doanh thu</span>
+      <span class="text-[11px] text-[#7A7E8B] block font-medium">
+        <%= (typeof totalRevenue !== 'undefined' && totalRevenue > 0) ? `Chiếm ${Math.round((totalFnb / totalRevenue) * 100)}% tổng doanh thu` : 'Chưa có đơn mua bắp nước' %>
+      </span>
     </div>
     <div class="bg-white border border-[#E5E0D5] p-6 space-y-1">
       <span class="text-[10px] uppercase font-bold text-[#7A7E8B] block">Giá trị trung bình đơn (AOV)</span>
       <strong class="text-3xl font-black text-[#121316] font-['Georgia'] block">
         <%= (typeof aov !== 'undefined' ? aov : 0).toLocaleString('vi-VN') %> đ
       </strong>
-      <span class="text-[11px] text-[#BA2D27] block font-medium">Tỷ suất trung bình <%= typeof avgSeatsPerOrder !== 'undefined' ? avgSeatsPerOrder : 0 %> vé / đơn</span>
+      <span class="text-[11px] text-[#BA2D27] block font-medium">
+        <%= (typeof avgSeatsPerOrder !== 'undefined' && Number(avgSeatsPerOrder) > 0) ? `Tỷ suất trung bình ${avgSeatsPerOrder} vé / đơn` : 'Chưa có đơn vé được đặt' %>
+      </span>
     </div>
   </div>
 
@@ -68,8 +72,13 @@
         </tr>
       </thead>
       <tbody class="divide-y divide-[#E5E0D5] font-['JetBrains_Mono']">
-        <% if (typeof cinemaReports !== 'undefined' && cinemaReports && cinemaReports.length > 0) { %>
-          <% cinemaReports.forEach(function(item) { %>
+        <% 
+          const activeReports = (typeof cinemaReports !== 'undefined' && cinemaReports) 
+            ? cinemaReports.filter(c => c.showCount > 0 || c.ticketCount > 0 || c.totalRevenue > 0) 
+            : [];
+        %>
+        <% if (activeReports.length > 0) { %>
+          <% activeReports.forEach(function(item) { %>
             <tr class="hover:bg-[#FAF8F5]">
               <td class="py-3.5 px-4 font-bold text-[#121316]"><%= item.name %></td>
               <td class="py-3.5 px-4"><%= item.showCount %> suất</td>
@@ -82,8 +91,10 @@
           <% }); %>
         <% } else { %>
           <tr>
-            <td colspan="7" class="py-8 text-center text-[#7A7E8B] font-['Plus_Jakarta_Sans']">
-              Chưa có dữ liệu giao dịch phát sinh cho các cụm rạp trong cơ sở dữ liệu.
+            <td colspan="7" class="py-12 text-center text-[#7A7E8B] font-['Plus_Jakarta_Sans']">
+              <span class="material-symbols-outlined text-3xl text-[#7A7E8B]/60 block mb-2">bar_chart</span>
+              Chưa có dữ liệu doanh thu hoặc suất chiếu phát sinh trong cơ sở dữ liệu.<br/>
+              <span class="text-[11px] text-[#7A7E8B]/70 mt-1 block">Số liệu từng rạp sẽ tự động thống kê thời gian thực ngay khi có suất chiếu và đơn vé được đặt.</span>
             </td>
           </tr>
         <% } %>
