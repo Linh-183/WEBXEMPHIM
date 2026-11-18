@@ -88,94 +88,110 @@
   </aside>
 
   <!-- =========================================================================
-       1.1 DÒNG THÔNG BÁO FLASH SALE DÀI TRÊN MÀN HÌNH (ĐANG/SẮP DIỄN RA)
+       STICKY TOP WRAPPER (CHỨA CẢ THANH THÔNG BÁO FLASH SALE & HEADER MENU)
+       Đảm bảo thanh Flash Sale và Header xếp chồng đúng thứ tự, không bao giờ che khuất nhau
        ========================================================================= -->
-  <% if (typeof activeFlashSale !== 'undefined' && activeFlashSale) { 
-       const sTime = new Date(activeFlashSale.startTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
-       const eTime = new Date(activeFlashSale.endTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
-       const remaining = Math.max(0, (activeFlashSale.totalQuantity || 50) - (activeFlashSale.claimedQuantity || 0));
-  %>
-    <aside class="w-full bg-[#121316] border-b-2 border-[#BA2D27] text-white py-2 px-4 shadow-md sticky top-0 z-50">
-      <div class="max-w-[1520px] mx-auto flex items-center justify-between gap-3 text-xs font-['JetBrains_Mono']">
-        <div class="flex items-center gap-2 overflow-hidden truncate">
-          <span class="px-2 py-0.5 bg-[#BA2D27] text-white font-bold text-[10px] uppercase tracking-wider animate-pulse rounded-xs shrink-0">
-            ⚡ ĐANG CÓ FLASH SALE
-          </span>
-          <span class="text-white font-bold truncate">
-            Đang có Flash Sale: <strong class="text-[#D97706]"><%= activeFlashSale.title %></strong> — Áp dụng từ <strong class="text-amber-300"><%= sTime %></strong> đến <strong class="text-amber-300"><%= eTime %></strong> hôm nay!
-          </span>
-          <span class="hidden md:inline px-2 py-0.5 bg-white/10 text-white/80 text-[10px] rounded-xs shrink-0">
-            Chỉ còn: <strong><%= remaining %></strong>/<%= activeFlashSale.totalQuantity || 50 %> voucher
-          </span>
-        </div>
-        <a href="/flash-sale" class="ml-2 shrink-0 px-3 py-1 bg-[#BA2D27] hover:bg-[#8E1F1A] text-white font-bold text-[10.5px] uppercase tracking-wider transition-colors flex items-center gap-1 shadow-sm whitespace-nowrap">
-          <span>SĂN NGAY</span>
-          <span>→</span>
-        </a>
-      </div>
-    </aside>
-  <% } else if (typeof upcomingFlashSale !== 'undefined' && upcomingFlashSale) { 
-       const sTime = new Date(upcomingFlashSale.startTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
-       const eTime = new Date(upcomingFlashSale.endTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
-  %>
-    <aside class="w-full bg-[#1A1D24] border-b border-[#A6853B] text-white py-2 px-4 shadow-md sticky top-0 z-50">
-      <div class="max-w-[1520px] mx-auto flex items-center justify-between gap-3 text-xs font-['JetBrains_Mono']">
-        <div class="flex items-center gap-2 overflow-hidden truncate">
-          <span class="px-2 py-0.5 bg-[#A6853B] text-[#121316] font-bold text-[10px] uppercase tracking-wider rounded-xs shrink-0">
-            ⚡ SẮP DIỄN RA
-          </span>
-          <span class="text-white font-bold truncate">
-            Flash Sale: <strong class="text-amber-300"><%= upcomingFlashSale.title %></strong> sẽ mở bán từ <strong class="text-[#FAF8F5]"><%= sTime %></strong> đến <strong class="text-[#FAF8F5]"><%= eTime %></strong> hôm nay!
-          </span>
-        </div>
-        <a href="/flash-sale" class="ml-2 shrink-0 px-3 py-1 bg-white hover:bg-[#FAF8F5] text-[#121316] font-bold text-[10.5px] uppercase tracking-wider transition-colors flex items-center gap-1 shadow-sm whitespace-nowrap">
-          <span>XEM CHI TIẾT</span>
-          <span>→</span>
-        </a>
-      </div>
-    </aside>
-  <% } %>
+  <div class="sticky top-0 w-full z-40">
 
-  <!-- =========================================================================
-       2. EDITORIAL MASTHEAD NAVIGATION (COMPACT & BALANCED)
-       ========================================================================= -->
-  <header class="sticky top-0 w-full z-40 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-[#E5E0D5] transition-all duration-200">
-    <div class="max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-[68px] flex items-center justify-between gap-3 lg:gap-4">
-      
-      <!-- LOGO / MASTHEAD -->
-      <a href="/" class="flex flex-col group shrink-0" aria-label="CineGo Trang Chủ">
-        <span class="font-serif font-bold text-xl sm:text-2xl tracking-[0.14em] text-[#121316] group-hover:text-[#BA2D27] transition-colors leading-none">
-          CINEGO
-        </span>
-        <span class="font-['JetBrains_Mono'] text-[8.5px] tracking-[0.25em] text-[#7A7E8B] uppercase mt-0.5">
-          Cinema & Archive
-        </span>
-      </a>
+    <!-- 1.1 DÒNG THÔNG BÁO FLASH SALE DÀI TRÊN MÀN HÌNH (ĐANG/SẮP DIỄN RA) -->
+    <% if (typeof activeFlashSale !== 'undefined' && activeFlashSale) { 
+         const sTime = new Date(activeFlashSale.startTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
+         const eTime = new Date(activeFlashSale.endTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
+         const remaining = Math.max(0, (activeFlashSale.totalQuantity || 50) - (activeFlashSale.claimedQuantity || 0));
+    %>
+      <aside id="flashSaleTopBanner" class="w-full bg-[#121316] border-b-2 border-[#BA2D27] text-white py-2 px-4 shadow-md transition-all">
+        <div class="max-w-[1520px] mx-auto flex items-center justify-between gap-3 text-xs font-['JetBrains_Mono']">
+          <div class="flex items-center gap-2 overflow-hidden truncate">
+            <span class="px-2 py-0.5 bg-[#BA2D27] text-white font-bold text-[10px] uppercase tracking-wider animate-pulse rounded-xs shrink-0">
+              ⚡ ĐANG CÓ FLASH SALE
+            </span>
+            <span class="text-white font-bold truncate">
+              Đang có Flash Sale: <strong class="text-[#D97706]"><%= activeFlashSale.title %></strong> — Áp dụng từ <strong class="text-amber-300"><%= sTime %></strong> đến <strong class="text-amber-300"><%= eTime %></strong> hôm nay!
+            </span>
+            <span class="hidden md:inline px-2 py-0.5 bg-white/10 text-white/80 text-[10px] rounded-xs shrink-0">
+              Chỉ còn: <strong><%= remaining %></strong>/<%= activeFlashSale.totalQuantity || 50 %> voucher
+            </span>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <a href="/flash-sale" class="ml-2 px-3 py-1 bg-[#BA2D27] hover:bg-[#8E1F1A] text-white font-bold text-[10.5px] uppercase tracking-wider transition-colors flex items-center gap-1 shadow-sm whitespace-nowrap">
+              <span>SĂN NGAY</span>
+              <span>→</span>
+            </a>
+            <button type="button" onclick="document.getElementById('flashSaleTopBanner').style.display='none'" class="text-white/60 hover:text-white px-1.5 py-0.5 text-sm leading-none" title="Đóng thông báo">
+              ✕
+            </button>
+          </div>
+        </div>
+      </aside>
+    <% } else if (typeof upcomingFlashSale !== 'undefined' && upcomingFlashSale) { 
+         const sTime = new Date(upcomingFlashSale.startTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
+         const eTime = new Date(upcomingFlashSale.endTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
+    %>
+      <aside id="flashSaleTopBanner" class="w-full bg-[#1A1D24] border-b border-[#A6853B] text-white py-2 px-4 shadow-md transition-all">
+        <div class="max-w-[1520px] mx-auto flex items-center justify-between gap-3 text-xs font-['JetBrains_Mono']">
+          <div class="flex items-center gap-2 overflow-hidden truncate">
+            <span class="px-2 py-0.5 bg-[#A6853B] text-[#121316] font-bold text-[10px] uppercase tracking-wider rounded-xs shrink-0">
+              ⚡ SẮP DIỄN RA
+            </span>
+            <span class="text-white font-bold truncate">
+              Flash Sale: <strong class="text-amber-300"><%= upcomingFlashSale.title %></strong> sẽ mở bán từ <strong class="text-[#FAF8F5]"><%= sTime %></strong> đến <strong class="text-[#FAF8F5]"><%= eTime %></strong> hôm nay!
+            </span>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <a href="/flash-sale" class="ml-2 px-3 py-1 bg-white hover:bg-[#FAF8F5] text-[#121316] font-bold text-[10.5px] uppercase tracking-wider transition-colors flex items-center gap-1 shadow-sm whitespace-nowrap">
+              <span>XEM CHI TIẾT</span>
+              <span>→</span>
+            </a>
+            <button type="button" onclick="document.getElementById('flashSaleTopBanner').style.display='none'" class="text-white/60 hover:text-white px-1.5 py-0.5 text-sm leading-none" title="Đóng thông báo">
+              ✕
+            </button>
+          </div>
+        </div>
+      </aside>
+    <% } %>
 
-      <!-- CURATED NUMERICAL INDEX MENU -->
-      <nav class="hidden lg:flex items-center gap-3 xl:gap-5 text-[11.5px] font-bold tracking-wider uppercase text-[#474A54]" aria-label="Điều hướng chính">
-        <a href="/" class="cinego-nav-link hover:text-[#BA2D27] transition-all flex items-center gap-1 py-1.5 whitespace-nowrap">
-          <span class="nav-num-badge font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B]">01.</span> Trang Chủ
+    <!-- =========================================================================
+         2. EDITORIAL MASTHEAD NAVIGATION (COMPACT & BALANCED)
+         ========================================================================= -->
+    <header class="w-full bg-[#FAF8F5]/95 backdrop-blur-md border-b border-[#E5E0D5] transition-all duration-200">
+      <div class="max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-[68px] flex items-center justify-between gap-3 lg:gap-4">
+        
+        <!-- LOGO / MASTHEAD -->
+        <a href="/" class="flex flex-col group shrink-0" aria-label="CineGo Trang Chủ">
+          <span class="font-serif font-bold text-xl sm:text-2xl tracking-[0.14em] text-[#121316] group-hover:text-[#BA2D27] transition-colors leading-none">
+            CINEGO
+          </span>
+          <span class="font-['JetBrains_Mono'] text-[8.5px] tracking-[0.25em] text-[#7A7E8B] uppercase mt-0.5">
+            Cinema & Archive
+          </span>
         </a>
-        <a href="/phim" class="cinego-nav-link hover:text-[#BA2D27] transition-all flex items-center gap-1 py-1.5 whitespace-nowrap">
-          <span class="nav-num-badge font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B]">02.</span> Lịch Chiếu
-        </a>
-        <a href="/he-thong-rap" class="cinego-nav-link hover:text-[#BA2D27] transition-all flex items-center gap-1 py-1.5 whitespace-nowrap">
-          <span class="nav-num-badge font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B]">03.</span> 3 Cụm Rạp
-        </a>
-        <a href="/bap-nuoc" class="cinego-nav-link hover:text-[#BA2D27] transition-all flex items-center gap-1 py-1.5 whitespace-nowrap">
-          <span class="nav-num-badge font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B]">04.</span> Bắp Nước & Combo
-        </a>
-        <a href="/khuyen-mai" class="cinego-nav-link hover:text-[#BA2D27] transition-all flex items-center gap-1 py-1.5 whitespace-nowrap">
-          <span class="nav-num-badge font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B]">05.</span> Ưu Đãi & Hội Viên
-        </a>
-        <a href="/tai-khoan/ve-cua-toi" class="cinego-nav-link hover:text-[#BA2D27] transition-all flex items-center gap-1 py-1.5 whitespace-nowrap">
-          <span class="nav-num-badge font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B]">06.</span> Vé Của Tôi
-        </a>
-        <a href="/flash-sale" class="cinego-nav-link text-[#BA2D27] hover:text-[#8E1F1A] transition-all flex items-center gap-1 py-1.5 whitespace-nowrap font-bold" title="Săn vé khung giờ vàng Flash Sale">
-          <span class="animate-pulse">⚡</span> Flash Sale
-        </a>
-      </nav>
+
+        <!-- CURATED NUMERICAL INDEX MENU -->
+        <nav class="hidden lg:flex items-center gap-3 xl:gap-5 text-[11.5px] font-bold tracking-wider uppercase text-[#474A54]" aria-label="Điều hướng chính">
+          <a href="/" class="cinego-nav-link hover:text-[#BA2D27] transition-all flex items-center gap-1 py-1.5 whitespace-nowrap">
+            <span class="nav-num-badge font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B]">01.</span> Trang Chủ
+          </a>
+          <a href="/phim" class="cinego-nav-link hover:text-[#BA2D27] transition-all flex items-center gap-1 py-1.5 whitespace-nowrap">
+            <span class="nav-num-badge font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B]">02.</span> Lịch Chiếu
+          </a>
+          <a href="/he-thong-rap" class="cinego-nav-link hover:text-[#BA2D27] transition-all flex items-center gap-1 py-1.5 whitespace-nowrap">
+            <span class="nav-num-badge font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B]">03.</span> 3 Cụm Rạp
+          </a>
+          <a href="/bap-nuoc" class="cinego-nav-link hover:text-[#BA2D27] transition-all flex items-center gap-1 py-1.5 whitespace-nowrap">
+            <span class="nav-num-badge font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B]">04.</span> Bắp Nước & Combo
+          </a>
+          <a href="/khuyen-mai" class="cinego-nav-link hover:text-[#BA2D27] transition-all flex items-center gap-1 py-1.5 whitespace-nowrap">
+            <span class="nav-num-badge font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B]">05.</span> Ưu Đãi & Hội Viên
+          </a>
+          <a href="/tai-khoan/ve-cua-toi" class="cinego-nav-link hover:text-[#BA2D27] transition-all flex items-center gap-1 py-1.5 whitespace-nowrap">
+            <span class="nav-num-badge font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B]">06.</span> Vé Của Tôi
+          </a>
+          <% if ((typeof activeFlashSale !== 'undefined' && activeFlashSale) || (typeof upcomingFlashSale !== 'undefined' && upcomingFlashSale)) { %>
+            <a href="/flash-sale" class="cinego-nav-link text-[#BA2D27] hover:text-[#8E1F1A] transition-all flex items-center gap-1 py-1.5 whitespace-nowrap font-bold" title="Săn vé khung giờ vàng Flash Sale">
+              <span class="animate-pulse">⚡</span> Flash Sale
+            </a>
+          <% } %>
+        </nav>
 
       <!-- RIGHT UTILITY CONTROLS -->
       <div class="flex items-center gap-2 sm:gap-2.5 shrink-0">
@@ -316,6 +332,7 @@
       </div>
     </div>
   </header>
+  </div>
 
 
 
@@ -357,10 +374,12 @@
             <span>06. Vé Của Tôi</span>
             <span class="font-['JetBrains_Mono'] text-xs text-[#BA2D27]">E-Ticket</span>
           </a>
-          <a href="/flash-sale" class="cinego-mobile-link flex items-center justify-between text-[#BA2D27] font-bold pb-3 border-b border-[#E5E0D5] transition-all">
-            <span class="flex items-center gap-1.5"><span class="animate-pulse">⚡</span> 07. Săn Vé Flash Sale</span>
-            <span class="font-['JetBrains_Mono'] text-xs text-[#BA2D27]">Khung Giờ Vàng</span>
-          </a>
+          <% if ((typeof activeFlashSale !== 'undefined' && activeFlashSale) || (typeof upcomingFlashSale !== 'undefined' && upcomingFlashSale)) { %>
+            <a href="/flash-sale" class="cinego-mobile-link flex items-center justify-between text-[#BA2D27] font-bold pb-3 border-b border-[#E5E0D5] transition-all">
+              <span class="flex items-center gap-1.5"><span class="animate-pulse">⚡</span> 07. Săn Vé Flash Sale</span>
+              <span class="font-['JetBrains_Mono'] text-xs text-[#BA2D27]">Khung Giờ Vàng</span>
+            </a>
+          <% } %>
         </nav>
       </div>
 

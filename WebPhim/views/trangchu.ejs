@@ -252,32 +252,39 @@
   </section>
 
   <!-- =========================================================================
-       3.5 CINEGO FLASH SALE CALLOUT SECTION
+       3.5 CINEGO FLASH SALE CALLOUT SECTION (CHỈ HIỆN KHI CÓ FLASH SALE)
        ========================================================================= -->
-  <section class="py-12 px-6 sm:px-10 lg:px-14 bg-[#121316] text-white border-b border-[#2A2E39]">
-    <div class="max-w-[1520px] mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
-      <div class="space-y-2">
-        <div class="flex items-center gap-2">
-          <span class="px-2.5 py-0.5 bg-[#BA2D27] text-white font-['JetBrains_Mono'] text-[10px] font-bold uppercase tracking-wider animate-pulse">
-            ⚡ KHUNG GIỜ VÀNG
-          </span>
-          <span class="text-[#A6853B] font-['JetBrains_Mono'] text-xs font-semibold">CINEGO FLASH SALE</span>
+  <% if ((typeof activeFlashSale !== 'undefined' && activeFlashSale) || (typeof upcomingFlashSale !== 'undefined' && upcomingFlashSale)) { 
+       const fsPromo = (typeof activeFlashSale !== 'undefined' && activeFlashSale) ? activeFlashSale : upcomingFlashSale;
+       const isLive = (typeof activeFlashSale !== 'undefined' && activeFlashSale);
+       const sTime = new Date(fsPromo.startTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
+       const eTime = new Date(fsPromo.endTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
+  %>
+    <section class="py-10 px-6 sm:px-10 lg:px-14 bg-[#121316] text-white border-b border-[#2A2E39]">
+      <div class="max-w-[1520px] mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+        <div class="space-y-2">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 <%= isLive ? 'bg-[#BA2D27] animate-pulse' : 'bg-[#A6853B]' %> text-white font-['JetBrains_Mono'] text-[10px] font-bold uppercase tracking-wider">
+              <%= isLive ? '⚡ ĐANG DIỄN RA' : '⚡ SẮP DIỄN RA' %>
+            </span>
+            <span class="text-[#A6853B] font-['JetBrains_Mono'] text-xs font-semibold">CINEGO FLASH SALE (<%= sTime %> — <%= eTime %>)</span>
+          </div>
+          <h2 class="font-serif text-2xl sm:text-3xl font-bold text-white tracking-wide">
+            <%= fsPromo.title %>
+          </h2>
+          <p class="text-xs text-[#A6AAB6] max-w-2xl leading-relaxed">
+            Đang mở bán các suất vé đồng giá chỉ từ <%= (fsPromo.salePrice || 19000).toLocaleString('vi-VN') %>đ trong khung giờ vàng hôm nay. Số lượng có hạn, nhanh tay săn vé ngay!
+          </p>
         </div>
-        <h2 class="font-serif text-2xl sm:text-3xl font-bold text-white tracking-wide">
-          Săn Vé Xem Phim Đồng Giá 19K & Voucher Giờ Vàng
-        </h2>
-        <p class="text-xs text-[#A6AAB6] max-w-2xl leading-relaxed">
-          Mỗi ngày hệ thống CineGo mở bán các suất vé đồng giá và voucher ưu đãi trong khung giờ vàng cố định với số lượng có hạn. Nhanh tay săn vé trước khi hết suất!
-        </p>
+        <div class="shrink-0 flex items-center gap-4">
+          <a href="/flash-sale" class="btn-editorial-primary text-xs !py-3.5 !px-8 font-bold !bg-[#BA2D27] hover:!bg-[#8E1F1A] transition-colors whitespace-nowrap flex items-center gap-2">
+            <span>⚡ VÀO SĂN VÉ FLASH SALE</span>
+            <span>→</span>
+          </a>
+        </div>
       </div>
-      <div class="shrink-0 flex items-center gap-4">
-        <a href="/flash-sale" class="btn-editorial-primary text-xs !py-3.5 !px-8 font-bold !bg-[#BA2D27] hover:!bg-[#8E1F1A] transition-colors whitespace-nowrap flex items-center gap-2">
-          <span>⚡ KHÁM PHÁ FLASH SALE</span>
-          <span>→</span>
-        </a>
-      </div>
-    </div>
-  </section>
+    </section>
+  <% } %>
 
   <!-- =========================================================================
        4. CONCESSIONS & POPCORN SHOWCASE (QUẦY BẮP NƯỚC RIÊNG CỦA RẠP)

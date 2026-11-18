@@ -27,32 +27,39 @@
     </div>
 
     <!-- =========================================================================
-         1.5 BANNER KHÁM PHÁ CHIẾN DỊCH FLASH SALE SĂN VÉ 19K
+         1.5 BANNER KHÁM PHÁ CHIẾN DỊCH FLASH SALE SĂN VÉ 19K (CHỈ HIỆN KHI CÓ FLASH SALE)
          ========================================================================= -->
-    <div class="bg-gradient-to-r from-[#121316] via-[#1E222B] to-[#121316] border-2 border-[#BA2D27] p-6 sm:p-8 mb-10 text-white shadow-lg relative overflow-hidden">
-      <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div class="space-y-2">
-          <div class="flex items-center gap-2">
-            <span class="px-2.5 py-0.5 bg-[#BA2D27] text-white font-['JetBrains_Mono'] text-[10px] font-bold uppercase tracking-wider animate-pulse">
-              ⚡ SỰ KIỆN ĐẶC BIỆT
-            </span>
-            <span class="text-[#A6853B] font-['JetBrains_Mono'] text-xs font-semibold">CINEGO FLASH SALE</span>
+    <% if ((typeof activeFlashSale !== 'undefined' && activeFlashSale) || (typeof upcomingFlashSale !== 'undefined' && upcomingFlashSale)) { 
+         const fsBanner = (typeof activeFlashSale !== 'undefined' && activeFlashSale) ? activeFlashSale : upcomingFlashSale;
+         const isLiveNow = (typeof activeFlashSale !== 'undefined' && activeFlashSale);
+         const sTime = new Date(fsBanner.startTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
+         const eTime = new Date(fsBanner.endTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
+    %>
+      <div class="bg-gradient-to-r from-[#121316] via-[#1E222B] to-[#121316] border-2 border-[#BA2D27] p-6 sm:p-8 mb-10 text-white shadow-lg relative overflow-hidden">
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 <%= isLiveNow ? 'bg-[#BA2D27] animate-pulse' : 'bg-[#A6853B]' %> text-white font-['JetBrains_Mono'] text-[10px] font-bold uppercase tracking-wider">
+                <%= isLiveNow ? '⚡ ĐANG DIỄN RA' : '⚡ SẮP MỞ BÁN' %>
+              </span>
+              <span class="text-[#A6853B] font-['JetBrains_Mono'] text-xs font-semibold">CINEGO FLASH SALE (<%= sTime %> — <%= eTime %>)</span>
+            </div>
+            <h2 class="font-serif text-2xl sm:text-3xl font-bold text-white tracking-wide">
+              <%= fsBanner.title %>
+            </h2>
+            <p class="text-xs text-white/80 max-w-xl font-light leading-relaxed">
+              Chương trình săn vé xem phim và voucher bắp nước cực sốc diễn ra trong khung giờ từ <%= sTime %> đến <%= eTime %> hôm nay. Số lượng có hạn, ưu tiên thành viên nhanh tay nhất!
+            </p>
           </div>
-          <h2 class="font-serif text-2xl sm:text-3xl font-bold text-white tracking-wide">
-            Săn Vé Đồng Giá 19K & Khung Giờ Vàng
-          </h2>
-          <p class="text-xs text-white/80 max-w-xl font-light leading-relaxed">
-            Chương trình săn vé xem phim và voucher bắp nước cực sốc diễn ra theo từng khung giờ giới hạn trong ngày. Số lượng voucher và vé có hạn, ưu tiên thành viên nhanh tay nhất!
-          </p>
-        </div>
-        <div class="shrink-0 flex items-center gap-3">
-          <a href="/flash-sale" class="inline-flex items-center gap-2 px-6 py-3.5 bg-[#BA2D27] hover:bg-[#8E1F1A] text-white font-bold text-xs uppercase tracking-wider font-['JetBrains_Mono'] transition-all shadow-md">
-            <span>⚡ VÀO SĂN VÉ FLASH SALE</span>
-            <span>→</span>
-          </a>
+          <div class="shrink-0 flex items-center gap-3">
+            <a href="/flash-sale" class="inline-flex items-center gap-2 px-6 py-3.5 bg-[#BA2D27] hover:bg-[#8E1F1A] text-white font-bold text-xs uppercase tracking-wider font-['JetBrains_Mono'] transition-all shadow-md">
+              <span>⚡ VÀO SĂN VÉ FLASH SALE</span>
+              <span>→</span>
+            </a>
+          </div>
         </div>
       </div>
-    </div>
+    <% } %>
 
     <!-- =========================================================================
          2. QUICK SAVE VOUCHER STRIP (NHẬP MÃ ĐỂ LƯU TRỰC TIẾP VÀO VÍ)
