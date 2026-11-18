@@ -382,14 +382,22 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
         const cfgCouple = seatCfg?.priceCouple || 170000;
 
         let calculatedSeatPrice = 0;
+        const totalRows = seatCfg?.rows || 6;
+        const lastRowChar = String.fromCharCode(65 + totalRows - 1);
+        const vipStartRowIdx = Math.max(1, Math.floor(totalRows * 0.45));
+
         seatList.forEach(code => {
             const upper = code.toUpperCase();
-            if (upper.startsWith('F')) {
-                calculatedSeatPrice += cfgCouple; // Ghế đôi Sweetbox
-            } else if (upper.startsWith('D') || upper.startsWith('E')) {
-                calculatedSeatPrice += cfgVIP;    // Ghế VIP
+            const rowChar = upper.charAt(0);
+            const rowIdx = rowChar.charCodeAt(0) - 65;
+
+            // Ghế đôi Sweetbox luôn ở hàng dưới cùng (hoặc có định dạng cặp như F1-F2, H1-H2)
+            if (upper.includes('-') || rowChar === lastRowChar) {
+                calculatedSeatPrice += cfgCouple;
+            } else if (rowIdx >= vipStartRowIdx && rowIdx < totalRows - 1) {
+                calculatedSeatPrice += cfgVIP;
             } else {
-                calculatedSeatPrice += cfgStd;    // Ghế tiêu chuẩn
+                calculatedSeatPrice += cfgStd;
             }
         });
 
@@ -412,6 +420,9 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
             }
 
             if (v) {
+                if (v.applicableTo === 'concession') {
+                    return res.redirect(`/dat-ve/${phimId}?error=${encodeURIComponent(`Mã voucher ${upperCode} chỉ dành riêng cho Bắp Nước & Đồ Ăn, không áp dụng cho vé xem phim!`)}`);
+                }
                 if (v.expiryDate && new Date(v.expiryDate) < new Date()) {
                     return res.redirect(`/dat-ve/${phimId}?error=${encodeURIComponent(`Mã voucher ${upperCode} đã hết hạn sử dụng!`)}`);
                 }
@@ -626,13 +637,13 @@ router.get('/danh-gia', (req, res) => {
     res.render('trangdanhgia', { user: req.session.user || null, title: 'Bình Phẩm & Đánh Giá Điện Ảnh — CineGo' });
 });
 
-// [ĐÃ SỬA] API Kiểm tra Voucher (Chống tái sử dụng voucher 1 lần, hỗ trợ cả đặt vé và đặt bắp nước riêng)
+// [ĐÃ SỬA] API Kiểm tra Voucher (Chống tái sử dụng voucher 1 lần, phân biệt voucher Phim vs Bắp Nước)
 router.post('/api/kiem-tra-voucher', async (req, res) => {
     try {
         if (!req.session || !req.session.user) {
             return res.json({ success: false, requireLogin: true, message: "Vui lòng đăng nhập tài khoản để áp dụng mã ưu đãi/voucher!" });
         }
-        const { code, currentTotal } = req.body;
+        const { code, currentTotal, orderType } = req.body;
         const upperCode = (code || '').trim().toUpperCase();
         if (!upperCode) return res.json({ success: false, message: "Vui lòng nhập mã voucher!" });
 
@@ -640,6 +651,15 @@ router.post('/api/kiem-tra-voucher', async (req, res) => {
         if (!v) return res.json({ success: false, message: "Mã voucher không tồn tại!" });
         if (v.expiryDate && new Date(v.expiryDate) < new Date()) return res.json({ success: false, message: "Mã voucher này đã hết hạn sử dụng!" });
         
+        // Phân biệt voucher dành riêng cho Vé Xem Phim hoặc Bắp Nước
+        const curType = orderType || 'movie';
+        if (v.applicableTo === 'movie' && curType === 'concession') {
+            return res.json({ success: false, message: "Voucher này chỉ áp dụng cho Vé xem phim, không áp dụng cho đơn bắp nước!" });
+        }
+        if (v.applicableTo === 'concession' && curType === 'movie') {
+            return res.json({ success: false, message: "Voucher này chỉ áp dụng cho Bắp nước & Ẩm thực, không áp dụng cho vé xem phim!" });
+        }
+
         // Kiểm tra xem người dùng hiện tại đã dùng mã voucher này chưa
         if (req.session.user && req.session.user._id) {
             const userInDb = await User.findById(req.session.user._id);
@@ -656,10 +676,11 @@ router.post('/api/kiem-tra-voucher', async (req, res) => {
         res.json({ 
             success: true, 
             code: v.code,
+            applicableTo: v.applicableTo || 'all',
             discountType: v.discountType, 
             discountValue: v.discountValue, 
             maxDiscountValue: v.maxDiscountValue || 0, 
-            message: `Áp dụng mã ${v.code} thành công!` 
+            message: `Áp dụng mã ${v.code} (${v.applicableTo === 'concession' ? 'Bắp Nước' : (v.applicableTo === 'movie' ? 'Vé Phim' : 'Tất Cả')}) thành công!` 
         });
     } catch (error) { 
         res.status(500).json({ success: false, message: "Lỗi hệ thống khi kiểm tra voucher" }); 
@@ -918,6 +939,13 @@ router.post('/api/dat-bap-nuoc', async (req, res) => {
         const discount = Number(discountAmount) || 0;
         const origPrice = Number(originalPrice) || (total + discount);
         const currentCinema = cinema || 'CGV Kim Cúc Plaza';
+
+        if (voucherCode) {
+            const vCheck = await Voucher.findOne({ code: voucherCode.trim().toUpperCase() });
+            if (vCheck && vCheck.applicableTo === 'movie') {
+                return res.status(400).json({ success: false, error: 'Mã voucher này chỉ dành riêng cho Vé xem phim, không áp dụng cho đơn bắp nước!' });
+            }
+        }
 
         if (req.session.user && req.session.user._id) {
             await new Ticket({

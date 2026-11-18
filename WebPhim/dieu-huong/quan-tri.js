@@ -396,10 +396,21 @@ router.get('/khuyen-mai', async (req, res, next) => {
 
 router.post('/vouchers/add', async (req, res) => {
     try {
-        const { code, discountValue, minOrderValue, maxDiscountValue, title, description, discountType, expiryDate, imageUrl } = req.body;
+        const { code, discountValue, minOrderValue, maxDiscountValue, title, description, discountType, expiryDate, imageUrl, applicableTo } = req.body;
         let val = discountType === 'fixed' ? Number(discountValue) * 1000 : Number(discountValue);
         let min = Number(minOrderValue) * 1000, max = Number(maxDiscountValue) * 1000;
-        await Voucher.create({ code: code.toUpperCase(), discountValue: val, minOrderValue: min, maxDiscountValue: max, title, description, discountType, imageUrl, expiryDate: expiryDate ? new Date(expiryDate) : null });
+        await Voucher.create({ 
+            code: code.toUpperCase(), 
+            discountValue: val, 
+            minOrderValue: min, 
+            maxDiscountValue: max, 
+            title, 
+            description, 
+            discountType, 
+            imageUrl, 
+            expiryDate: expiryDate ? new Date(expiryDate) : null,
+            applicableTo: applicableTo || 'all'
+        });
         res.redirect('/admin/khuyen-mai?tab=voucher&success=' + encodeURIComponent(`Đã tạo mã voucher "${code.toUpperCase()}" thành công!`));
     } catch (error) { 
         res.redirect('/admin/khuyen-mai?tab=voucher&error=' + encodeURIComponent('Lỗi thêm voucher: ' + error.message)); 
@@ -408,10 +419,21 @@ router.post('/vouchers/add', async (req, res) => {
 
 router.post('/vouchers/sua/:id', async (req, res) => {
     try {
-        const { code, discountValue, minOrderValue, maxDiscountValue, title, description, discountType, expiryDate, imageUrl } = req.body;
+        const { code, discountValue, minOrderValue, maxDiscountValue, title, description, discountType, expiryDate, imageUrl, applicableTo } = req.body;
         let val = discountType === 'fixed' ? Number(discountValue) * 1000 : Number(discountValue);
         let min = Number(minOrderValue) * 1000, max = Number(maxDiscountValue) * 1000;
-        await Voucher.findByIdAndUpdate(req.params.id, { code: code.toUpperCase(), discountValue: val, minOrderValue: min, maxDiscountValue: max, title, description, discountType, imageUrl, expiryDate: expiryDate ? new Date(expiryDate) : null });
+        await Voucher.findByIdAndUpdate(req.params.id, { 
+            code: code.toUpperCase(), 
+            discountValue: val, 
+            minOrderValue: min, 
+            maxDiscountValue: max, 
+            title, 
+            description, 
+            discountType, 
+            imageUrl, 
+            expiryDate: expiryDate ? new Date(expiryDate) : null,
+            applicableTo: applicableTo || 'all'
+        });
         res.redirect('/admin/khuyen-mai?tab=voucher&success=' + encodeURIComponent(`Đã cập nhật thông tin voucher "${code.toUpperCase()}"!`));
     } catch (error) { 
         res.redirect('/admin/khuyen-mai?tab=voucher&error=' + encodeURIComponent('Lỗi cập nhật voucher: ' + error.message)); 

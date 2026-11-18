@@ -248,78 +248,68 @@
 
       <!-- SEAT ROWS CONTAINER -->
       <% 
+        const nRows = (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.rows) ? seatConfig.rows : 6;
+        const nCols = (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.cols) ? seatConfig.cols : 10;
         const pStd = (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.priceStandard) ? seatConfig.priceStandard : 75000;
         const pVIP = (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.priceVIP) ? seatConfig.priceVIP : 95000;
         const pCouple = (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.priceCouple) ? seatConfig.priceCouple : 170000;
+        let sMatrix = {};
+        if (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.seatMatrix) {
+          sMatrix = (typeof seatConfig.seatMatrix === 'string') ? JSON.parse(seatConfig.seatMatrix) : seatConfig.seatMatrix;
+        }
+        const vipStartRow = Math.max(1, Math.floor(nRows * 0.45));
       %>
       <div class="min-w-[620px] max-w-2xl mx-auto space-y-3.5 text-center mt-6 transition-opacity" id="auditoriumSeatMatrix">
-        
-        <!-- Row A (Standard) -->
-        <div class="flex items-center justify-center gap-2">
-          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">A</span>
-          <% for(let i=1; i<=10; i++) { %>
-            <div class="seat-unit seat-free" data-seat="A<%= i %>" data-price="<%= pStd %>" data-type="standard">A<%= i %></div>
+        <% for(let r = 0; r < nRows; r++) { %>
+          <% 
+            const rChar = String.fromCharCode(65 + r); 
+            const isLastRow = (r === nRows - 1);
+            const isVIPRow = (!isLastRow && r >= vipStartRow);
+          %>
+
+          <% if (r === vipStartRow && nRows >= 3) { %>
+            <div class="py-2 font-['JetBrains_Mono'] text-[11px] font-bold uppercase tracking-[0.2em] text-[#D97706]">
+              — KHU VỰC GHẾ TRUNG TÂM VIP (<%= pVIP.toLocaleString('vi-VN') %>đ) —
+            </div>
           <% } %>
-          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">A</span>
-        </div>
 
-        <!-- Row B (Standard) -->
-        <div class="flex items-center justify-center gap-2">
-          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">B</span>
-          <% for(let i=1; i<=10; i++) { %>
-            <div class="seat-unit seat-free" data-seat="B<%= i %>" data-price="<%= pStd %>" data-type="standard">B<%= i %></div>
+          <% if (isLastRow && nRows >= 2) { %>
+            <div class="py-2 font-['JetBrains_Mono'] text-[11px] font-bold uppercase tracking-[0.2em] text-white/50">
+              — HÀNG GHẾ ĐÔI SWEETBOX (<%= pCouple.toLocaleString('vi-VN') %>đ / 2 Người) —
+            </div>
           <% } %>
-          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">B</span>
-        </div>
 
-        <!-- Row C (Standard) -->
-        <div class="flex items-center justify-center gap-2">
-          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">C</span>
-          <% for(let i=1; i<=10; i++) { %>
-            <div class="seat-unit seat-free" data-seat="C<%= i %>" data-price="<%= pStd %>" data-type="standard">C<%= i %></div>
-          <% } %>
-          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">C</span>
-        </div>
+          <div class="flex items-center justify-center gap-2">
+            <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold <%= isVIPRow ? 'text-[#D97706]' : 'text-white/50' %>"><%= rChar %></span>
 
-        <!-- Divider VIP -->
-        <div class="py-2 font-['JetBrains_Mono'] text-[11px] font-bold uppercase tracking-[0.2em] text-[#D97706]">
-          — KHU VỰC GHẾ TRUNG TÂM VIP (<%= pVIP.toLocaleString('vi-VN') %>đ) —
-        </div>
+            <% if (isLastRow) { %>
+              <% for(let c = 1; c <= nCols; c += 2) { %>
+                <% const pairCode = (c + 1 <= nCols) ? `${rChar}${c}-${rChar}${c+1}` : `${rChar}${c}`; %>
+                <div class="seat-unit seat-free is-couple" data-seat="<%= pairCode %>" data-price="<%= pCouple %>" data-type="couple"><%= pairCode %></div>
+              <% } %>
+            <% } else { %>
+              <% for(let c = 1; c <= nCols; c++) { %>
+                <% 
+                  const sCode = rChar + c;
+                  let sType = sMatrix[sCode];
+                  if (!sType) {
+                    sType = isVIPRow ? 'vip' : 'standard';
+                  }
+                  const sPrice = (sType === 'vip') ? pVIP : ((sType === 'couple') ? pCouple : pStd);
+                  const sClass = (sType === 'vip') ? 'is-vip' : ((sType === 'couple') ? 'is-couple' : '');
+                %>
+                <% if (sType === 'empty') { %>
+                  <div class="w-[38px] h-[35px] invisible"></div>
+                <% } else { %>
+                  <div class="seat-unit seat-free <%= sClass %>" data-seat="<%= sCode %>" data-price="<%= sPrice %>" data-type="<%= sType %>"><%= sCode %></div>
+                <% } %>
+              <% } %>
+            <% } %>
 
-        <!-- Row D (VIP) -->
-        <div class="flex items-center justify-center gap-2">
-          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-[#D97706]">D</span>
-          <% for(let i=1; i<=10; i++) { %>
-            <div class="seat-unit seat-free is-vip" data-seat="D<%= i %>" data-price="<%= pVIP %>" data-type="vip">D<%= i %></div>
-          <% } %>
-          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-[#D97706]">D</span>
-        </div>
+            <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold <%= isVIPRow ? 'text-[#D97706]' : 'text-white/50' %>"><%= rChar %></span>
+          </div>
 
-        <!-- Row E (VIP) -->
-        <div class="flex items-center justify-center gap-2">
-          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-[#D97706]">E</span>
-          <% for(let i=1; i<=10; i++) { %>
-            <div class="seat-unit seat-free is-vip" data-seat="E<%= i %>" data-price="<%= pVIP %>" data-type="vip">E<%= i %></div>
-          <% } %>
-          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-[#D97706]">E</span>
-        </div>
-
-        <!-- Divider Sweetbox -->
-        <div class="py-2 font-['JetBrains_Mono'] text-[11px] font-bold uppercase tracking-[0.2em] text-white/50">
-          — HÀNG GHẾ ĐÔI SWEETBOX (<%= pCouple.toLocaleString('vi-VN') %>đ / 2 Người) —
-        </div>
-
-        <!-- Row F (Sweetbox Couple) -->
-        <div class="flex items-center justify-center gap-3">
-          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">F</span>
-          <div class="seat-unit seat-free is-couple" data-seat="F1-F2" data-price="<%= pCouple %>" data-type="couple">F1-F2</div>
-          <div class="seat-unit seat-free is-couple" data-seat="F3-F4" data-price="<%= pCouple %>" data-type="couple">F3-F4</div>
-          <div class="seat-unit seat-free is-couple" data-seat="F5-F6" data-price="<%= pCouple %>" data-type="couple">F5-F6</div>
-          <div class="seat-unit seat-free is-couple" data-seat="F7-F8" data-price="<%= pCouple %>" data-type="couple">F7-F8</div>
-          <div class="seat-unit seat-free is-couple" data-seat="F9-F10" data-price="<%= pCouple %>" data-type="couple">F9-F10</div>
-          <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">F</span>
-        </div>
-
+        <% } %>
       </div>
 
       <!-- CLEAR SEAT LEGEND -->

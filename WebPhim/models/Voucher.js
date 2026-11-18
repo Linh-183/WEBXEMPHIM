@@ -11,7 +11,8 @@ const voucherSchema = new mongoose.Schema({
     imageUrl: { type: String }, 
     expiryDate: { type: Date },
     isReward: { type: Boolean, default: false }, // true: Voucher đổi từ điểm thưởng / sinh nhật của khách (không hiển thị trong danh sách Admin)
-    rewardUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    rewardUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    applicableTo: { type: String, enum: ['all', 'movie', 'concession'], default: 'all' } // 'all': Tất cả, 'movie': Chỉ vé phim, 'concession': Chỉ bắp nước
 }, { timestamps: true });
 
 module.exports = mongoose.model('Voucher', voucherSchema);

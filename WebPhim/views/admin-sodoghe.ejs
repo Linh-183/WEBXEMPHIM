@@ -187,11 +187,12 @@
         let seatType = savedMatrix[seatCode];
 
         // Default type if not explicitly set in matrix:
+        // HÀNG DƯỚI CÙNG LUÔN LUÔN LÀ GHẾ ĐÔI SWEETBOX COUPLE
         if (!seatType) {
-          if (rowChar === 'D' || rowChar === 'E') {
-            seatType = 'vip';
-          } else if (rowChar === 'F') {
+          if (rIdx === numRows - 1) {
             seatType = 'couple';
+          } else if (rIdx >= Math.max(1, Math.floor(numRows * 0.45))) {
+            seatType = 'vip';
           } else {
             seatType = 'standard';
           }
