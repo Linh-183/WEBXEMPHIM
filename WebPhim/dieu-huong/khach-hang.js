@@ -199,6 +199,11 @@ router.get('/dat-ve/:id', checkLogin, async (req, res, next) => {
     } catch (error) { next(error); }
 });
 
+// Điều hướng an toàn nếu người dùng refresh trang thanh toán hoặc truy cập trực tiếp
+router.get('/thanh-toan', checkLogin, (req, res) => {
+    res.redirect('/phim?warning=' + encodeURIComponent('Vui lòng chọn phim và suất chiếu trước khi thanh toán!'));
+});
+
 router.post('/thanh-toan', checkLogin, async (req, res) => {
     try {
         const { movieId, cinema, showDate, showTime, seats, total, comboDetails, comboTotal } = req.body;

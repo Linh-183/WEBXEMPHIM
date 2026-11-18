@@ -714,7 +714,10 @@
 
     if (!currentTime) {
       if (notice) notice.classList.remove('hidden');
-      if (seatMatrix) seatMatrix.classList.add('opacity-25', 'pointer-events-none');
+      if (seatMatrix) {
+        seatMatrix.classList.add('opacity-40');
+        seatMatrix.classList.remove('pointer-events-none');
+      }
       document.querySelectorAll('.seat-unit').forEach(el => {
         el.classList.remove('seat-selected', 'seat-sold', 'seat-held');
         el.classList.add('seat-free');
@@ -723,7 +726,9 @@
     }
 
     if (notice) notice.classList.add('hidden');
-    if (seatMatrix) seatMatrix.classList.remove('opacity-25', 'pointer-events-none');
+    if (seatMatrix) {
+      seatMatrix.classList.remove('opacity-40', 'opacity-25', 'pointer-events-none');
+    }
 
     // Lưu mã các ghế người dùng đang chọn hiện tại để bảo toàn nếu không reset
     const userSelectedCodes = new Set(selectedSeats.map(s => s.code));
@@ -792,14 +797,6 @@
           el.classList.remove('seat-free');
           el.classList.add('seat-selected');
           el.title = `Ghế ${s.code} - Đang chọn (${s.price.toLocaleString('vi-VN')}đ)`;
-        }
-      });
-    } catch(err) {
-      console.warn('Lỗi kiểm tra ghế đã đặt:', err);
-    }
-  }
-          el.innerText = code;
-          el.title = `Ghế ${code} - Đang có người chọn`;
         }
       });
     } catch(err) {
@@ -885,7 +882,7 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function initBookingPage() {
     // Parse URL params for preselected cinema/date/time
     const urlParams = new URLSearchParams(window.location.search);
     const preCinema = urlParams.get('cinema');
@@ -932,6 +929,29 @@
       }
     }
 
+    // Nếu hôm nay đã qua hết các suất chiếu hoặc chưa có suất:
+    // Tự động tìm ngày gần nhất tiếp theo có suất chiếu để chọn giúp khách hàng
+    if (!currentTime || isPastShowtime(currentTime, currentDate)) {
+      const dateButtons = Array.from(document.querySelectorAll('.date-btn'));
+      for (const btn of dateButtons) {
+        const iso = btn.getAttribute('data-iso');
+        const label = btn.getAttribute('data-label') || '';
+        const allTimes = getAvailableShowtimes(currentCinema, iso);
+        const futureTimes = allTimes.filter(t => !isPastShowtime(t, iso));
+        if (futureTimes.length > 0) {
+          currentDate = iso;
+          document.getElementById('input_showDate').value = iso;
+          document.querySelectorAll('.date-btn').forEach(b => {
+            b.className = 'date-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-[\'JetBrains_Mono\'] text-xs transition-all';
+          });
+          btn.className = 'date-btn px-4 py-2 bg-[#121316] text-white font-[\'JetBrains_Mono\'] text-xs font-bold transition-all';
+          currentTime = futureTimes[0];
+          document.getElementById('input_showTime').value = currentTime;
+          break;
+        }
+      }
+    }
+
     renderShowtimes();
 
     // Delegated seat click handlers
@@ -940,8 +960,9 @@
       if (!seat) return;
 
       if (!currentTime) {
-        if (window.cinegoToast) window.cinegoToast.warning('Vui lòng chọn suất chiếu ở Bước 2 trước khi chọn ghế!');
-        else alert('Vui lòng chọn suất chiếu trước khi chọn ghế!');
+        if (window.cinegoToast) window.cinegoToast.warning('Vui lòng chọn ngày & suất chiếu ở Bước 2 trước khi chọn ghế!');
+        else alert('Vui lòng chọn ngày & suất chiếu ở Bước 2 trước khi chọn ghế!');
+        document.getElementById('timePickerContainer')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
 
@@ -992,6 +1013,27 @@
       updateBottomSummary();
     });
 
+    // Bắt sự kiện submit form đặt vé để phòng ngừa submit khi chưa chọn ghế hoặc chưa chọn suất
+    const bookingForm = document.getElementById('bookingForm');
+    if (bookingForm) {
+      bookingForm.addEventListener('submit', (e) => {
+        if (!currentTime) {
+          e.preventDefault();
+          if (window.cinegoToast) window.cinegoToast.warning('Vui lòng chọn suất chiếu ở Bước 2 trước khi tiếp tục!');
+          else alert('Vui lòng chọn suất chiếu ở Bước 2 trước khi tiếp tục!');
+          document.getElementById('timePickerContainer')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return false;
+        }
+        if (!selectedSeats || selectedSeats.length === 0) {
+          e.preventDefault();
+          if (window.cinegoToast) window.cinegoToast.warning('Vui lòng chọn ít nhất 1 ghế trước khi thanh toán!');
+          else alert('Vui lòng chọn ít nhất 1 ghế trước khi thanh toán!');
+          document.getElementById('auditoriumSeatMatrix')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return false;
+        }
+      });
+    }
+
     // Tự động đồng bộ ghế real-time theo chuẩn Modern Web (Page Visibility API)
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && currentTime) {
@@ -1006,7 +1048,13 @@
         loadOccupiedSeats(false);
       }
     }, 10000);
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initBookingPage);
+  } else {
+    initBookingPage();
+  }
 
   function adjustCombo(id, name, price, delta) {
     if (!comboItems[id]) {
