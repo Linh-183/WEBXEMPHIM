@@ -150,7 +150,7 @@
               <span id="header-cinema-label">CGV Kim Cúc</span>
               <span class="material-symbols-outlined text-[14px]">expand_more</span>
             </button>
-            <div id="quick-cinema-menu" popover="auto" class="cinego-popover absolute right-0 mt-1 w-64 bg-white border border-[#E5E0D5] shadow-xl py-1 z-50 text-xs font-['Plus_Jakarta_Sans']">
+            <div id="quick-cinema-menu" popover="auto" class="cinego-popover hidden absolute right-0 mt-1 w-64 bg-white border border-[#E5E0D5] shadow-xl py-1 z-50 text-xs font-['Plus_Jakarta_Sans']">
               <div class="px-3 py-1.5 text-[10px] font-['JetBrains_Mono'] uppercase tracking-widest text-[#7A7E8B] border-b border-[#E5E0D5]">
                 Chọn cụm rạp Quy Nhơn
               </div>
@@ -195,7 +195,7 @@
             </button>
 
             <!-- Dropdown Menu -->
-            <div id="user-profile-menu" popover="auto" class="cinego-popover absolute right-0 mt-2 w-56 bg-white border border-[#E5E0D5] shadow-xl py-2 z-50 text-xs font-['Plus_Jakarta_Sans']">
+            <div id="user-profile-menu" popover="auto" class="cinego-popover hidden absolute right-0 mt-2 w-56 bg-white border border-[#E5E0D5] shadow-xl py-2 z-50 text-xs font-['Plus_Jakarta_Sans']">
               <div class="px-4 py-2 border-b border-[#E5E0D5]">
                 <div class="font-bold text-[#121316] truncate"><%= user.hoTen %></div>
                 <div class="text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B] truncate"><%= user.email %></div>
@@ -447,15 +447,34 @@
       }, 250);
     });
 
-    // Close dropdowns on outside click (fallback for browsers without Popover API)
+    // Sync Native Popover and class 'hidden' to prevent transparent overlay click blocks
+    ['quick-cinema-menu', 'user-profile-menu'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('toggle', (e) => {
+        if (e.newState === 'open') {
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
+      });
+    });
+
+    // Close dropdowns on outside click (fallback for all browsers)
     document.addEventListener('click', function(e) {
       const qMenu = document.getElementById('quick-cinema-menu');
       const uMenu = document.getElementById('user-profile-menu');
-      if (qMenu && !qMenu.matches?.(':popover-open') && !e.target.closest('#quick-cinema-menu') && !e.target.closest('button[popovertarget="quick-cinema-menu"]')) {
+      if (qMenu && !e.target.closest('#quick-cinema-menu') && !e.target.closest('#quick-cinema-trigger') && !e.target.closest('button[popovertarget="quick-cinema-menu"]')) {
         qMenu.classList.add('hidden');
+        if (typeof qMenu.hidePopover === 'function') {
+          try { if (qMenu.matches(':popover-open')) qMenu.hidePopover(); } catch(err) {}
+        }
       }
-      if (uMenu && !uMenu.matches?.(':popover-open') && !e.target.closest('#user-profile-menu') && !e.target.closest('button[popovertarget="user-profile-menu"]')) {
+      if (uMenu && !e.target.closest('#user-profile-menu') && !e.target.closest('#user-profile-trigger') && !e.target.closest('button[popovertarget="user-profile-menu"]')) {
         uMenu.classList.add('hidden');
+        if (typeof uMenu.hidePopover === 'function') {
+          try { if (uMenu.matches(':popover-open')) uMenu.hidePopover(); } catch(err) {}
+        }
       }
     });
 

@@ -7,8 +7,8 @@
   let tierBadge = 'ĐỒNG';
   let tierColor = '#A6853B';
   let nextTierName = 'Bạc';
-  let nextTierPoints = 100;
-  let progressPercent = Math.min(100, Math.round((points / 100) * 100));
+  let nextTierPoints = 300;
+  let progressPercent = Math.min(100, Math.round((points / 300) * 100));
 
   if (user && user.vaiTro === 'admin') {
     tierCode = 'Admin';
@@ -17,29 +17,29 @@
     tierColor = '#BA2D27';
     nextTierName = null;
     progressPercent = 100;
-  } else if (points >= 600) {
+  } else if (points >= 1000) {
     tierCode = 'KimCuong';
     tierName = 'HỘI VIÊN KIM CƯƠNG';
     tierBadge = 'KIM CƯƠNG';
     tierColor = '#2563EB';
     nextTierName = null;
     progressPercent = 100;
-  } else if (points >= 300) {
+  } else if (points >= 600) {
     tierCode = 'Vang';
     tierName = 'HỘI VIÊN VÀNG';
     tierBadge = 'VÀNG';
     tierColor = '#D97706';
     nextTierName = 'Kim Cương';
-    nextTierPoints = 600;
-    progressPercent = Math.min(100, Math.round(((points - 300) / 300) * 100));
-  } else if (points >= 100) {
+    nextTierPoints = 1000;
+    progressPercent = Math.min(100, Math.round(((points - 600) / 400) * 100));
+  } else if (points >= 300) {
     tierCode = 'Bac';
     tierName = 'HỘI VIÊN BẠC';
     tierBadge = 'BẠC';
     tierColor = '#64748B';
     nextTierName = 'Vàng';
-    nextTierPoints = 300;
-    progressPercent = Math.min(100, Math.round(((points - 100) / 200) * 100));
+    nextTierPoints = 600;
+    progressPercent = Math.min(100, Math.round(((points - 300) / 300) * 100));
   }
 
   const savedVouchersList = (typeof savedVouchers !== 'undefined' && Array.isArray(savedVouchers)) 
@@ -135,14 +135,40 @@
             <% } %>
 
             <div class="text-[10px] text-[#7A7E8B] pt-2 border-t border-[#E5E0D5]">
-              Quy đổi: <strong>10.000đ</strong> chi tiêu = <strong>1 điểm</strong>. Đổi vé 0đ hoặc voucher 50K khi đủ điểm.
+              Quy đổi: <strong>1.000đ</strong> chi tiêu = <strong>1 điểm</strong>. Đổi ngay voucher 50K hoặc 100K khi đủ điểm!
             </div>
           </div>
 
-          <div class="pt-4">
-            <button type="button" onclick="redeemPointsModal(<%= points %>)" class="btn-editorial-primary w-full text-xs text-center !py-2.5">
-              Đổi Điểm Lấy Voucher 50K
-            </button>
+          <!-- Points Redemption Options -->
+          <div class="pt-4 space-y-2">
+            <span class="block text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider font-['JetBrains_Mono']">
+              ĐỔI ĐIỂM NHẬN VOUCHER ƯU ĐÃI:
+            </span>
+            <div class="grid grid-cols-1 gap-2.5">
+              <div class="p-3 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] flex items-center justify-between transition-all">
+                <div>
+                  <div class="font-bold text-xs text-[#121316]">🎟 Voucher Giảm 50.000đ</div>
+                  <div class="text-[10px] text-[#7A7E8B] font-['JetBrains_Mono'] mt-0.5">Chi phí: <strong class="text-[#BA2D27]">100 điểm thưởng</strong></div>
+                </div>
+                <button type="button" 
+                        onclick="redeemVoucher('50k', 100)" 
+                        class="btn-editorial-primary text-xs !py-1.5 !px-3 font-['JetBrains_Mono']">
+                  Đổi 50K
+                </button>
+              </div>
+
+              <div class="p-3 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] flex items-center justify-between transition-all">
+                <div>
+                  <div class="font-bold text-xs text-[#121316]">🎟 Voucher Giảm 100.000đ</div>
+                  <div class="text-[10px] text-[#7A7E8B] font-['JetBrains_Mono'] mt-0.5">Chi phí: <strong class="text-[#BA2D27]">200 điểm thưởng</strong></div>
+                </div>
+                <button type="button" 
+                        onclick="redeemVoucher('100k', 200)" 
+                        class="btn-editorial-secondary text-xs !py-1.5 !px-3 font-['JetBrains_Mono'] hover:!bg-[#BA2D27] hover:!text-white hover:!border-[#BA2D27]">
+                  Đổi 100K
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -155,33 +181,33 @@
             <div class="p-2 border border-[#E5E0D5] <%= tierCode === 'Dong' ? 'bg-[#F9EBEA] border-[#BA2D27]' : 'bg-[#FAF8F5]' %>">
               <div class="flex items-center justify-between font-bold text-[#A6853B]">
                 <span>1. HỘI VIÊN ĐỒNG</span>
-                <span>0 – 99đ</span>
+                <span>0 – 299đ</span>
               </div>
-              <p class="text-[#7A7E8B] text-[10px] mt-0.5">Tích 1 điểm cho mỗi 10.000đ khi đặt vé tại 3 rạp Quy Nhơn.</p>
+              <p class="text-[#7A7E8B] text-[10px] mt-0.5">Tích 1 điểm cho mỗi 1.000đ khi đặt vé & bắp nước tại 3 rạp Quy Nhơn.</p>
             </div>
             
             <div class="p-2 border border-[#E5E0D5] <%= tierCode === 'Bac' ? 'bg-[#F9EBEA] border-[#BA2D27]' : 'bg-[#FAF8F5]' %>">
               <div class="flex items-center justify-between font-bold text-[#64748B]">
                 <span>2. HỘI VIÊN BẠC</span>
-                <span>100 – 299đ</span>
+                <span>300 – 599đ</span>
               </div>
-              <p class="text-[#7A7E8B] text-[10px] mt-0.5">Giảm 5% bắp nước + Tặng 01 vé 2D vào tháng sinh nhật.</p>
+              <p class="text-[#7A7E8B] text-[10px] mt-0.5">Giảm 5% bắp nước + Tặng 01 voucher đặc quyền vào ngày sinh nhật.</p>
             </div>
 
             <div class="p-2 border border-[#E5E0D5] <%= tierCode === 'Vang' ? 'bg-[#F9EBEA] border-[#BA2D27]' : 'bg-[#FAF8F5]' %>">
               <div class="flex items-center justify-between font-bold text-[#D97706]">
                 <span>3. HỘI VIÊN VÀNG</span>
-                <span>300 – 599đ</span>
+                <span>600 – 999đ</span>
               </div>
-              <p class="text-[#7A7E8B] text-[10px] mt-0.5">Giảm 10% bắp nước + 2 vé 2D sinh nhật + Ưu tiên Fast-Track.</p>
+              <p class="text-[#7A7E8B] text-[10px] mt-0.5">Giảm 10% bắp nước + Quà tặng sinh nhật 100K + Ưu tiên Fast-Track.</p>
             </div>
 
             <div class="p-2 border border-[#E5E0D5] <%= tierCode === 'KimCuong' ? 'bg-[#F9EBEA] border-[#BA2D27]' : 'bg-[#FAF8F5]' %>">
               <div class="flex items-center justify-between font-bold text-[#2563EB]">
                 <span>4. HỘI VIÊN KIM CƯƠNG</span>
-                <span>≥ 600đ</span>
+                <span>≥ 1000đ</span>
               </div>
-              <p class="text-[#7A7E8B] text-[10px] mt-0.5">Giảm 15% bắp nước + Vé Premiere + Phòng chờ VIP Lounge.</p>
+              <p class="text-[#7A7E8B] text-[10px] mt-0.5">Giảm 15% bắp nước + Vé Premiere + Quà sinh nhật đặc quyền.</p>
             </div>
           </div>
         </div>
@@ -207,6 +233,20 @@
       <!-- Right Column: Profile Edit, Vouchers & Password (Span 8) -->
       <div class="lg:col-span-8 space-y-8">
         
+        <% if (typeof birthdayCelebration !== 'undefined' && birthdayCelebration) { %>
+          <div class="p-5 bg-[#FAF8F5] border-2 border-[#BA2D27] flex items-start gap-4 shadow-md">
+            <div class="text-3xl">🎂</div>
+            <div class="space-y-1">
+              <h3 class="font-serif text-base font-bold text-[#121316]">
+                Chúc Mừng Sinh Nhật Quý Hội Viên! 🎉
+              </h3>
+              <p class="text-xs text-[#474A54]">
+                CineGo hân hoan gửi tặng bạn <strong>Voucher Giảm 100.000đ</strong> và cộng trực tiếp <strong>+100 điểm thưởng</strong> vào tài khoản! Chúc bạn có những phút giây xem phim thăng hoa tại cụm rạp CineGo Quy Nhơn!
+              </p>
+            </div>
+          </div>
+        <% } %>
+
         <% if (typeof error !== 'undefined' && error) { %>
           <div data-toast-error="<%= error %>" class="p-4 bg-[#F9EBEA] border-l-4 border-[#BA2D27] text-[#BA2D27] text-xs font-['JetBrains_Mono'] flex items-center justify-between shadow-sm">
             <span>⚠ <%= error %></span>
@@ -573,19 +613,34 @@
     });
   }
 
-  function redeemPointsModal(currentPoints) {
-    if (currentPoints < 100) {
-      if (window.cinegoToast) window.cinegoToast.warning('Bạn cần tối thiểu 100 điểm thưởng để đổi lấy voucher 50.000đ.');
-      else alert('Bạn cần tối thiểu 100 điểm thưởng để đổi lấy voucher 50.000đ.');
-      return;
-    }
-    if (confirm('Bạn có muốn dùng 100 điểm thưởng để đổi lấy voucher giảm 50.000đ không?')) {
-      if (window.cinegoToast) {
-        window.cinegoToast.success('Đổi điểm thành công! Hãy kiểm tra ví voucher.');
+  function redeemVoucher(type, cost) {
+    const valText = (type === '50k' ? '50.000đ' : '100.000đ');
+    if (!confirm(`Bạn có chắc muốn dùng ${cost} điểm thưởng để đổi lấy Voucher ${valText} không?`)) return;
+
+    fetch('/api/doi-diem-voucher', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rewardType: type })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        if (window.cinegoToast) window.cinegoToast.success(data.message);
+        else alert(data.message);
+        setTimeout(() => window.location.reload(), 1000);
       } else {
-        alert('Đổi điểm thành công!');
+        if (window.cinegoToast) window.cinegoToast.warning(data.message);
+        else alert(data.message);
       }
-    }
+    })
+    .catch(err => {
+      if (window.cinegoToast) window.cinegoToast.error('Lỗi khi đổi điểm: ' + err.message);
+      else alert('Lỗi kết nối: ' + err.message);
+    });
+  }
+
+  function redeemPointsModal(currentPoints) {
+    redeemVoucher('50k', 100);
   }
 </script>
 

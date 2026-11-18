@@ -70,6 +70,22 @@
             </select>
           </div>
 
+          <!-- Giá vé bán (VNĐ) -->
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
+              Giá vé bán (VNĐ) <span class="text-[#BA2D27]">*</span>
+            </label>
+            <input name="price" type="number" required value="<%= phim.price || 75000 %>" placeholder="75000" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
+          </div>
+
+          <!-- Giá gốc niêm yết (VNĐ) -->
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
+              Giá gốc niêm yết (VNĐ)
+            </label>
+            <input name="originalPrice" type="number" value="<%= phim.originalPrice || 95000 %>" placeholder="95000" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-['JetBrains_Mono'] focus:outline-none focus:border-[#121316]" />
+          </div>
+
           <div class="sm:col-span-2">
             <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Tóm tắt nội dung phim</label>
             <textarea name="description" rows="4" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] focus:outline-none focus:border-[#121316]"><%= phim.description || '' %></textarea>
@@ -112,20 +128,13 @@
             </div>
             <div class="flex flex-col">
               <div class="flex items-center justify-between h-5 mb-1.5">
-                <label class="font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] whitespace-nowrap truncate" title="Các suất chiếu">Các suất chiếu (HH:MM)</label>
+                <label class="font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] whitespace-nowrap truncate" title="Các suất chiếu">Giờ chiếu (Tự nhập giờ, cách nhau dấu phẩy)</label>
                 <% if (idx > 0) { %>
                   <button type="button" onclick="this.closest('.grid').remove()" class="text-[10px] font-bold text-[#BA2D27] hover:underline">✕ Xóa</button>
                 <% } %>
               </div>
-              <input type="text" name="show_times" value="<%= timesStr %>" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs font-['JetBrains_Mono'] font-bold text-[#121316] focus:outline-none focus:border-[#121316]" onblur="formatShowtimeInput(this)" />
-              <div class="flex items-center gap-1 mt-1.5 flex-wrap">
-                <span class="text-[9px] text-[#7A7E8B] font-['JetBrains_Mono']">Thêm:</span>
-                <button type="button" onclick="appendTimeChip(this, '09:30')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+09:30</button>
-                <button type="button" onclick="appendTimeChip(this, '13:15')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+13:15</button>
-                <button type="button" onclick="appendTimeChip(this, '16:45')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+16:45</button>
-                <button type="button" onclick="appendTimeChip(this, '19:30')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+19:30</button>
-                <button type="button" onclick="appendTimeChip(this, '21:45')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+21:45</button>
-              </div>
+              <input type="text" name="show_times" value="<%= timesStr %>" placeholder="Nhập giờ chiếu tùy ý (VD: 08:30, 14:15, 20:00)" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs font-['JetBrains_Mono'] font-bold text-[#121316] focus:outline-none focus:border-[#121316]" onblur="formatShowtimeInput(this)" />
+              <span class="text-[9px] text-[#7A7E8B] font-['JetBrains_Mono'] mt-1">Định dạng HH:MM, cách nhau bởi dấu phẩy</span>
             </div>
           </div>
           <% }); %>
@@ -250,18 +259,10 @@
       </div>
       <div class="flex flex-col">
         <div class="flex items-center justify-between h-5 mb-1.5">
-          <label class="font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] whitespace-nowrap truncate">Các suất chiếu (HH:MM)</label>
+          <label class="font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] whitespace-nowrap truncate">Giờ chiếu (Tự nhập)</label>
           <button type="button" onclick="this.closest('.grid').remove()" class="text-[10px] font-bold text-[#BA2D27] hover:underline">✕ Xóa</button>
         </div>
-        <input type="text" name="show_times" placeholder="09:30, 13:15, 19:30" value="09:30, 13:15, 19:30" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs font-['JetBrains_Mono'] font-bold text-[#121316] focus:outline-none focus:border-[#121316]" onblur="formatShowtimeInput(this)" />
-        <div class="flex items-center gap-1 mt-1.5 flex-wrap">
-          <span class="text-[9px] text-[#7A7E8B] font-['JetBrains_Mono']">Thêm:</span>
-          <button type="button" onclick="appendTimeChip(this, '09:30')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+09:30</button>
-          <button type="button" onclick="appendTimeChip(this, '13:15')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+13:15</button>
-          <button type="button" onclick="appendTimeChip(this, '16:45')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+16:45</button>
-          <button type="button" onclick="appendTimeChip(this, '19:30')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+19:30</button>
-          <button type="button" onclick="appendTimeChip(this, '21:45')" class="px-1.5 py-0.5 bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[10px] font-['JetBrains_Mono'] font-bold text-[#121316] transition-all">+21:45</button>
-        </div>
+        <input type="text" name="show_times" placeholder="Nhập giờ chiếu tùy ý (VD: 08:30, 14:15, 20:00)" value="" class="w-full h-10 bg-white border border-[#E5E0D5] px-2.5 text-xs font-['JetBrains_Mono'] font-bold text-[#121316] focus:outline-none focus:border-[#121316]" onblur="formatShowtimeInput(this)" />
       </div>
     `;
     container.appendChild(newRow);

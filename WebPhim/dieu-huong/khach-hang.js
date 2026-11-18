@@ -91,10 +91,51 @@ router.get('/api/tim-kiem', async (req, res) => {
 router.get('/tim-kiem', async (req, res) => {
     try {
         const keyword = (req.query.keyword || '').trim();
-        const safeQuery = escapeRegex(keyword);
-        const movies = await Movie.find({ title: { $regex: safeQuery, $options: 'i' } }).sort({ createdAt: -1 });
-        res.render('trangtimkiem', { movies, tuKhoa: keyword, user: req.session.user || null, title: `Tìm Kiếm: "${keyword}" — CineGo` });
-    } catch (error) { res.status(500).send("Lỗi máy chủ khi tìm kiếm"); }
+        const genre = (req.query.genre || '').trim();
+        const cinema = (req.query.cinema || '').trim();
+        const status = (req.query.status || '').trim();
+        const ageRating = (req.query.ageRating || '').trim();
+
+        const mongoQuery = {};
+
+        if (keyword) {
+            const safe = escapeRegex(keyword);
+            mongoQuery.$or = [
+                { title: { $regex: safe, $options: 'i' } },
+                { director: { $regex: safe, $options: 'i' } },
+                { genre: { $regex: safe, $options: 'i' } },
+                { description: { $regex: safe, $options: 'i' } }
+            ];
+        }
+
+        if (genre && genre !== 'all') {
+            mongoQuery.genre = { $regex: escapeRegex(genre), $options: 'i' };
+        }
+
+        if (cinema && cinema !== 'all') {
+            mongoQuery['showtimes.cinema'] = { $regex: escapeRegex(cinema), $options: 'i' };
+        }
+
+        if (status && status !== 'all') {
+            mongoQuery.status = status;
+        }
+
+        if (ageRating && ageRating !== 'all') {
+            mongoQuery.ageRating = ageRating;
+        }
+
+        const movies = await Movie.find(mongoQuery).sort({ createdAt: -1 });
+        res.render('trangtimkiem', { 
+            movies, 
+            tuKhoa: keyword, 
+            filters: { genre, cinema, status, ageRating },
+            user: req.session.user || null, 
+            title: `Tìm Kiếm: "${keyword || 'Toàn Bộ Phim'}" — CineGo` 
+        });
+    } catch (error) { 
+        console.error("Lỗi máy chủ khi tìm kiếm:", error);
+        res.status(500).send("Lỗi máy chủ khi tìm kiếm"); 
+    }
 });
 
 // [VÁ LỖ HỔNG IDOR] Kiểm tra quyền sở hữu vé trước khi cho phép xóa
@@ -343,15 +384,15 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
             seat: { $in: seatList }
         });
 
-        // Tích điểm tự động: 10.000đ = 1 Điểm & Cập nhật hạng hội viên (Đồng -> Bạc -> Vàng -> Kim Cương)
-        const earnedPoints = Math.floor(verifiedTotalPrice / 10000);
+        // Tích điểm tự động hào phóng: 1.000đ = 1 Điểm & Cập nhật hạng hội viên (Đồng -> Bạc -> Vàng -> Kim Cương)
+        const earnedPoints = Math.floor(verifiedTotalPrice / 1000);
         if (earnedPoints > 0 && req.session.user && req.session.user._id) {
             const userInDb = await User.findById(req.session.user._id);
             if (userInDb) {
                 userInDb.diemTichLuy = (userInDb.diemTichLuy || 0) + earnedPoints;
-                if (userInDb.diemTichLuy >= 600) userInDb.hangHoiVien = 'KimCuong';
-                else if (userInDb.diemTichLuy >= 300) userInDb.hangHoiVien = 'Vang';
-                else if (userInDb.diemTichLuy >= 100) userInDb.hangHoiVien = 'Bac';
+                if (userInDb.diemTichLuy >= 1000) userInDb.hangHoiVien = 'KimCuong';
+                else if (userInDb.diemTichLuy >= 600) userInDb.hangHoiVien = 'Vang';
+                else if (userInDb.diemTichLuy >= 300) userInDb.hangHoiVien = 'Bac';
                 else userInDb.hangHoiVien = 'Dong';
                 await userInDb.save();
                 req.session.user = userInDb;
@@ -701,6 +742,21 @@ router.post('/api/dat-bap-nuoc', async (req, res) => {
                 totalPrice: total,
                 paymentMethod: 'vietqr'
             }).save();
+
+            // Tích điểm cho đơn bắp nước
+            const earnedPoints = Math.floor(total / 1000);
+            if (earnedPoints > 0) {
+                const userInDb = await User.findById(req.session.user._id);
+                if (userInDb) {
+                    userInDb.diemTichLuy = (userInDb.diemTichLuy || 0) + earnedPoints;
+                    if (userInDb.diemTichLuy >= 1000) userInDb.hangHoiVien = 'KimCuong';
+                    else if (userInDb.diemTichLuy >= 600) userInDb.hangHoiVien = 'Vang';
+                    else if (userInDb.diemTichLuy >= 300) userInDb.hangHoiVien = 'Bac';
+                    else userInDb.hangHoiVien = 'Dong';
+                    await userInDb.save();
+                    req.session.user = userInDb;
+                }
+            }
         }
 
         res.json({ success: true, message: 'Đơn bắp nước đã được xác nhận thành công!' });
@@ -750,17 +806,67 @@ router.get('/tai-khoan/ve-cua-toi', checkLogin, async (req, res) => {
     try { res.render('lichsudatve', { tickets: await Ticket.find({ user: req.session.user._id }).populate('movie').sort({ _id: -1 }) }); } catch (error) { res.status(500).send("Lỗi tải lịch sử"); }
 });
 
+// Helper kiểm tra và trao quà sinh nhật hàng năm tự động
+async function checkAndAwardBirthdayGift(user) {
+    if (!user || !user.ngaySinh) return false;
+    try {
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const birth = new Date(user.ngaySinh);
+        
+        // Kiểm tra đúng ngày và tháng sinh
+        const isBirthdayToday = (now.getMonth() === birth.getMonth() && now.getDate() === birth.getDate());
+        
+        if (isBirthdayToday && user.lastBirthdayGiftYear !== currentYear) {
+            const bdayCode = `BDAY${currentYear}-${user._id.toString().slice(-4).toUpperCase()}`;
+            let bdayVoucher = await Voucher.findOne({ code: bdayCode });
+            if (!bdayVoucher) {
+                bdayVoucher = await new Voucher({
+                    code: bdayCode,
+                    title: `Ưu Đãi Mừng Sinh Nhật ${currentYear} (Giảm 100K)`,
+                    discountType: 'fixed',
+                    discountValue: 100000,
+                    minOrderValue: 100000,
+                    expiryDate: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+                }).save();
+            }
+            
+            if (!user.vouchers) user.vouchers = [];
+            if (!user.vouchers.some(v => v.toString() === bdayVoucher._id.toString())) {
+                user.vouchers.push(bdayVoucher._id);
+            }
+            
+            // Tặng thêm 100 điểm thưởng mừng sinh nhật
+            user.diemTichLuy = (user.diemTichLuy || 0) + 100;
+            user.lastBirthdayGiftYear = currentYear;
+            await user.save();
+            return true;
+        }
+    } catch (err) {
+        console.warn('Lỗi kiểm tra ưu đãi sinh nhật:', err);
+    }
+    return false;
+}
+
 router.get('/tai-khoan/thong-tin', checkLogin, async (req, res) => {
     try {
         const thongTinUser = await User.findById(req.session.user._id).populate('vouchers');
         if (!thongTinUser) return res.redirect('/dang-nhap');
+        
+        const birthdayAwarded = await checkAndAwardBirthdayGift(thongTinUser);
+        if (birthdayAwarded) {
+            await thongTinUser.populate('vouchers');
+            req.session.user = thongTinUser;
+        }
+
         const vouchers = await Voucher.find({ $or: [{ expiryDate: { $gte: new Date() } }, { expiryDate: null }] }).sort({ createdAt: -1 });
         res.render('thongtincanhan', { 
             user: thongTinUser, 
             vouchers: vouchers || [], 
             savedVouchers: thongTinUser.vouchers || [],
+            birthdayCelebration: birthdayAwarded,
             error: req.query.error || null, 
-            success: req.query.success || null 
+            success: req.query.success || (birthdayAwarded ? 'Chúc mừng sinh nhật! Bạn vừa nhận được Voucher Sinh Nhật 100K và +100 điểm thưởng!' : null)
         });
     } catch (error) { res.redirect('/dang-nhap'); }
 });
@@ -784,11 +890,90 @@ router.post('/tai-khoan/cap-nhat', checkLogin, async (req, res) => {
             { new: true } 
         );
         if (!updatedUser) return res.redirect('/dang-nhap');
+        
+        const bdayAwarded = await checkAndAwardBirthdayGift(updatedUser);
         req.session.user = updatedUser; // Cập nhật lại session ngay lập tức
+        
+        let successMsg = 'Cập nhật hồ sơ thành công!';
+        if (bdayAwarded) {
+            successMsg = 'Chúc mừng sinh nhật! Bạn vừa nhận được Voucher Sinh Nhật 100K và +100 điểm thưởng!';
+        }
+
         return new Promise((resolve, reject) => {
             req.session.save((err) => { if (err) return reject(err); resolve(); });
-        }).then(() => res.redirect('/tai-khoan/thong-tin?success=' + encodeURIComponent('Cập nhật hồ sơ thành công!')));
+        }).then(() => res.redirect('/tai-khoan/thong-tin?success=' + encodeURIComponent(successMsg)));
     } catch (error) { res.status(500).send("Lỗi cập nhật: " + error.message); }
+});
+
+// [MỚI] API ĐỔI ĐIỂM THƯỞNG LẤY VOUCHER (50K, 100K) - KHẤU TRỪ ĐIỂM THỰC TẾ
+router.post('/api/doi-diem-voucher', checkLogin, async (req, res) => {
+    try {
+        const { rewardType } = req.body;
+        const user = await User.findById(req.session.user._id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản!' });
+        }
+
+        let cost = 100;
+        let discountVal = 50000;
+        let voucherTitle = 'Voucher 50.000đ Đổi Bằng Điểm Thưởng';
+        let baseCode = 'CINEGO50K';
+
+        if (rewardType === '100k') {
+            cost = 200;
+            discountVal = 100000;
+            voucherTitle = 'Voucher 100.000đ Đổi Bằng Điểm Thưởng';
+            baseCode = 'CINEGO100K';
+        }
+
+        if ((user.diemTichLuy || 0) < cost) {
+            return res.status(400).json({ 
+                success: false, 
+                message: `Bạn không đủ điểm! Cần tối thiểu ${cost} điểm thưởng để đổi voucher này (Hiện có: ${user.diemTichLuy || 0} điểm).` 
+            });
+        }
+
+        // Khấu trừ điểm tích lũy thật vào MongoDB
+        user.diemTichLuy -= cost;
+
+        // Cập nhật lại cấp bậc hội viên
+        if (user.diemTichLuy >= 1000) user.hangHoiVien = 'KimCuong';
+        else if (user.diemTichLuy >= 600) user.hangHoiVien = 'Vang';
+        else if (user.diemTichLuy >= 300) user.hangHoiVien = 'Bac';
+        else user.hangHoiVien = 'Dong';
+
+        // Tạo mới voucher ưu đãi cho người dùng
+        const now = new Date();
+        const code = `${baseCode}-${Date.now().toString(36).toUpperCase()}`;
+        const newVoucher = await new Voucher({
+            code: code,
+            title: voucherTitle,
+            discountType: 'fixed',
+            discountValue: discountVal,
+            minOrderValue: discountVal,
+            expiryDate: new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000)
+        }).save();
+
+        if (!user.vouchers) user.vouchers = [];
+        user.vouchers.push(newVoucher._id);
+        await user.save();
+        req.session.user = user;
+
+        res.json({
+            success: true,
+            message: `Đổi thành công Voucher ${discountVal.toLocaleString('vi-VN')}đ! Bạn đã trừ ${cost} điểm. Số điểm còn lại: ${user.diemTichLuy}`,
+            remainingPoints: user.diemTichLuy,
+            voucher: {
+                _id: newVoucher._id,
+                code: newVoucher.code,
+                title: newVoucher.title,
+                discountValue: newVoucher.discountValue
+            }
+        });
+    } catch (err) {
+        console.error('Lỗi đổi điểm voucher:', err);
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ khi đổi điểm: ' + err.message });
+    }
 });
 
 // [ĐÃ SỬA] Route Đổi mật khẩu an toàn, dùng flash message thay cho script alert

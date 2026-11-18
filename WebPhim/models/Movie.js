@@ -9,6 +9,8 @@ const movieSchema = new mongoose.Schema({
     trailerUrl: { type: String },      // Link Trailer (Youtube)
     posterUrl: { type: String },       // Link Ảnh Poster
     ageRating: { type: String, enum: ['P', 'K', 'T13', 'T16', 'T18', 'C'], default: 'P' },
+    price: { type: Number, default: 75000 },          // Giá bán vé (VNĐ)
+    originalPrice: { type: Number, default: 95000 },  // Giá gốc niêm yết (VNĐ)
     status: { type: String, enum: ['DangChieu', 'SapChieu', 'NgungChieu'], default: 'DangChieu' },
     description: { type: String },
     

@@ -637,7 +637,7 @@
       `;
 
       updateSummaryScreening();
-      loadOccupiedSeats();
+      loadOccupiedSeats(true);
       return;
     }
 
@@ -666,7 +666,7 @@
       `;
 
       updateSummaryScreening();
-      loadOccupiedSeats();
+      loadOccupiedSeats(true);
       return;
     }
 
@@ -699,14 +699,15 @@
     });
 
     updateSummaryScreening();
-    loadOccupiedSeats();
+    loadOccupiedSeats(true);
   }
 
-  async function loadOccupiedSeats() {
-    // Reset danh sách ghế đã chọn khi đổi suất/rạp/ngày
-    selectedSeats = [];
-    seatTotal = 0;
-    updateBottomSummary();
+  async function loadOccupiedSeats(resetSelected = false) {
+    if (resetSelected) {
+      selectedSeats = [];
+      seatTotal = 0;
+      updateBottomSummary();
+    }
 
     const seatMatrix = document.getElementById('auditoriumSeatMatrix');
     const notice = document.getElementById('noShowtimeNotice');
@@ -723,6 +724,9 @@
 
     if (notice) notice.classList.add('hidden');
     if (seatMatrix) seatMatrix.classList.remove('opacity-25', 'pointer-events-none');
+
+    // Lưu mã các ghế người dùng đang chọn hiện tại để bảo toàn nếu không reset
+    const userSelectedCodes = new Set(selectedSeats.map(s => s.code));
 
     // Đặt lại toàn bộ ghế về trạng thái trống
     document.querySelectorAll('.seat-unit').forEach(el => {
@@ -743,6 +747,8 @@
       const booked = Array.isArray(data.bookedSeats) ? data.bookedSeats : [];
       const locked = Array.isArray(data.tempLocked) ? data.tempLocked : [];
 
+      let conflictSeats = [];
+
       booked.forEach(code => {
         const el = document.querySelector(`.seat-unit[data-seat="${code}"]`);
         if (el) {
@@ -751,6 +757,9 @@
           el.innerText = '✕';
           el.title = `Ghế ${code} - Đã bán`;
         }
+        if (userSelectedCodes.has(code)) {
+          conflictSeats.push(code);
+        }
       });
 
       locked.forEach(code => {
@@ -758,6 +767,37 @@
         if (el && !el.classList.contains('seat-sold')) {
           el.classList.remove('seat-free', 'seat-selected');
           el.classList.add('seat-held');
+          el.innerText = code;
+          el.title = `Ghế ${code} - Đang có người chọn`;
+        }
+        if (userSelectedCodes.has(code)) {
+          conflictSeats.push(code);
+        }
+      });
+
+      // Nếu có ghế bị người khác chiếm khi đang chọn
+      if (conflictSeats.length > 0) {
+        selectedSeats = selectedSeats.filter(s => !conflictSeats.includes(s.code));
+        seatTotal = selectedSeats.reduce((sum, s) => sum + s.price, 0);
+        updateBottomSummary();
+        if (window.cinegoToast) {
+          window.cinegoToast.warning(`Ghế ${conflictSeats.join(', ')} vừa có khách hàng khác đặt giữ.`);
+        }
+      }
+
+      // Khôi phục trạng thái seat-selected cho các ghế đang chọn hợp lệ
+      selectedSeats.forEach(s => {
+        const el = document.querySelector(`.seat-unit[data-seat="${s.code}"]`);
+        if (el && !el.classList.contains('seat-sold') && !el.classList.contains('seat-held')) {
+          el.classList.remove('seat-free');
+          el.classList.add('seat-selected');
+          el.title = `Ghế ${s.code} - Đang chọn (${s.price.toLocaleString('vi-VN')}đ)`;
+        }
+      });
+    } catch(err) {
+      console.warn('Lỗi kiểm tra ghế đã đặt:', err);
+    }
+  }
           el.innerText = code;
           el.title = `Ghế ${code} - Đang có người chọn`;
         }
@@ -830,7 +870,7 @@
     }
 
     updateSummaryScreening();
-    loadOccupiedSeats();
+    loadOccupiedSeats(true);
   }
 
   function updateSummaryScreening() {
@@ -955,15 +995,15 @@
     // Tự động đồng bộ ghế real-time theo chuẩn Modern Web (Page Visibility API)
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && currentTime) {
-        loadOccupiedSeats();
+        loadOccupiedSeats(false);
       }
     });
     window.addEventListener('focus', () => {
-      if (currentTime) loadOccupiedSeats();
+      if (currentTime) loadOccupiedSeats(false);
     });
     setInterval(() => {
       if (document.visibilityState === 'visible' && currentTime) {
-        loadOccupiedSeats();
+        loadOccupiedSeats(false);
       }
     }, 10000);
   });

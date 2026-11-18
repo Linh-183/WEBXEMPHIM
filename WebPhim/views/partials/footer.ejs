@@ -143,29 +143,17 @@
 
   <script>
     function openTrailerModal(url, title) {
-      const modal = document.getElementById('trailerModal');
-      const iframe = document.getElementById('trailerIframe');
-      const titleEl = document.getElementById('trailerModalTitle');
-      if (!modal || !iframe) return;
-
-      let embedUrl = (url && url.trim()) ? url.trim() : ('https://www.youtube.com/embed?listType=search&list=' + encodeURIComponent((title || 'Phim điện ảnh') + ' trailer'));
-      if (embedUrl.includes('watch?v=')) {
-        embedUrl = embedUrl.replace('watch?v=', 'embed/') + '?autoplay=1';
-      } else if (embedUrl.includes('youtu.be/')) {
-        const id = embedUrl.split('youtu.be/')[1]?.split('?')[0];
-        embedUrl = 'https://www.youtube.com/embed/' + id + '?autoplay=1';
-      } else if (!embedUrl.includes('autoplay=1')) {
-        embedUrl += (embedUrl.includes('?') ? '&' : '?') + 'autoplay=1';
+      let watchUrl = (url && url.trim()) ? url.trim() : ('https://www.youtube.com/results?search_query=' + encodeURIComponent((title || 'Phim') + ' trailer'));
+      if (watchUrl.includes('embed/')) {
+        const id = watchUrl.split('embed/')[1]?.split('?')[0];
+        watchUrl = 'https://www.youtube.com/watch?v=' + id;
+      } else if (watchUrl.includes('youtu.be/')) {
+        const id = watchUrl.split('youtu.be/')[1]?.split('?')[0];
+        watchUrl = 'https://www.youtube.com/watch?v=' + id;
       }
 
-      iframe.src = embedUrl;
-      if (titleEl) titleEl.innerText = title || 'Trailer Thước Phim';
-
-      if (typeof modal.showModal === 'function') {
-        if (!modal.open) modal.showModal();
-      } else {
-        modal.classList.remove('hidden');
-      }
+      // Mở trực tiếp sang YouTube theo đúng yêu cầu người dùng
+      window.open(watchUrl, '_blank');
     }
 
     function closeTrailerModal() {

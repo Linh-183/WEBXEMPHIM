@@ -312,12 +312,14 @@
               </button>
             </div>
 
-            <!-- Quick Voucher Pills from User Wallet / Active Vouchers -->
+            <!-- Quick Voucher Pills from User Wallet & Available System Vouchers -->
             <% 
               const walletList = (typeof savedVouchers !== 'undefined' && Array.isArray(savedVouchers)) 
                 ? savedVouchers 
                 : ((typeof user !== 'undefined' && user && Array.isArray(user.vouchers) && user.vouchers.length > 0 && user.vouchers[0]._id) ? user.vouchers : []); 
+              const availableSystemVouchers = (typeof vouchers !== 'undefined' && Array.isArray(vouchers)) ? vouchers : [];
             %>
+
             <% if (walletList.length > 0) { %>
               <div class="space-y-1.5 pt-2">
                 <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B] uppercase font-bold">Mã trong ví của bạn (Click để chọn nhanh):</span>
@@ -331,7 +333,40 @@
                   <% }); %>
                 </div>
               </div>
-            <% } else { %>
+            <% } %>
+
+            <!-- Available System Vouchers Section -->
+            <% if (availableSystemVouchers.length > 0) { %>
+              <div class="space-y-2 pt-3 border-t border-[#E5E0D5]">
+                <div class="flex items-center justify-between text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B] uppercase font-bold">
+                  <span>Voucher Ưu Đãi Có Sẵn Hôm Nay:</span>
+                  <span class="text-[#BA2D27]"><%= availableSystemVouchers.length %> Mã Khả Dụng</span>
+                </div>
+                <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  <% availableSystemVouchers.forEach(v => { %>
+                    <div class="p-2.5 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] flex items-center justify-between gap-3 transition-colors">
+                      <div class="min-w-0">
+                        <div class="flex items-center gap-1.5">
+                          <span class="font-['JetBrains_Mono'] font-bold text-xs text-[#121316]"><%= v.code %></span>
+                          <span class="px-1.5 py-0.5 bg-[#BA2D27] text-white text-[9px] font-['JetBrains_Mono'] font-bold">
+                            <%= v.discountType === 'percentage' ? ('-' + v.discountValue + '%') : ('-' + (v.discountValue/1000) + 'K') %>
+                          </span>
+                        </div>
+                        <div class="text-[11px] text-[#7A7E8B] truncate mt-0.5"><%= v.title %></div>
+                        <% if (v.minOrderValue) { %>
+                          <div class="text-[9px] text-[#7A7E8B] font-['JetBrains_Mono']">Đơn tối thiểu: <%= (v.minOrderValue/1000) %>K</div>
+                        <% } %>
+                      </div>
+                      <button type="button" 
+                              onclick="fillVoucher('<%= v.code %>')" 
+                              class="btn-editorial-secondary text-[11px] !py-1 !px-3 font-bold whitespace-nowrap hover:!bg-[#BA2D27] hover:!text-white hover:!border-[#BA2D27] transition-all">
+                        Dùng Mã
+                      </button>
+                    </div>
+                  <% }); %>
+                </div>
+              </div>
+            <% } else if (walletList.length === 0) { %>
               <div class="pt-1 text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B]">
                 Ví voucher chưa có mã. <a href="/khuyen-mai" target="_blank" class="text-[#BA2D27] underline font-bold">Khám phá & lưu mã tại mục Khuyến Mãi →</a>
               </div>

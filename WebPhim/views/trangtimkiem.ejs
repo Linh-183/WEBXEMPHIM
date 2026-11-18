@@ -8,18 +8,88 @@
       <h1 class="editorial-headline">Tìm Kiếm Phim & Rạp Quy Nhơn</h1>
     </div>
 
-    <!-- Search Input Box -->
-    <div class="max-w-3xl mx-auto mb-12">
-      <form action="/tim-kiem" method="GET" class="relative flex items-center bg-white border border-[#E5E0D5] p-2">
-        <span class="material-symbols-outlined text-[#7A7E8B] text-xl ml-3">search</span>
-        <input type="text" 
-               name="keyword" 
-               value="<%= typeof tuKhoa !== 'undefined' ? tuKhoa : '' %>" 
-               placeholder="Nhập tên phim, đạo diễn hoặc rạp (CGV, Starlight, Dcine)..." 
-               class="w-full bg-transparent border-none pl-3 pr-28 py-3 text-sm text-[#121316] placeholder-[#A6AAB6] focus:outline-none font-['Plus_Jakarta_Sans']" />
-        <button type="submit" class="btn-editorial-primary text-xs !py-2.5 !px-6 absolute right-2">
-          TÌM KIẾM
-        </button>
+    <!-- Search Input & Filters Box -->
+    <div class="max-w-4xl mx-auto mb-10 space-y-4">
+      <form action="/tim-kiem" method="GET" class="space-y-4">
+        <div class="relative flex items-center bg-white border border-[#E5E0D5] p-2 shadow-sm">
+          <span class="material-symbols-outlined text-[#7A7E8B] text-xl ml-3">search</span>
+          <input type="text" 
+                 name="keyword" 
+                 value="<%= typeof tuKhoa !== 'undefined' ? tuKhoa : '' %>" 
+                 placeholder="Nhập tên phim, đạo diễn hoặc rạp (CGV, Starlight, Dcine)..." 
+                 class="w-full bg-transparent border-none pl-3 pr-28 py-3 text-sm text-[#121316] placeholder-[#A6AAB6] focus:outline-none font-['Plus_Jakarta_Sans']" />
+          <button type="submit" class="btn-editorial-primary text-xs !py-2.5 !px-6 absolute right-2">
+            TÌM KIẾM
+          </button>
+        </div>
+
+        <!-- Multi-facet Filter Bar -->
+        <% 
+          const currentFilters = (typeof filters !== 'undefined') ? filters : {}; 
+          const curGenre = currentFilters.genre || '';
+          const curCinema = currentFilters.cinema || '';
+          const curStatus = currentFilters.status || '';
+          const curAge = currentFilters.ageRating || '';
+        %>
+        <div class="bg-white border border-[#E5E0D5] p-4 sm:p-5 shadow-sm space-y-3 font-['JetBrains_Mono'] text-xs">
+          <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-2 text-[10px] text-[#7A7E8B] uppercase font-bold tracking-wider">
+            <span>BỘ LỌC TÌM KIẾM NÂNG CAO</span>
+            <% if (curGenre || curCinema || curStatus || curAge || (typeof tuKhoa !== 'undefined' && tuKhoa)) { %>
+              <a href="/tim-kiem" class="text-[#BA2D27] hover:underline normal-case">✕ Đặt lại tất cả</a>
+            <% } %>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <!-- Filter: Thể loại -->
+            <div>
+              <label class="block text-[10px] text-[#7A7E8B] mb-1 font-semibold uppercase">Thể loại</label>
+              <select name="genre" onchange="this.form.submit()" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-2.5 py-2 text-xs text-[#121316] font-medium focus:outline-none focus:border-[#121316]">
+                <option value="">Tất cả thể loại</option>
+                <option value="Hành Động" <%= curGenre === 'Hành Động' ? 'selected' : '' %>>Hành Động</option>
+                <option value="Khoa Học Viễn Tưởng" <%= curGenre === 'Khoa Học Viễn Tưởng' ? 'selected' : '' %>>Khoa Học Viễn Tưởng</option>
+                <option value="Kinh Dị" <%= curGenre === 'Kinh Dị' ? 'selected' : '' %>>Kinh Dị</option>
+                <option value="Hoạt Hình" <%= curGenre === 'Hoạt Hình' ? 'selected' : '' %>>Hoạt Hình</option>
+                <option value="Hài Hước" <%= curGenre === 'Hài Hước' ? 'selected' : '' %>>Hài Hước</option>
+                <option value="Tình Cảm" <%= curGenre === 'Tình Cảm' ? 'selected' : '' %>>Tình Cảm</option>
+                <option value="Tâm Lý" <%= curGenre === 'Tâm Lý' ? 'selected' : '' %>>Tâm Lý</option>
+              </select>
+            </div>
+
+            <!-- Filter: Cụm rạp -->
+            <div>
+              <label class="block text-[10px] text-[#7A7E8B] mb-1 font-semibold uppercase">Cụm rạp</label>
+              <select name="cinema" onchange="this.form.submit()" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-2.5 py-2 text-xs text-[#121316] font-medium focus:outline-none focus:border-[#121316]">
+                <option value="">Tất cả rạp Quy Nhơn</option>
+                <option value="CGV Kim Cúc" <%= curCinema.includes('CGV') ? 'selected' : '' %>>CGV Kim Cúc Plaza</option>
+                <option value="Starlight" <%= curCinema.includes('Starlight') ? 'selected' : '' %>>Starlight Nguyễn Kim</option>
+                <option value="DCine" <%= curCinema.includes('DCine') ? 'selected' : '' %>>DCine Quy Nhơn</option>
+              </select>
+            </div>
+
+            <!-- Filter: Trạng thái -->
+            <div>
+              <label class="block text-[10px] text-[#7A7E8B] mb-1 font-semibold uppercase">Trạng thái</label>
+              <select name="status" onchange="this.form.submit()" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-2.5 py-2 text-xs text-[#121316] font-medium focus:outline-none focus:border-[#121316]">
+                <option value="">Tất cả trạng thái</option>
+                <option value="DangChieu" <%= curStatus === 'DangChieu' ? 'selected' : '' %>>Đang Chiếu</option>
+                <option value="SapChieu" <%= curStatus === 'SapChieu' ? 'selected' : '' %>>Sắp Chiếu</option>
+              </select>
+            </div>
+
+            <!-- Filter: Độ tuổi -->
+            <div>
+              <label class="block text-[10px] text-[#7A7E8B] mb-1 font-semibold uppercase">Độ tuổi</label>
+              <select name="ageRating" onchange="this.form.submit()" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-2.5 py-2 text-xs text-[#121316] font-medium focus:outline-none focus:border-[#121316]">
+                <option value="">Tất cả độ tuổi</option>
+                <option value="P" <%= curAge === 'P' ? 'selected' : '' %>>P (Mọi lứa tuổi)</option>
+                <option value="K" <%= curAge === 'K' ? 'selected' : '' %>>K (Dưới 13 tuổi)</option>
+                <option value="T13" <%= curAge === 'T13' ? 'selected' : '' %>>T13 (Từ 13 tuổi)</option>
+                <option value="T16" <%= curAge === 'T16' ? 'selected' : '' %>>T16 (Từ 16 tuổi)</option>
+                <option value="T18" <%= curAge === 'T18' ? 'selected' : '' %>>T18 (Từ 18 tuổi)</option>
+              </select>
+            </div>
+          </div>
+        </div>
       </form>
     </div>
 
@@ -50,6 +120,12 @@
                   </h3>
                   <div class="text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B]">
                     Thời lượng: <span class="text-[#121316]"><%= phim.duration ? (phim.duration + ' phút') : '120 phút' %></span>
+                  </div>
+                  <div class="text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B]">
+                    Giá vé: <strong class="text-[#BA2D27]"><%= (phim.price || 75000).toLocaleString('vi-VN') %>đ</strong>
+                    <% if (phim.originalPrice && phim.originalPrice > (phim.price || 75000)) { %>
+                      <span class="text-[10px] text-[#A6AAB6] line-through ml-1"><%= phim.originalPrice.toLocaleString('vi-VN') %>đ</span>
+                    <% } %>
                   </div>
                 </div>
               </div>

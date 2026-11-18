@@ -623,9 +623,25 @@ dialog.cinego-dialog[open]::backdrop {
   transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), display 0.18s allow-discrete, overlay 0.18s allow-discrete;
 }
 
+.cinego-popover:not(:popover-open),
+.cinego-popover.hidden {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
 .cinego-popover:popover-open {
+  display: block !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
   opacity: 1;
   transform: translateY(0);
+}
+
+dialog.cinego-dialog:not([open]) {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
 }
 
 @starting-style {

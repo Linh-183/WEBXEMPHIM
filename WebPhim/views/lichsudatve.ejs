@@ -22,16 +22,22 @@
       </div>
     </div>
 
-    <!-- Filter Tabs (SRS 1.6: Vé sắp xem, đã xem, đã hủy) -->
-    <div class="flex items-center gap-2 border-b border-[#E5E0D5] pb-4 mb-8 text-xs font-['JetBrains_Mono']">
+    <!-- Filter Tabs (SRS 1.6: Vé sắp xem, đã xem, bắp nước F&B riêng) -->
+    <div class="flex items-center gap-2 border-b border-[#E5E0D5] pb-4 mb-8 text-xs font-['JetBrains_Mono'] flex-wrap">
       <button type="button" onclick="filterTicketCategory('all', this)" class="ticket-tab-pill px-4 py-2 bg-[#121316] text-white font-bold uppercase tracking-wider">
-        Tất Cả Vé
+        Tất Cả Giao Dịch
+      </button>
+      <button type="button" onclick="filterTicketCategory('movie', this)" class="ticket-tab-pill px-4 py-2 bg-white border border-[#E5E0D5] text-[#474A54] hover:text-[#121316] font-bold uppercase tracking-wider transition-colors">
+        Vé Xem Phim
+      </button>
+      <button type="button" onclick="filterTicketCategory('concession', this)" class="ticket-tab-pill px-4 py-2 bg-white border border-[#E5E0D5] text-[#474A54] hover:text-[#121316] font-bold uppercase tracking-wider transition-colors">
+        🍿 Bắp Nước Đặt Riêng (F&B)
       </button>
       <button type="button" onclick="filterTicketCategory('upcoming', this)" class="ticket-tab-pill px-4 py-2 bg-white border border-[#E5E0D5] text-[#474A54] hover:text-[#121316] font-bold uppercase tracking-wider transition-colors">
-        Sắp Xem
+        Suất Sắp Chiếu
       </button>
       <button type="button" onclick="filterTicketCategory('past', this)" class="ticket-tab-pill px-4 py-2 bg-white border border-[#E5E0D5] text-[#474A54] hover:text-[#121316] font-bold uppercase tracking-wider transition-colors">
-        Đã Xem & Đánh Giá
+        Lịch Sử Cũ
       </button>
     </div>
 
@@ -41,12 +47,21 @@
     <div class="space-y-6" id="tickets-list-container">
       <% if (typeof tickets !== 'undefined' && tickets && tickets.length > 0) { %>
         <% tickets.forEach(function(ticket, idx) { %>
-          <div class="ticket-pass ticket-pass-horizontal p-6 sm:p-8 bg-white border border-[#E5E0D5] flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:border-[#121316] transition-all">
+          <% 
+            const isConcessionOnly = !ticket.movie || (ticket.seats && (Array.isArray(ticket.seats) ? ticket.seats.includes('Quầy F&B') : ticket.seats === 'Quầy F&B'));
+            const todayStr = new Date().toISOString().split('T')[0];
+            const isUpcoming = (!isConcessionOnly && ticket.showDate && ticket.showDate >= todayStr);
+            const isPast = (!isConcessionOnly && ticket.showDate && ticket.showDate < todayStr);
+          %>
+          <div class="ticket-item-card ticket-pass ticket-pass-horizontal p-6 sm:p-8 bg-white border border-[#E5E0D5] flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:border-[#121316] transition-all"
+               data-type="<%= isConcessionOnly ? 'concession' : 'movie' %>"
+               data-upcoming="<%= isUpcoming ? 'true' : 'false' %>"
+               data-past="<%= isPast ? 'true' : 'false' %>">
             
             <div class="space-y-2 flex-1">
               <div class="flex flex-wrap items-center gap-3 font-['JetBrains_Mono'] text-[11px]">
-                <span class="px-2 py-0.5 bg-[#121316] text-white font-bold tracking-wider">
-                  MÃ VÉ: <%= ticket._id.toString().substring(18).toUpperCase() %>
+                <span class="px-2 py-0.5 <%= isConcessionOnly ? 'bg-[#A6853B]' : 'bg-[#121316]' %> text-white font-bold tracking-wider">
+                  <%= isConcessionOnly ? 'ĐƠN BẮP NƯỚC F&B' : 'MÃ VÉ: ' + ticket._id.toString().substring(18).toUpperCase() %>
                 </span>
                 <span class="text-[#BA2D27] font-semibold">
                   <%= ticket.cinema || 'CGV Kim Cúc Plaza' %>
@@ -56,18 +71,30 @@
               </div>
 
               <h2 class="font-serif text-2xl sm:text-3xl font-bold text-[#121316] leading-tight">
-                <%= ticket.movie ? ticket.movie.title : 'Phim Điện Ảnh' %>
+                <% if (isConcessionOnly) { %>
+                  🍿 <%= ticket.comboDetails || 'Combo Bắp Nước Online' %>
+                <% } else { %>
+                  <%= ticket.movie ? ticket.movie.title : 'Phim Điện Ảnh' %>
+                <% } %>
               </h2>
 
               <div class="font-['JetBrains_Mono'] text-xs text-[#7A7E8B] flex flex-wrap items-center gap-3">
-                <span>Suất: <strong class="text-[#121316]"><%= ticket.showTime || '19:30' %></strong></span>
-                <span>•</span>
-                <span>Ngày: <strong class="text-[#121316]"><%= ticket.showDate || new Date().toISOString().split('T')[0] %></strong></span>
-                <span>•</span>
-                <span>Ghế: <strong class="text-[#BA2D27]"><%= ticket.seats ? (Array.isArray(ticket.seats) ? ticket.seats.join(', ') : ticket.seats) : 'D5' %></strong></span>
+                <% if (isConcessionOnly) { %>
+                  <span>Loại đơn: <strong class="text-[#121316]">Quầy F&B Fast-Track</strong></span>
+                  <span>•</span>
+                  <span>Ngày nhận: <strong class="text-[#121316]"><%= ticket.showDate || todayStr %></strong></span>
+                  <span>•</span>
+                  <span>Vị trí: <strong class="text-[#BA2D27]">Quầy Bắp Nước Tại Rạp</strong></span>
+                <% } else { %>
+                  <span>Suất: <strong class="text-[#121316]"><%= ticket.showTime || '19:30' %></strong></span>
+                  <span>•</span>
+                  <span>Ngày: <strong class="text-[#121316]"><%= ticket.showDate || todayStr %></strong></span>
+                  <span>•</span>
+                  <span>Ghế: <strong class="text-[#BA2D27]"><%= ticket.seats ? (Array.isArray(ticket.seats) ? ticket.seats.join(', ') : ticket.seats) : 'D5' %></strong></span>
+                <% } %>
               </div>
 
-              <% if (ticket.comboDetails) { %>
+              <% if (!isConcessionOnly && ticket.comboDetails) { %>
                 <div class="text-[11px] font-['JetBrains_Mono'] text-[#474A54]">
                   Bắp nước kèm: <span class="font-semibold text-[#121316]"><%= ticket.comboDetails %></span>
                 </div>
@@ -82,13 +109,15 @@
               </div>
 
               <div class="flex items-center gap-2">
-                <a href="/ve/<%= ticket._id %>" class="btn-editorial-secondary text-xs !py-2.5 !px-3 font-semibold" title="Xem thẻ vé điện tử chuẩn">
-                  Thẻ Vé →
-                </a>
+                <% if (!isConcessionOnly) { %>
+                  <a href="/ve/<%= ticket._id %>" class="btn-editorial-secondary text-xs !py-2.5 !px-3 font-semibold" title="Xem thẻ vé điện tử chuẩn">
+                    Thẻ Vé →
+                  </a>
+                <% } %>
                 <button type="button" 
-                        onclick="openTicketQRModal('<%= ticket._id.toString().substring(18).toUpperCase() %>', '<%= ticket.movie ? ticket.movie.title : 'Phim Điện Ảnh' %>', '<%= ticket.cinema %>', '<%= ticket.showDate %>', '<%= ticket.showTime %>', '<%= ticket.seats ? (Array.isArray(ticket.seats) ? ticket.seats.join(', ') : ticket.seats) : 'D5' %>')"
+                        onclick="openTicketQRModal('<%= ticket._id.toString().substring(18).toUpperCase() %>', '<%= isConcessionOnly ? (ticket.comboDetails || 'Combo Bắp Nước') : (ticket.movie ? ticket.movie.title : 'Phim Điện Ảnh') %>', '<%= ticket.cinema || 'CGV Kim Cúc Plaza' %>', '<%= ticket.showDate %>', '<%= ticket.showTime || 'Fast-Track' %>', '<%= isConcessionOnly ? 'Quầy F&B' : (ticket.seats ? (Array.isArray(ticket.seats) ? ticket.seats.join(', ') : ticket.seats) : 'D5') %>')"
                         class="btn-editorial-primary text-xs !py-2.5 !px-4">
-                  Xem Mã QR
+                  <%= isConcessionOnly ? 'Mã Nhận Bắp Nước' : 'Xem Mã QR' %>
                 </button>
               </div>
             </div>
@@ -236,9 +265,24 @@
     btn.classList.remove('bg-white', 'text-[#474A54]');
     btn.classList.add('bg-[#121316]', 'text-white');
 
-    if (window.cinegoToast) {
-      window.cinegoToast.info('Đang lọc danh mục: ' + btn.innerText);
-    }
+    const cards = document.querySelectorAll('.ticket-item-card');
+    cards.forEach(card => {
+      const cType = card.getAttribute('data-type');
+      const isUpcoming = card.getAttribute('data-upcoming') === 'true';
+      const isPast = card.getAttribute('data-past') === 'true';
+
+      if (type === 'all') {
+        card.style.display = 'flex';
+      } else if (type === 'concession') {
+        card.style.display = (cType === 'concession') ? 'flex' : 'none';
+      } else if (type === 'movie') {
+        card.style.display = (cType === 'movie') ? 'flex' : 'none';
+      } else if (type === 'upcoming') {
+        card.style.display = isUpcoming ? 'flex' : 'none';
+      } else if (type === 'past') {
+        card.style.display = isPast ? 'flex' : 'none';
+      }
+    });
   }
 </script>
 

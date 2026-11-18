@@ -28,10 +28,9 @@ assert(!checkoutView.includes('2026-11-12'), 'trangthanhtoan.ejs must NOT have h
   const content = fs.readFileSync(path.join(__dirname, 'views', file), 'utf8');
   assert(!content.includes('grid-cols-4 gap-3 p-4 bg-[#FAF8F5] border border-[#E5E0D5] items-end'), file + ' must NOT use items-end with unbalanced labels');
   assert(content.includes('h-5 flex items-center'), file + ' must use uniform h-5 label wrappers');
-  assert(content.includes('appendTimeChip'), file + ' must have appendTimeChip helper');
   assert(content.includes('formatShowtimeInput'), file + ' must have formatShowtimeInput helper');
   assert(content.includes('addShowtimeRow'), file + ' must have addShowtimeRow helper');
-  assert(content.includes('+09:30'), file + ' must have +09:30 quick chip');
+  assert(!content.includes('+09:30'), file + ' must NOT force +09:30 quick chips per user request');
 });
 
 // 4. Check khach-hang.js API

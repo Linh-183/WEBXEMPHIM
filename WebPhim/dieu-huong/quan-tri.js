@@ -182,7 +182,7 @@ router.get('/phim/them', (req, res) => res.redirect('/admin/phim?action=them'));
 
 router.post('/phim/them', async (req, res) => {
     try {
-        const { title, genre, duration, director, releaseDate, posterUrl, trailerUrl, ageRating, status, description, cinema, room, show_date, show_times } = req.body;
+        const { title, genre, duration, director, releaseDate, posterUrl, trailerUrl, ageRating, status, description, cinema, room, show_date, show_times, price, originalPrice } = req.body;
         if (!title || !title.trim()) {
             return res.redirect('/admin/phim?action=them&error=' + encodeURIComponent('Vui lòng nhập tên phim!'));
         }
@@ -239,6 +239,8 @@ router.post('/phim/them', async (req, res) => {
 
         const safeReleaseDate = (releaseDate && !isNaN(new Date(releaseDate).getTime())) ? new Date(releaseDate) : new Date();
         const safeDuration = Number(duration) || 120;
+        const safePrice = Number(price) > 0 ? Number(price) : 75000;
+        const safeOriginalPrice = Number(originalPrice) > 0 ? Number(originalPrice) : 95000;
 
         await new Movie({ 
             title: title.trim(), 
@@ -249,6 +251,8 @@ router.post('/phim/them', async (req, res) => {
             posterUrl: posterUrl ? posterUrl.trim() : 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=400&q=80', 
             trailerUrl: trailerUrl ? trailerUrl.trim() : '', 
             ageRating: ageRating || 'T16', 
+            price: safePrice,
+            originalPrice: safeOriginalPrice,
             status: status || 'DangChieu', 
             description: description ? description.trim() : '', 
             showtimes: formattedShowtimes 
@@ -268,7 +272,7 @@ router.get('/phim/sua/:id', async (req, res) => {
 router.post('/phim/sua/:id', async (req, res) => {
     try {
         const idPhim = req.params.id;
-        const { title, description, posterUrl, ageRating, duration, genre, director, status, releaseDate } = req.body;
+        const { title, description, posterUrl, trailerUrl, ageRating, duration, genre, director, status, releaseDate, price, originalPrice } = req.body;
         
         const showDates = req.body.show_date || [];
         const showTimesRaw = req.body.show_times || [];
@@ -327,8 +331,23 @@ router.post('/phim/sua/:id', async (req, res) => {
             }
         }
 
+        const safePrice = Number(price) > 0 ? Number(price) : 75000;
+        const safeOriginalPrice = Number(originalPrice) > 0 ? Number(originalPrice) : 95000;
+
         await Movie.findByIdAndUpdate(idPhim, {
-            title, description, posterUrl, ageRating, duration: Number(duration) || 0, genre, director, status, releaseDate: releaseDate ? new Date(releaseDate) : null, showtimes
+            title, 
+            description, 
+            posterUrl, 
+            trailerUrl: trailerUrl ? trailerUrl.trim() : '',
+            ageRating, 
+            price: safePrice,
+            originalPrice: safeOriginalPrice,
+            duration: Number(duration) || 0, 
+            genre, 
+            director, 
+            status, 
+            releaseDate: releaseDate ? new Date(releaseDate) : null, 
+            showtimes
         }, { runValidators: true });
 
         res.redirect('/admin/phim?success=' + encodeURIComponent(`Đã cập nhật thông tin tác phẩm "${title}" thành công!`)); 
