@@ -21,14 +21,13 @@ assert(checkoutView.includes('Voucher Ưu Đãi Có Sẵn Hôm Nay'), 'trangthan
 assert(checkoutView.includes('fillVoucher'), 'trangthanhtoan.ejs must have 1-click apply button');
 console.log('  ✓ Requirement 2: Hiển thị voucher có sẵn tại thanh toán - Verified');
 
-// 3. Lỗi header bị đơ do popover che click
+// 3. Khắc phục lỗi header đơ và menu tài khoản bị vỡ layout
 const headerView = fs.readFileSync(path.join(__dirname, 'views', 'partials', 'header.ejs'), 'utf8');
 const editorialCss = fs.readFileSync(path.join(__dirname, 'public', 'css', 'cinego-editorial.css'), 'utf8');
-assert(headerView.includes('id="quick-cinema-menu" popover="auto" class="cinego-popover hidden'), 'quick-cinema-menu must have hidden class by default');
-assert(headerView.includes('id="user-profile-menu" popover="auto" class="cinego-popover hidden'), 'user-profile-menu must have hidden class by default');
-assert(editorialCss.includes('.cinego-popover:not(:popover-open)'), 'CSS must handle :not(:popover-open)');
-assert(editorialCss.includes('pointer-events: none !important'), 'CSS must disable pointer events when closed');
-console.log('  ✓ Requirement 3: Khắc phục triệt để lỗi header đơ / click overlay - Verified');
+assert(headerView.includes('id="quick-cinema-menu"') && headerView.includes('hidden absolute right-0'), 'quick-cinema-menu must have hidden class by default');
+assert(headerView.includes('id="user-profile-menu"') && headerView.includes('hidden absolute right-0'), 'user-profile-menu must have hidden class by default');
+assert(headerView.includes('toggleUserDropdown') && headerView.includes('toggleCinemaDropdown'), 'Header must have standard click controllers');
+console.log('  ✓ Requirement 3: Khắc phục triệt để lỗi header đơ / click overlay & vỡ layout - Verified');
 
 // 4. Mất trailerUrl khi sửa phim
 const quanTriCode = fs.readFileSync(path.join(__dirname, 'dieu-huong', 'quan-tri.js'), 'utf8');

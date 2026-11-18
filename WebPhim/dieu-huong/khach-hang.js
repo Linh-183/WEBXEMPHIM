@@ -419,6 +419,13 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
             }
         }
 
+        const submittedTotal = Number(total) || 0;
+        const submittedFinal = Number(finalAmount);
+        const submittedDiscount = Number(discountAmount) || 0;
+        const grossSum = (!isNaN(submittedFinal) ? submittedFinal : 0) + submittedDiscount;
+        const grossOrderValue = Math.max(submittedTotal, expectedBaseTotal, grossSum);
+        const finalDiscountAmount = Math.max(appliedDiscount, submittedDiscount, Math.max(0, grossOrderValue - verifiedTotalPrice));
+
         const savedTicket = await new Ticket({
             user: req.session.user._id,
             movie: phimId,
@@ -428,8 +435,8 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
             seats: seatList,
             comboDetails: comboDetails || '',
             comboTotal: safeComboTotal,
-            originalPrice: expectedBaseTotal,
-            discountAmount: appliedDiscount,
+            originalPrice: grossOrderValue,
+            discountAmount: finalDiscountAmount,
             voucherCode: validVoucherCode,
             totalPrice: verifiedTotalPrice,
             paymentMethod: payment_method || 'vietqr'
@@ -445,8 +452,7 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
         });
 
         // Cập nhật User một lần duy nhất: gỡ voucher khỏi ví, ghi nhận mã đã dùng, và CỘNG ĐIỂM THƯỞNG
-        const baseOrderValue = expectedBaseTotal > 0 ? expectedBaseTotal : (Number(total) || 0);
-        const earnedPoints = Math.max(Math.floor(verifiedTotalPrice / 1000), Math.floor(baseOrderValue / 1000));
+        const earnedPoints = Math.max(Math.floor(grossOrderValue / 1000), Math.floor(verifiedTotalPrice / 1000));
 
         if (userInDb) {
             if (validVoucherCode) {
@@ -886,7 +892,14 @@ router.get('/uu-dai', (req, res) => res.redirect('/khuyen-mai'));
 
 router.get('/tai-khoan', checkLogin, (req, res) => res.redirect('/tai-khoan/thong-tin'));
 router.get('/tai-khoan/ve-cua-toi', checkLogin, async (req, res) => {
-    try { res.render('lichsudatve', { tickets: await Ticket.find({ user: req.session.user._id }).populate('movie').sort({ _id: -1 }) }); } catch (error) { res.status(500).send("Lỗi tải lịch sử"); }
+    try { 
+        res.render('lichsudatve', { 
+            tickets: await Ticket.find({ user: req.session.user._id }).populate('movie').sort({ _id: -1 }),
+            user: req.session.user || null
+        }); 
+    } catch (error) { 
+        res.status(500).send("Lỗi tải lịch sử"); 
+    }
 });
 
 // Helper kiểm tra và trao quà sinh nhật hàng năm tự động
@@ -947,8 +960,12 @@ router.get('/tai-khoan/thong-tin', checkLogin, async (req, res) => {
             let totalOrderPoints = 0;
             myTickets.forEach(t => {
                 let orderVal = 0;
-                if (t.originalPrice && t.originalPrice > 0) orderVal = t.originalPrice;
-                else if (t.totalPrice && t.totalPrice > 0) orderVal = t.totalPrice;
+                const orig = Number(t.originalPrice) || 0;
+                const tot = Number(t.totalPrice) || 0;
+                const disc = Number(t.discountAmount) || 0;
+                if (orig > 0) orderVal = orig;
+                else if (tot + disc > 0 && disc > 0) orderVal = tot + disc;
+                else if (tot > 0) orderVal = tot;
                 else {
                     let seatSum = 0;
                     if (Array.isArray(t.seats)) {

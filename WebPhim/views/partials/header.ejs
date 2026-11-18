@@ -138,19 +138,19 @@
 
         <!-- Quick Cinema Selector Pill -->
         <div class="hidden xl:flex items-center">
-          <div class="relative inline-block text-left">
+          <div class="relative inline-block text-left" id="cinemaDropdownContainer">
             <button type="button" 
                     id="quick-cinema-trigger"
-                    popovertarget="quick-cinema-menu"
-                    onclick="if(!this.popoverTargetElement) document.getElementById('quick-cinema-menu')?.classList.toggle('hidden')"
-                    class="flex items-center gap-2 text-[11px] font-['JetBrains_Mono'] text-[#121316] bg-[#F3EFE6] px-3.5 py-2 border border-[#E5E0D5] hover:border-[#CDC6B8] transition-colors uppercase tracking-wider cursor-pointer"
+                    onclick="toggleCinemaDropdown(event)"
+                    class="flex items-center gap-2 text-[11px] font-['JetBrains_Mono'] text-[#121316] bg-[#F3EFE6] px-3.5 py-2 border border-[#E5E0D5] hover:border-[#CDC6B8] transition-colors uppercase tracking-wider cursor-pointer select-none"
                     aria-haspopup="menu"
+                    aria-expanded="false"
                     aria-controls="quick-cinema-menu">
               <span class="w-1.5 h-1.5 rounded-full bg-[#BA2D27]"></span>
               <span id="header-cinema-label">CGV Kim Cúc</span>
               <span class="material-symbols-outlined text-[14px]">expand_more</span>
             </button>
-            <div id="quick-cinema-menu" popover="auto" class="cinego-popover hidden absolute right-0 mt-1 w-64 bg-white border border-[#E5E0D5] shadow-xl py-1 z-50 text-xs font-['Plus_Jakarta_Sans']">
+            <div id="quick-cinema-menu" class="hidden absolute right-0 top-full mt-1.5 w-64 bg-white border border-[#E5E0D5] shadow-2xl py-1 z-50 text-xs font-['Plus_Jakarta_Sans'] whitespace-normal">
               <div class="px-3 py-1.5 text-[10px] font-['JetBrains_Mono'] uppercase tracking-widest text-[#7A7E8B] border-b border-[#E5E0D5]">
                 Chọn cụm rạp Quy Nhơn
               </div>
@@ -177,15 +177,15 @@
           <% } %>
 
           <!-- Logged In Menu -->
-          <div class="relative">
+          <div class="relative inline-block text-left" id="userMenuDropdownContainer">
             <button type="button" 
                     id="user-profile-trigger"
-                    popovertarget="user-profile-menu"
-                    onclick="if(!this.popoverTargetElement) document.getElementById('user-profile-menu')?.classList.toggle('hidden')" 
-                    class="flex items-center gap-2.5 py-1.5 px-3 border border-[#E5E0D5] hover:border-[#121316] bg-white transition-all cursor-pointer"
+                    onclick="toggleUserDropdown(event)" 
+                    class="flex items-center gap-2.5 py-1.5 px-3 border border-[#E5E0D5] hover:border-[#121316] bg-white transition-all cursor-pointer select-none"
                     aria-haspopup="menu"
+                    aria-expanded="false"
                     aria-controls="user-profile-menu">
-              <span class="w-7 h-7 bg-[#121316] text-[#FAF8F5] flex items-center justify-center font-serif font-bold text-xs">
+              <span class="w-7 h-7 bg-[#121316] text-[#FAF8F5] flex items-center justify-center font-serif font-bold text-xs shrink-0">
                 <%= (user.hoTen && user.hoTen.length > 0) ? user.hoTen.charAt(0).toUpperCase() : 'U' %>
               </span>
               <span class="hidden sm:inline font-bold text-xs text-[#121316] max-w-[120px] truncate">
@@ -195,7 +195,7 @@
             </button>
 
             <!-- Dropdown Menu -->
-            <div id="user-profile-menu" popover="auto" class="cinego-popover hidden absolute right-0 mt-2 w-56 bg-white border border-[#E5E0D5] shadow-xl py-2 z-50 text-xs font-['Plus_Jakarta_Sans']">
+            <div id="user-profile-menu" class="hidden absolute right-0 top-full mt-2 w-64 bg-white border border-[#E5E0D5] shadow-2xl py-2 z-50 text-xs font-['Plus_Jakarta_Sans'] whitespace-normal">
               <div class="px-4 py-2 border-b border-[#E5E0D5]">
                 <div class="font-bold text-[#121316] truncate"><%= user.hoTen %></div>
                 <div class="text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B] truncate"><%= user.email %></div>
@@ -447,34 +447,56 @@
       }, 250);
     });
 
-    // Sync Native Popover and class 'hidden' to prevent transparent overlay click blocks
-    ['quick-cinema-menu', 'user-profile-menu'].forEach(id => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.addEventListener('toggle', (e) => {
-        if (e.newState === 'open') {
-          el.classList.remove('hidden');
-        } else {
-          el.classList.add('hidden');
-        }
-      });
-    });
+    // Dropdown Controllers: Quick Cinema & User Menu
+    function toggleCinemaDropdown(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('quick-cinema-menu');
+      const userMenu = document.getElementById('user-profile-menu');
+      if (userMenu) {
+        userMenu.classList.add('hidden');
+        document.getElementById('user-profile-trigger')?.setAttribute('aria-expanded', 'false');
+      }
+      if (!menu) return;
+      const isHidden = menu.classList.contains('hidden');
+      if (isHidden) {
+        menu.classList.remove('hidden');
+        document.getElementById('quick-cinema-trigger')?.setAttribute('aria-expanded', 'true');
+      } else {
+        menu.classList.add('hidden');
+        document.getElementById('quick-cinema-trigger')?.setAttribute('aria-expanded', 'false');
+      }
+    }
 
-    // Close dropdowns on outside click (fallback for all browsers)
+    function toggleUserDropdown(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('user-profile-menu');
+      const cinemaMenu = document.getElementById('quick-cinema-menu');
+      if (cinemaMenu) {
+        cinemaMenu.classList.add('hidden');
+        document.getElementById('quick-cinema-trigger')?.setAttribute('aria-expanded', 'false');
+      }
+      if (!menu) return;
+      const isHidden = menu.classList.contains('hidden');
+      if (isHidden) {
+        menu.classList.remove('hidden');
+        document.getElementById('user-profile-trigger')?.setAttribute('aria-expanded', 'true');
+      } else {
+        menu.classList.add('hidden');
+        document.getElementById('user-profile-trigger')?.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    // Đóng dropdown khi click bên ngoài menu
     document.addEventListener('click', function(e) {
       const qMenu = document.getElementById('quick-cinema-menu');
       const uMenu = document.getElementById('user-profile-menu');
-      if (qMenu && !e.target.closest('#quick-cinema-menu') && !e.target.closest('#quick-cinema-trigger') && !e.target.closest('button[popovertarget="quick-cinema-menu"]')) {
+      if (qMenu && !qMenu.classList.contains('hidden') && !e.target.closest('#quick-cinema-menu') && !e.target.closest('#quick-cinema-trigger')) {
         qMenu.classList.add('hidden');
-        if (typeof qMenu.hidePopover === 'function') {
-          try { if (qMenu.matches(':popover-open')) qMenu.hidePopover(); } catch(err) {}
-        }
+        document.getElementById('quick-cinema-trigger')?.setAttribute('aria-expanded', 'false');
       }
-      if (uMenu && !e.target.closest('#user-profile-menu') && !e.target.closest('#user-profile-trigger') && !e.target.closest('button[popovertarget="user-profile-menu"]')) {
+      if (uMenu && !uMenu.classList.contains('hidden') && !e.target.closest('#user-profile-menu') && !e.target.closest('#user-profile-trigger')) {
         uMenu.classList.add('hidden');
-        if (typeof uMenu.hidePopover === 'function') {
-          try { if (uMenu.matches(':popover-open')) uMenu.hidePopover(); } catch(err) {}
-        }
+        document.getElementById('user-profile-trigger')?.setAttribute('aria-expanded', 'false');
       }
     });
 

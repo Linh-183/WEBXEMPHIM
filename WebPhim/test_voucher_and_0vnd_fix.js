@@ -51,9 +51,9 @@ assert(khachHangCode.includes('userInDb.usedVouchers.includes('), 'Must check if
 assert(khachHangCode.includes('userInDb.usedVouchers.push('), 'Must record used voucher in userInDb.usedVouchers');
 assert(khachHangCode.includes('userInDb.vouchers.filter('), 'Must remove voucher from user.vouchers wallet on checkout');
 
-// Check that points are awarded based on base order value (before voucher)
-assert(khachHangCode.includes('baseOrderValue = expectedBaseTotal > 0 ? expectedBaseTotal : (Number(total) || 0)'), 'Must award points based on base order value');
-assert(khachHangCode.includes('Math.floor(baseOrderValue / 1000)'), 'Must calculate earnedPoints from baseOrderValue');
+// Check that points are awarded based on gross order value (before voucher)
+assert(khachHangCode.includes('grossOrderValue = Math.max('), 'Must award points based on gross order value');
+assert(khachHangCode.includes('Math.floor(grossOrderValue / 1000)'), 'Must calculate earnedPoints from grossOrderValue');
 console.log('✓ TEST 3: Backend awards full loyalty points on base order & enforces single-use voucher removal - PASSED!');
 
 // 4. TEST USER MODEL CONTAINS usedVouchers

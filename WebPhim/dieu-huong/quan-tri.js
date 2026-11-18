@@ -9,11 +9,15 @@ const FoodCombo = require('../models/FoodCombo');
 const Cinema = require('../models/Cinema');
 const FlashSale = require('../models/FlashSale');
 
-// Helper tính toán doanh số thực tế của đơn vé (kể cả khi khách dùng voucher giảm 100% về 0đ)
+// Helper tính toán doanh số thực tế của đơn vé (kể cả khi khách dùng voucher giảm 100% về 0đ hoặc giảm giá lớn)
 function getTicketRevenue(t) {
     if (!t) return 0;
-    if (typeof t.originalPrice === 'number' && t.originalPrice > 0) return t.originalPrice;
-    if (typeof t.totalPrice === 'number' && t.totalPrice > 0) return t.totalPrice;
+    const orig = Number(t.originalPrice) || 0;
+    const tot = Number(t.totalPrice) || 0;
+    const disc = Number(t.discountAmount) || 0;
+    if (orig > 0) return orig;
+    if (tot + disc > 0 && disc > 0) return tot + disc;
+    if (tot > 0) return tot;
     // Tự động tính lại giá trị đơn nếu vé cũ chưa lưu originalPrice hoặc giảm về 0đ do voucher
     let seatSum = 0;
     if (Array.isArray(t.seats) && t.seats.length > 0) {
@@ -26,7 +30,7 @@ function getTicketRevenue(t) {
     }
     const cTotal = Number(t.comboTotal) || 0;
     const fallback = seatSum + cTotal;
-    return fallback > 0 ? fallback : (t.totalPrice || 0);
+    return fallback > 0 ? fallback : tot;
 }
 
 router.get('/', async (req, res) => {

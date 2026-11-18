@@ -651,29 +651,9 @@ dialog.cinego-dialog:not([open]) {
   }
 }
 
-/* CSS Anchor Positioning for Native Popovers */
-#quick-cinema-trigger {
-  anchor-name: --quick-cinema-btn;
-}
-
-#quick-cinema-menu {
-  position-anchor: --quick-cinema-btn;
-  inset: auto;
-  top: anchor(bottom);
-  right: anchor(right);
-  margin-top: 6px;
-}
-
-#user-profile-trigger {
-  anchor-name: --user-profile-btn;
-}
-
-#user-profile-menu {
-  position-anchor: --user-profile-btn;
-  inset: auto;
-  top: anchor(bottom);
-  right: anchor(right);
-  margin-top: 6px;
+/* Header Dropdowns */
+#user-profile-menu, #quick-cinema-menu {
+  box-shadow: 0 16px 36px -6px rgba(18, 19, 22, 0.22);
 }
 
 
