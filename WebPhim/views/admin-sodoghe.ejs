@@ -100,17 +100,17 @@
       <!-- Price & Type Legend -->
       <div class="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-6 font-['JetBrains_Mono'] text-xs text-white/70">
         <div class="flex items-center gap-2">
-          <span class="w-4 h-4 bg-white/10 border border-white/30 rounded-xs inline-block"></span>
+          <span class="w-4 h-4 bg-white border border-[#CBD5E1] rounded-xs inline-block"></span>
           <span>Ghế Thường: <strong class="text-white" id="legendPriceStd">75.000đ</strong></span>
         </div>
         <span>•</span>
         <div class="flex items-center gap-2">
-          <span class="w-4 h-4 bg-white/10 border border-[#D97706] rounded-xs inline-block"></span>
+          <span class="w-4 h-4 bg-[#1E232E] border-2 border-[#D97706] rounded-xs inline-block"></span>
           <span class="text-[#D97706]">Ghế VIP: <strong class="text-[#F59E0B]" id="legendPriceVIP">95.000đ</strong></span>
         </div>
         <span>•</span>
         <div class="flex items-center gap-2">
-          <span class="w-4 h-4 bg-[#EC4899]/20 border border-[#EC4899] rounded-xs inline-block"></span>
+          <span class="w-6 h-4 bg-[#EC4899]/25 border-2 border-[#EC4899] rounded-xs inline-block"></span>
           <span class="text-[#EC4899]">Ghế Đôi Sweetbox: <strong class="text-white" id="legendPriceCouple">170.000đ</strong></span>
         </div>
         <span>•</span>
@@ -225,21 +225,33 @@
   }
 
   function applySeatVisual(el, type) {
-    el.classList.remove('is-vip', 'is-couple', 'opacity-20');
+    el.className = 'seat-unit select-none cursor-pointer transition-all flex items-center justify-center font-[\'JetBrains_Mono\'] text-xs font-bold rounded-sm shadow-xs';
     el.style.visibility = 'visible';
-    el.style.backgroundColor = '';
-    el.style.borderColor = '';
-    el.style.color = '';
+    el.style.width = '36px';
+    el.style.height = '32px';
 
     if (type === 'vip') {
-      el.classList.add('is-vip');
+      el.style.backgroundColor = '#1E232E';
+      el.style.border = '2px solid #D97706';
+      el.style.color = '#F59E0B';
+      el.title = 'Ghế VIP (Click để đổi)';
     } else if (type === 'couple') {
-      el.classList.add('is-couple');
+      el.style.width = '78px';
       el.style.backgroundColor = 'rgba(236, 72, 153, 0.25)';
-      el.style.borderColor = '#EC4899';
+      el.style.border = '2px solid #EC4899';
       el.style.color = '#FFFFFF';
+      el.title = 'Ghế Đôi Sweetbox (Click để đổi)';
     } else if (type === 'empty') {
-      el.style.visibility = 'hidden';
+      el.style.backgroundColor = 'transparent';
+      el.style.border = '1px dashed rgba(255, 255, 255, 0.2)';
+      el.style.color = 'rgba(255, 255, 255, 0.2)';
+      el.title = 'Lối đi / Ẩn ghế';
+    } else {
+      // standard
+      el.style.backgroundColor = '#FFFFFF';
+      el.style.border = '1.5px solid #CBD5E1';
+      el.style.color = '#121316';
+      el.title = 'Ghế Thường (Click để đổi)';
     }
   }
 

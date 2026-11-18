@@ -386,7 +386,8 @@ router.get('/quan-ly-rap', (req, res) => res.redirect('/admin/so-do-ghe'));
 router.get('/khuyen-mai', async (req, res, next) => {
     try { 
         const tab = req.query.tab || 'voucher';
-        const vouchers = await Voucher.find().sort({ createdAt: -1 });
+        // Chỉ lấy những voucher do Admin trực tiếp quản lý/phát hành, không lấy các mã sinh ngẫu nhiên từ đổi điểm thưởng
+        const vouchers = await Voucher.find({ isReward: { $ne: true } }).sort({ createdAt: -1 });
         const flashSales = await FlashSale.find().populate('movie').sort({ createdAt: -1 });
         const movies = await Movie.find().select('title posterUrl').sort({ title: 1 });
         res.render('admin-khuyenmai', { user: req.session.user, vouchers, flashSales, movies, tab }); 

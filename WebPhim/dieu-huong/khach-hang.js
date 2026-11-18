@@ -12,6 +12,7 @@ const FoodCombo = require('../models/FoodCombo');
 const SeatLock = require('../models/SeatLock');
 const FlashSale = require('../models/FlashSale');
 const SeatConfig = require('../models/SeatConfig');
+const Review = require('../models/Review');
 const { checkLogin } = require('../trung-gian/xac-thuc');
 
 // Hàm kiểm tra ObjectId MongoDB hợp lệ chống lỗi 500 CastError
@@ -30,8 +31,9 @@ router.get('/', async (req, res) => {
         );
 
         const movies = await Movie.find({ status: 'DangChieu' }).sort({ createdAt: -1 }).limit(4);
-        const topVouchers = await Voucher.find({ $or: [{ expiryDate: { $gte: new Date() } }, { expiryDate: null }] }).limit(2);
-        res.render('trangchu', { movies, vouchers: topVouchers });
+        const topVouchers = await Voucher.find({ isReward: { $ne: true }, $or: [{ expiryDate: { $gte: new Date() } }, { expiryDate: null }] }).limit(2);
+        const combos = await FoodCombo.find({ isActive: true }).sort({ createdAt: -1 }).limit(2);
+        res.render('trangchu', { movies, vouchers: topVouchers, combos });
     } catch (error) { res.status(500).send("Lỗi máy chủ"); }
 });
 
@@ -71,7 +73,32 @@ router.get(['/chi-tiet-phim/:id', '/phim/:id'], async (req, res, next) => {
         }
         const phim = await Movie.findById(req.params.id);
         if (!phim) return res.status(404).render('404', { title: '404 — Không Tìm Thấy Phim' });
-        res.render('trangchitietphim', { phim, user: req.session.user || null, title: phim.title });
+
+        // Lấy danh sách đánh giá từ người xem thật
+        const reviews = await Review.find({ movie: phim._id }).populate('user', 'hoTen hangHoiVien').sort({ createdAt: -1 });
+        const avgRating = reviews.length ? (reviews.reduce((acc, r) => acc + (r.rating || 5), 0) / reviews.length).toFixed(1) : '5.0';
+
+        // Kiểm tra xem người dùng hiện tại đã mua vé xem phim này chưa (chỉ sau khi xem mới được đánh giá)
+        let hasWatched = false;
+        let alreadyReviewed = false;
+        let myReview = null;
+        if (req.session.user && req.session.user._id) {
+            const ticket = await Ticket.findOne({ user: req.session.user._id, movie: phim._id });
+            if (ticket) hasWatched = true;
+            myReview = await Review.findOne({ user: req.session.user._id, movie: phim._id });
+            if (myReview) alreadyReviewed = true;
+        }
+
+        res.render('trangchitietphim', { 
+            phim, 
+            user: req.session.user || null, 
+            title: phim.title,
+            reviews,
+            avgRating,
+            hasWatched,
+            alreadyReviewed,
+            myReview
+        });
     } catch (error) { next(error); }
 });
 
@@ -599,14 +626,19 @@ router.get('/danh-gia', (req, res) => {
     res.render('trangdanhgia', { user: req.session.user || null, title: 'Bình Phẩm & Đánh Giá Điện Ảnh — CineGo' });
 });
 
-// [ĐÃ SỬA] API Kiểm tra Voucher (Chống tái sử dụng voucher 1 lần)
-router.post('/api/kiem-tra-voucher', checkLogin, async (req, res) => {
+// [ĐÃ SỬA] API Kiểm tra Voucher (Chống tái sử dụng voucher 1 lần, hỗ trợ cả đặt vé và đặt bắp nước riêng)
+router.post('/api/kiem-tra-voucher', async (req, res) => {
     try {
+        if (!req.session || !req.session.user) {
+            return res.json({ success: false, requireLogin: true, message: "Vui lòng đăng nhập tài khoản để áp dụng mã ưu đãi/voucher!" });
+        }
         const { code, currentTotal } = req.body;
         const upperCode = (code || '').trim().toUpperCase();
+        if (!upperCode) return res.json({ success: false, message: "Vui lòng nhập mã voucher!" });
+
         const v = await Voucher.findOne({ code: upperCode });
-        if (!v) return res.json({ success: false, message: "Mã không tồn tại!" });
-        if (v.expiryDate && new Date(v.expiryDate) < new Date()) return res.json({ success: false, message: "Mã đã hết hạn!" });
+        if (!v) return res.json({ success: false, message: "Mã voucher không tồn tại!" });
+        if (v.expiryDate && new Date(v.expiryDate) < new Date()) return res.json({ success: false, message: "Mã voucher này đã hết hạn sử dụng!" });
         
         // Kiểm tra xem người dùng hiện tại đã dùng mã voucher này chưa
         if (req.session.user && req.session.user._id) {
@@ -616,9 +648,69 @@ router.post('/api/kiem-tra-voucher', checkLogin, async (req, res) => {
             }
         }
 
-        if (currentTotal < (v.minOrderValue || 0)) return res.json({ success: false, message: `Đơn tối thiểu là ${v.minOrderValue.toLocaleString('vi-VN')}đ` });
-        res.json({ success: true, discountType: v.discountType, discountValue: v.discountValue, maxDiscountValue: v.maxDiscountValue || 0, message: "Áp dụng mã thành công!" });
-    } catch (error) { res.status(500).json({ success: false, message: "Lỗi hệ thống khi kiểm tra voucher" }); }
+        const totalNum = Number(currentTotal) || 0;
+        if (totalNum < (v.minOrderValue || 0)) {
+            return res.json({ success: false, message: `Đơn tối thiểu để áp dụng mã này là ${v.minOrderValue.toLocaleString('vi-VN')}đ` });
+        }
+
+        res.json({ 
+            success: true, 
+            code: v.code,
+            discountType: v.discountType, 
+            discountValue: v.discountValue, 
+            maxDiscountValue: v.maxDiscountValue || 0, 
+            message: `Áp dụng mã ${v.code} thành công!` 
+        });
+    } catch (error) { 
+        res.status(500).json({ success: false, message: "Lỗi hệ thống khi kiểm tra voucher" }); 
+    }
+});
+
+// [MỚI] API ĐÁNH GIÁ PHIM (BẮT BUỘC ĐÃ MUA VÉ XEM PHIM)
+router.post('/api/danh-gia', async (req, res) => {
+    try {
+        if (!req.session || !req.session.user) {
+            return res.status(401).json({ success: false, message: 'Vui lòng đăng nhập để gửi đánh giá phim!' });
+        }
+        const { movieId, rating, comment } = req.body;
+        if (!movieId || !isValidObjectId(movieId)) {
+            return res.status(400).json({ success: false, message: 'Mã phim không hợp lệ!' });
+        }
+        if (!comment || !comment.trim()) {
+            return res.status(400).json({ success: false, message: 'Vui lòng nhập nội dung đánh giá/bình phẩm!' });
+        }
+
+        // BẮT BUỘC: Khách hàng phải có vé xem phim này thì mới được đánh giá sau khi xem
+        const ticket = await Ticket.findOne({ user: req.session.user._id, movie: movieId });
+        if (!ticket) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Chính sách CineGo: Bạn cần mua vé xem phim này trước thì mới có thể gửi đánh giá & bình phẩm!' 
+            });
+        }
+
+        const existingReview = await Review.findOne({ user: req.session.user._id, movie: movieId });
+        if (existingReview) {
+            existingReview.rating = Math.min(5, Math.max(1, Number(rating) || 5));
+            existingReview.comment = comment.trim();
+            await existingReview.save();
+            return res.json({ success: true, message: 'Đã cập nhật bài đánh giá của bạn thành công!' });
+        }
+
+        await Review.create({
+            movie: movieId,
+            user: req.session.user._id,
+            ticket: ticket._id,
+            rating: Math.min(5, Math.max(1, Number(rating) || 5)),
+            comment: comment.trim(),
+            isVerifiedViewer: true
+        });
+
+        res.json({ success: true, message: 'Cảm ơn bạn! Đánh giá của bạn đã được xuất bản công khai.' });
+    } catch (err) {
+        console.error('Lỗi gửi đánh giá:', err);
+        res.status(500).json({ success: false, message: 'Lỗi hệ thống khi gửi đánh giá: ' + err.message });
+    }
 });
 
 // [MỚI] API LƯU VOUCHER VÀO VÍ CÁ NHÂN CỦA KHÁCH HÀNG
@@ -818,11 +910,13 @@ router.post('/api/huy-giu-ghe', async (req, res) => {
     }
 });
 
-// [MỚI] API ĐẶT BẮP NƯỚC RIÊNG LẺ (CONCESSIONS FAST-TRACK)
+// [MỚI] API ĐẶT BẮP NƯỚC RIÊNG LẺ (CONCESSIONS FAST-TRACK CÓ ÁP DỤNG VOUCHER)
 router.post('/api/dat-bap-nuoc', async (req, res) => {
     try {
-        const { cinema, custName, custPhone, comboDetails, totalAmount } = req.body;
+        const { cinema, custName, custPhone, comboDetails, totalAmount, voucherCode, discountAmount, originalPrice } = req.body;
         const total = Number(totalAmount) || 0;
+        const discount = Number(discountAmount) || 0;
+        const origPrice = Number(originalPrice) || (total + discount);
         const currentCinema = cinema || 'CGV Kim Cúc Plaza';
 
         if (req.session.user && req.session.user._id) {
@@ -834,10 +928,20 @@ router.post('/api/dat-bap-nuoc', async (req, res) => {
                 showTime: 'Fast-Track',
                 seats: ['Quầy F&B'],
                 comboDetails: comboDetails || 'Combo Bắp Nước Online',
-                comboTotal: total,
+                comboTotal: origPrice,
+                originalPrice: origPrice,
+                discountAmount: discount,
+                voucherCode: voucherCode || '',
                 totalPrice: total,
                 paymentMethod: 'vietqr'
             }).save();
+
+            // Nếu có áp dụng mã voucher, ghi nhận voucher đã dùng để không dùng lại
+            if (voucherCode) {
+                await User.findByIdAndUpdate(req.session.user._id, {
+                    $addToSet: { usedVouchers: voucherCode.trim().toUpperCase() }
+                });
+            }
 
             // Tích điểm cho đơn bắp nước
             const earnedPoints = Math.floor(total / 1000);
@@ -930,7 +1034,9 @@ async function checkAndAwardBirthdayGift(user) {
                     discountType: 'fixed',
                     discountValue: 100000,
                     minOrderValue: 100000,
-                    expiryDate: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+                    expiryDate: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+                    isReward: true,
+                    rewardUser: user._id
                 }).save();
             }
             
@@ -1090,7 +1196,7 @@ router.post('/api/doi-diem-voucher', checkLogin, async (req, res) => {
         else if (user.diemTichLuy >= 300) user.hangHoiVien = 'Bac';
         else user.hangHoiVien = 'Dong';
 
-        // Tạo mới voucher ưu đãi cho người dùng
+        // Tạo mới voucher ưu đãi cho người dùng (đánh dấu isReward: true để không làm loạn danh sách voucher của Admin)
         const now = new Date();
         const code = `${baseCode}-${Date.now().toString(36).toUpperCase()}`;
         const newVoucher = await new Voucher({
@@ -1099,7 +1205,9 @@ router.post('/api/doi-diem-voucher', checkLogin, async (req, res) => {
             discountType: 'fixed',
             discountValue: discountVal,
             minOrderValue: discountVal,
-            expiryDate: new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000)
+            expiryDate: new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000),
+            isReward: true,
+            rewardUser: user._id
         }).save();
 
         if (!user.vouchers) user.vouchers = [];

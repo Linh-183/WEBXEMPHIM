@@ -289,6 +289,142 @@
 
   </section>
 
+  <!-- =========================================================================
+       REVIEWS & AUDIENCE RATINGS (CHỈ KHÁN GIẢ ĐÃ XEM MỚI ĐƯỢC ĐÁNH GIÁ)
+       ========================================================================= -->
+  <section id="danh-gia-phim" class="py-12 border-t border-[#E5E0D5] bg-[#FAF8F5]">
+    <div class="max-w-[1520px] mx-auto px-6 sm:px-10 lg:px-14">
+      
+      <!-- Section Header -->
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E5E0D5] mb-8">
+        <div>
+          <span class="font-['JetBrains_Mono'] text-[11px] text-[#A6853B] font-bold uppercase tracking-wider block">GÓC NHÌN KHÁN GIẢ</span>
+          <h2 class="font-serif text-2xl sm:text-3xl font-bold text-[#121316] mt-1">Bình Phẩm & Đánh Giá Điện Ảnh</h2>
+          <p class="text-xs text-[#7A7E8B] mt-1 font-light">Chỉ những khán giả đã mua vé và trải nghiệm phim tại rạp mới được gửi nhận xét khách quan.</p>
+        </div>
+
+        <!-- Rating Score Badge -->
+        <div class="flex items-center gap-3 bg-white border border-[#E5E0D5] p-3 px-5 shadow-xs">
+          <span class="text-3xl font-serif font-bold text-[#BA2D27]"><%= (typeof avgRating !== 'undefined' && avgRating) ? avgRating : '5.0' %></span>
+          <div>
+            <div class="text-[#A6853B] text-sm">★★★★★</div>
+            <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B] block mt-0.5"><%= (typeof reviews !== 'undefined' && reviews) ? reviews.length : 0 %> bình luận đã xác thực</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left: Review Submission Form (Only for viewers who bought ticket) (Span 5) -->
+        <div class="lg:col-span-5">
+          <div class="bg-white border border-[#E5E0D5] p-6 space-y-5">
+            <h3 class="font-serif text-lg font-bold text-[#121316]">Gửi Nhận Xét Của Bạn</h3>
+
+            <% if (typeof hasWatched !== 'undefined' && hasWatched) { %>
+              <form id="movieReviewForm" onsubmit="submitMovieReview(event)" class="space-y-4 text-xs font-['Plus_Jakarta_Sans']">
+                <!-- Star Rating Picker -->
+                <div>
+                  <label class="block font-['JetBrains_Mono'] text-[10.5px] font-bold text-[#7A7E8B] uppercase mb-2">Chấm điểm tác phẩm:</label>
+                  <div class="flex items-center gap-2 text-2xl text-[#A6853B]" id="starContainer">
+                    <button type="button" onclick="selectMovieStar(1)" class="star-btn cursor-pointer transition-transform hover:scale-125">★</button>
+                    <button type="button" onclick="selectMovieStar(2)" class="star-btn cursor-pointer transition-transform hover:scale-125">★</button>
+                    <button type="button" onclick="selectMovieStar(3)" class="star-btn cursor-pointer transition-transform hover:scale-125">★</button>
+                    <button type="button" onclick="selectMovieStar(4)" class="star-btn cursor-pointer transition-transform hover:scale-125">★</button>
+                    <button type="button" onclick="selectMovieStar(5)" class="star-btn cursor-pointer transition-transform hover:scale-125">★</button>
+                    <span id="starTextLabel" class="text-xs font-['JetBrains_Mono'] font-bold text-[#121316] ml-2">5.0 (Xuất sắc)</span>
+                  </div>
+                  <input type="hidden" id="selectedStarValue" value="<%= (typeof myReview !== 'undefined' && myReview) ? myReview.rating : 5 %>" />
+                </div>
+
+                <!-- Comment Input -->
+                <div>
+                  <label class="block font-['JetBrains_Mono'] text-[10.5px] font-bold text-[#7A7E8B] uppercase mb-1.5">Bình luận cảm nhận:</label>
+                  <textarea id="reviewCommentText" rows="4" required placeholder="Cảm nghĩ của bạn về cốt truyện, diễn xuất, kỹ xảo, âm thanh hoặc trải nghiệm tại rạp..." class="w-full bg-[#FAF8F5] border border-[#E5E0D5] p-3 text-xs text-[#121316] placeholder:text-[#A6AAB6] focus:outline-none focus:border-[#121316]"><%= (typeof myReview !== 'undefined' && myReview) ? myReview.comment : '' %></textarea>
+                </div>
+
+                <!-- Verified Badge -->
+                <div class="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-['JetBrains_Mono'] flex items-center gap-2">
+                  <span class="material-symbols-outlined text-base">verified</span>
+                  <span>Đã xác thực vé xem phim: Bạn đủ điều kiện gửi bình phẩm.</span>
+                </div>
+
+                <button type="submit" id="btnSubmitReview" class="btn-editorial-primary w-full py-3 text-xs font-bold text-center block !bg-[#BA2D27] hover:!bg-[#8E1F1A]">
+                  <%= (typeof alreadyReviewed !== 'undefined' && alreadyReviewed) ? 'CẬP NHẬT ĐÁNH GIÁ →' : 'GỬI ĐÁNH GIÁ ĐIỆN ẢNH →' %>
+                </button>
+              </form>
+            <% } else { %>
+              <!-- Notice for users who haven't watched yet -->
+              <div class="p-6 bg-[#FAF8F5] border border-[#E5E0D5] text-center space-y-3">
+                <span class="material-symbols-outlined text-3xl text-[#7A7E8B]">lock</span>
+                <h4 class="font-serif font-bold text-sm text-[#121316]">Chỉ Người Đã Xem Mới Được Đánh Giá</h4>
+                <p class="text-xs text-[#7A7E8B] leading-relaxed">
+                  Để đảm bảo tính khách quan và trung thực, hệ thống CineGo chỉ mở quyền đánh giá cho tài khoản đã có vé xem phim này tại cụm rạp.
+                </p>
+                <div class="pt-2">
+                  <% if (typeof user !== 'undefined' && user) { %>
+                    <a href="#cum-rap-chieu" class="btn-editorial-primary text-xs !py-2.5 !px-5 inline-block">
+                      Đặt Vé Phim Này Để Mở Khóa Đánh Giá →
+                    </a>
+                  <% } else { %>
+                    <a href="/dang-nhap?returnTo=/phim/<%= phim._id %>" class="btn-editorial-primary text-xs !py-2.5 !px-5 inline-block">
+                      Đăng Nhập Tài Khoản →
+                    </a>
+                  <% } %>
+                </div>
+              </div>
+            <% } %>
+
+          </div>
+        </div>
+
+        <!-- Right: Reviews Feed (Span 7) -->
+        <div class="lg:col-span-7 space-y-4">
+          <% if (typeof reviews !== 'undefined' && reviews && reviews.length > 0) { %>
+            <div class="space-y-3">
+              <% reviews.forEach(function(rev) { %>
+                <div class="bg-white border border-[#E5E0D5] p-5 space-y-2 hover:border-[#121316] transition-all">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <div class="w-8 h-8 rounded-full bg-[#121316] text-white flex items-center justify-center font-bold text-xs">
+                        <%= (rev.user && rev.user.hoTen) ? rev.user.hoTen.charAt(0).toUpperCase() : 'K' %>
+                      </div>
+                      <div>
+                        <div class="flex items-center gap-1.5">
+                          <span class="font-bold text-xs text-[#121316] font-['Plus_Jakarta_Sans']"><%= (rev.user && rev.user.hoTen) ? rev.user.hoTen : 'Khán Giả' %></span>
+                          <span class="px-1.5 py-0.2 bg-[#F3EFE6] border border-[#E5E0D5] text-[9.5px] font-['JetBrains_Mono'] text-[#A6853B] font-bold">✓ Đã Xem</span>
+                        </div>
+                        <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">
+                          <%= new Date(rev.createdAt).toLocaleDateString('vi-VN') %>
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Stars -->
+                    <div class="text-[#A6853B] text-xs font-bold font-['JetBrains_Mono']">
+                      <%= '★'.repeat(rev.rating || 5) %> <span class="text-[#121316] ml-1"><%= (rev.rating || 5).toFixed(1) %></span>
+                    </div>
+                  </div>
+
+                  <p class="text-xs text-[#474A54] leading-relaxed pt-1 font-normal font-['Plus_Jakarta_Sans']">
+                    <%= rev.comment %>
+                  </p>
+                </div>
+              <% }) %>
+            </div>
+          <% } else { %>
+            <div class="bg-white border border-[#E5E0D5] p-10 text-center space-y-2">
+              <span class="material-symbols-outlined text-3xl text-[#A6AAB6]">rate_review</span>
+              <h4 class="font-serif font-bold text-sm text-[#121316]">Chưa Có Bình Phẩm Nào</h4>
+              <p class="text-xs text-[#7A7E8B]">Hãy là một trong những khán giả đầu tiên đặt vé và chia sẻ cảm nghĩ về bộ phim này!</p>
+            </div>
+          <% } %>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
 </main>
 
 <script>
@@ -379,6 +515,75 @@
       }
     } else {
       prompt('Sao chép đường dẫn xem phim:', url);
+    }
+  }
+
+  // ==========================================
+  // MOVIE REVIEW & STAR RATING SYSTEM
+  // ==========================================
+  function selectMovieStar(n) {
+    document.getElementById('selectedStarValue').value = n;
+    const labels = ['', '1.0 (Kém hấp dẫn)', '2.0 (Tạm được)', '3.0 (Khá ổn)', '4.0 (Rất đáng xem)', '5.0 (Xuất sắc)'];
+    document.getElementById('starTextLabel').innerText = labels[n] || (n + '.0');
+
+    const starBtns = document.querySelectorAll('#starContainer .star-btn');
+    starBtns.forEach((btn, idx) => {
+      if (idx < n) {
+        btn.classList.add('text-[#A6853B]');
+        btn.classList.remove('text-[#CBD5E1]');
+      } else {
+        btn.classList.remove('text-[#A6853B]');
+        btn.classList.add('text-[#CBD5E1]');
+      }
+    });
+  }
+
+  async function submitMovieReview(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmitReview');
+    const rating = parseInt(document.getElementById('selectedStarValue')?.value || '5', 10);
+    const comment = document.getElementById('reviewCommentText')?.value.trim();
+
+    if (!comment) {
+      if (window.cinegoToast) window.cinegoToast.warning('Vui lòng nhập nội dung đánh giá cảm nhận!');
+      else alert('Vui lòng nhập nội dung đánh giá cảm nhận!');
+      return;
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = 'Đang gửi đánh giá...';
+    }
+
+    try {
+      const res = await fetch('/api/danh-gia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          movieId: '<%= phim._id %>',
+          rating,
+          comment
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (window.cinegoToast) window.cinegoToast.success(data.message || 'Gửi đánh giá thành công!');
+        else alert(data.message || 'Gửi đánh giá thành công!');
+        setTimeout(() => window.location.reload(), 800);
+      } else {
+        if (window.cinegoToast) window.cinegoToast.error(data.message || 'Lỗi gửi đánh giá');
+        else alert(data.message || 'Lỗi gửi đánh giá');
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = 'GỬI ĐÁNH GIÁ ĐIỆN ẢNH →';
+        }
+      }
+    } catch (err) {
+      if (window.cinegoToast) window.cinegoToast.error('Lỗi kết nối khi gửi đánh giá: ' + err.message);
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = 'GỬI ĐÁNH GIÁ ĐIỆN ẢNH →';
+      }
     }
   }
 </script>

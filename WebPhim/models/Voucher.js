@@ -9,7 +9,9 @@ const voucherSchema = new mongoose.Schema({
     minOrderValue: { type: Number, default: 0 },
     maxDiscountValue: { type: Number, default: 0 }, // THÊM DÒNG NÀY: Mức giảm tối đa
     imageUrl: { type: String }, 
-    expiryDate: { type: Date }
+    expiryDate: { type: Date },
+    isReward: { type: Boolean, default: false }, // true: Voucher đổi từ điểm thưởng / sinh nhật của khách (không hiển thị trong danh sách Admin)
+    rewardUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Voucher', voucherSchema);

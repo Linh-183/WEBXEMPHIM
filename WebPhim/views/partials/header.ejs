@@ -128,15 +128,43 @@
       <!-- RIGHT UTILITY CONTROLS -->
       <div class="flex items-center gap-2 sm:gap-2.5 shrink-0">
         
-        <!-- Search Trigger Button -->
-        <button type="button" 
-                onclick="toggleSearchModal(true)" 
-                class="flex items-center gap-1.5 text-[11px] font-['JetBrains_Mono'] text-[#474A54] hover:text-[#121316] py-1.5 px-2.5 border border-[#E5E0D5] hover:border-[#121316] transition-colors rounded-none whitespace-nowrap"
-                aria-label="Tìm kiếm phim"
-                title="Tìm kiếm phim (Ctrl+K)">
-          <span class="material-symbols-outlined text-[17px]">search</span>
-          <span class="hidden xl:inline uppercase text-[9.5px] tracking-wider">Tìm kiếm</span>
-        </button>
+        <!-- INLINE SEARCH WITH DIRECT DROPDOWN (NO POPUP MODAL) -->
+        <div class="relative" id="headerSearchContainer">
+          <form action="/tim-kiem" method="GET" class="flex items-center border border-[#E5E0D5] hover:border-[#121316] focus-within:border-[#121316] bg-white transition-colors">
+            <span class="material-symbols-outlined text-[17px] text-[#7A7E8B] pl-2 select-none">search</span>
+            <input type="text"
+                   id="headerSearchInput"
+                   name="keyword"
+                   placeholder="Tìm kiếm..."
+                   autocomplete="off"
+                   class="w-24 sm:w-36 lg:w-44 py-1.5 px-2 text-[11px] font-['Plus_Jakarta_Sans'] text-[#121316] placeholder:text-[#A6AAB6] bg-transparent focus:outline-none"
+                   onfocus="openHeaderSearchDropdown()" />
+            <button type="button" id="headerSearchClear" onclick="clearHeaderSearchInput()" class="hidden pr-2 text-[#A6AAB6] hover:text-[#121316]">
+              <span class="material-symbols-outlined text-[15px]">close</span>
+            </button>
+          </form>
+
+          <!-- DROPDOWN ANCHORED DIRECTLY BELOW SEARCH -->
+          <div id="headerSearchDropdown" class="hidden absolute right-0 top-full mt-2 w-80 sm:w-96 bg-[#FAF8F5] border-2 border-[#121316] shadow-2xl z-50 p-4 max-h-[420px] overflow-y-auto">
+            <div class="flex items-center justify-between pb-2 border-b border-[#E5E0D5] text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">
+              <span class="font-bold uppercase tracking-wider">KẾT QUẢ TÌM KIẾM</span>
+              <span id="headerSearchCount" class="text-[#BA2D27] font-bold"></span>
+            </div>
+
+            <div id="headerSearchResults" class="divide-y divide-[#E5E0D5] mt-1">
+              <div class="py-4 text-center text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">
+                Nhập tên phim, đạo diễn hoặc thể loại...
+              </div>
+            </div>
+
+            <div class="pt-3 mt-3 border-t border-[#E5E0D5] text-[10.5px] font-['JetBrains_Mono'] text-[#7A7E8B] flex flex-wrap items-center gap-2">
+              <span class="text-[#121316] font-bold">Gợi ý:</span>
+              <a href="/tim-kiem?keyword=Hành+động" class="hover:text-[#BA2D27] underline">Hành Động</a> •
+              <a href="/tim-kiem?keyword=Khoa+học" class="hover:text-[#BA2D27] underline">Viễn Tưởng</a> •
+              <a href="/phim?status=DangChieu" class="hover:text-[#BA2D27] underline">Đang Chiếu</a>
+            </div>
+          </div>
+        </div>
 
         <!-- User Authentication State -->
         <% if (typeof user !== 'undefined' && user) { %>
@@ -225,45 +253,7 @@
     </div>
   </header>
 
-  <!-- =========================================================================
-       3. SEARCH OVERLAY MODAL (NATIVE HTML5 DIALOG PATTERN)
-       ========================================================================= -->
-  <dialog id="search-modal" class="cinego-dialog p-0 m-auto bg-transparent border-none" aria-labelledby="searchDialogTitle">
-    <div class="bg-[#FAF8F5] border border-[#E5E0D5] w-[92vw] max-w-2xl p-6 sm:p-8 shadow-2xl relative text-[#121316]">
-      <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-4">
-        <span id="searchDialogTitle" class="font-serif text-xs uppercase tracking-[0.25em] text-[#7A7E8B]">Tra cứu tác phẩm điện ảnh</span>
-        <button type="button" onclick="toggleSearchModal(false)" class="text-[#7A7E8B] hover:text-[#121316] p-1 cursor-pointer" aria-label="Đóng tra cứu">
-          <span class="material-symbols-outlined text-xl">close</span>
-        </button>
-      </div>
 
-      <form action="/tim-kiem" method="GET" class="mt-6">
-        <div class="relative flex items-center">
-          <span class="material-symbols-outlined absolute left-0 text-xl text-[#7A7E8B]">search</span>
-          <input type="text" 
-                 id="searchInput"
-                 name="keyword" 
-                 placeholder="Nhập tên phim, đạo diễn hoặc thể loại..." 
-                 autocomplete="off"
-                 class="w-full pl-8 pr-4 py-3 bg-transparent border-b-2 border-[#121316] text-lg sm:text-xl font-['Plus_Jakarta_Sans'] font-medium text-[#121316] placeholder:text-[#A6AAB6] focus:outline-none focus:border-[#BA2D27]" />
-        </div>
-      </form>
-
-      <!-- Instant Live Results Container -->
-      <div id="searchResults" class="hidden mt-4 max-h-80 overflow-y-auto divide-y divide-[#E5E0D5]"></div>
-
-      <div class="mt-6 flex flex-wrap gap-2 text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B]">
-        <span class="text-[#121316] font-bold">Gợi ý từ khóa:</span>
-        <a href="/tim-kiem?keyword=Hành+động" class="hover:text-[#BA2D27] underline">Hành Động</a>
-        <span>•</span>
-        <a href="/tim-kiem?keyword=Khoa+học" class="hover:text-[#BA2D27] underline">Khoa Học Viễn Tưởng</a>
-        <span>•</span>
-        <a href="/tim-kiem?keyword=Tình+cảm" class="hover:text-[#BA2D27] underline">Tâm Lý - Tình Cảm</a>
-        <span>•</span>
-        <a href="/phim?status=DangChieu" class="hover:text-[#BA2D27] underline">Phim Đang Chiếu</a>
-      </div>
-    </div>
-  </dialog>
 
   <!-- =========================================================================
        4. MOBILE SLIDING DRAWER
@@ -324,29 +314,44 @@
 
   <!-- Global scripts for Header UI -->
   <script>
-    function toggleSearchModal(show) {
-      const modal = document.getElementById('search-modal');
-      if (!modal) return;
-      if (show) {
-        if (typeof modal.showModal === 'function') {
-          if (!modal.open) modal.showModal();
-        } else {
-          modal.classList.remove('hidden');
-        }
-        setTimeout(() => document.getElementById('searchInput')?.focus(), 60);
-      } else {
-        if (typeof modal.close === 'function') {
-          if (modal.open) modal.close();
-        } else {
-          modal.classList.add('hidden');
-        }
+    function openHeaderSearchDropdown() {
+      const dropdown = document.getElementById('headerSearchDropdown');
+      if (dropdown) dropdown.classList.remove('hidden');
+    }
+
+    function closeHeaderSearchDropdown() {
+      const dropdown = document.getElementById('headerSearchDropdown');
+      if (dropdown) dropdown.classList.add('hidden');
+    }
+
+    function clearHeaderSearchInput() {
+      const input = document.getElementById('headerSearchInput');
+      const clearBtn = document.getElementById('headerSearchClear');
+      const resultsBox = document.getElementById('headerSearchResults');
+      const countEl = document.getElementById('headerSearchCount');
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+      if (clearBtn) clearBtn.classList.add('hidden');
+      if (countEl) countEl.innerText = '';
+      if (resultsBox) {
+        resultsBox.innerHTML = '<div class="py-4 text-center text-xs font-[\'JetBrains_Mono\'] text-[#7A7E8B]">Nhập tên phim, đạo diễn hoặc thể loại...</div>';
       }
     }
 
-    // Native backdrop light-dismiss for search modal
-    document.getElementById('search-modal')?.addEventListener('click', function(e) {
-      if (e.target === this) {
-        toggleSearchModal(false);
+    // Dismiss search dropdown on click outside
+    document.addEventListener('click', function(e) {
+      const container = document.getElementById('headerSearchContainer');
+      if (container && !container.contains(e.target)) {
+        closeHeaderSearchDropdown();
+      }
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeHeaderSearchDropdown();
       }
     });
 
@@ -358,17 +363,27 @@
     // Debounced Live Search Autocomplete with AbortController
     let searchDebounce = null;
     let searchAbortController = null;
-    document.getElementById('searchInput')?.addEventListener('input', function(e) {
+    document.getElementById('headerSearchInput')?.addEventListener('input', function(e) {
       clearTimeout(searchDebounce);
       if (searchAbortController) {
         searchAbortController.abort();
       }
       const val = e.target.value.trim();
-      const resultsBox = document.getElementById('searchResults');
-      if (!val || val.length < 2) {
-        if (resultsBox) resultsBox.classList.add('hidden');
+      const resultsBox = document.getElementById('headerSearchResults');
+      const clearBtn = document.getElementById('headerSearchClear');
+      const countEl = document.getElementById('headerSearchCount');
+
+      if (clearBtn) clearBtn.classList.toggle('hidden', !val);
+
+      if (!val || val.length < 1) {
+        if (countEl) countEl.innerText = '';
+        if (resultsBox) {
+          resultsBox.innerHTML = '<div class="py-4 text-center text-xs font-[\'JetBrains_Mono\'] text-[#7A7E8B]">Nhập tên phim, đạo diễn hoặc thể loại...</div>';
+        }
         return;
       }
+
+      openHeaderSearchDropdown();
 
       searchDebounce = setTimeout(async () => {
         searchAbortController = new AbortController();
@@ -379,35 +394,37 @@
           const list = await res.json();
           if (resultsBox) {
             resultsBox.innerHTML = '';
+            if (countEl) countEl.innerText = `(${list.length})`;
             if (list.length === 0) {
-              resultsBox.innerHTML = '<div class="py-4 text-xs font-[\'JetBrains_Mono\'] text-[#7A7E8B]">Không tìm thấy tác phẩm phù hợp.</div>';
+              resultsBox.innerHTML = '<div class="py-6 text-center text-xs font-[\'JetBrains_Mono\'] text-[#7A7E8B]">Không tìm thấy phim phù hợp với từ khóa này.</div>';
             } else {
               list.forEach(item => {
                 const row = document.createElement('a');
                 row.href = '/chi-tiet-phim/' + item._id;
-                row.className = 'flex items-center gap-3 py-3 hover:bg-[#F3EFE6] transition-colors';
+                row.className = 'flex items-center gap-3 py-2.5 px-2 hover:bg-white border border-transparent hover:border-[#E5E0D5] transition-all rounded-xs';
                 row.innerHTML = `
                   <img src="${item.posterUrl || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=100&q=80'}" 
-                       class="w-10 h-14 object-cover border border-[#E5E0D5]" 
+                       class="w-10 h-14 object-cover border border-[#E5E0D5] shrink-0" 
                        alt="${item.title}" 
                        loading="lazy" 
                        decoding="async" 
                        width="40" 
                        height="56" />
-                  <div>
-                    <div class="font-bold text-sm text-[#121316] font-serif">${item.title}</div>
-                    <div class="text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B] mt-0.5">${item.ageRating || 'P'} • Đang Chiếu</div>
+                  <div class="flex-1 min-w-0 text-left">
+                    <div class="font-bold text-xs text-[#121316] font-['Plus_Jakarta_Sans'] truncate">${item.title}</div>
+                    <div class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B] mt-0.5 truncate">${item.genre || 'Điện ảnh'}</div>
+                    <div class="text-[10px] font-['JetBrains_Mono'] text-[#BA2D27] font-semibold mt-0.5">${item.status === 'DangChieu' ? 'Đang Chiếu' : 'Sắp Chiếu'} • ${item.ageRating || 'P'}</div>
                   </div>
+                  <span class="material-symbols-outlined text-sm text-[#A6AAB6] shrink-0">chevron_right</span>
                 `;
                 resultsBox.appendChild(row);
               });
             }
-            resultsBox.classList.remove('hidden');
           }
         } catch(err) {
           if (err.name !== 'AbortError') console.error(err);
         }
-      }, 250);
+      }, 200);
     });
 
     // Dropdown Controller: User Profile Menu

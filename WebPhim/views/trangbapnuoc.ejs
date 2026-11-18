@@ -376,6 +376,33 @@
               <span>Phí đóng gói & phục vụ:</span>
               <span class="font-bold">0 đ (Miễn phí)</span>
             </div>
+
+            <!-- Voucher Section for Concessions -->
+            <div class="pt-3 border-t border-[#E5E0D5] space-y-2">
+              <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase">Mã Giảm Giá / Voucher:</label>
+              <div class="flex items-center gap-1.5">
+                <input type="text"
+                       id="concessionVoucherCode"
+                       placeholder="NHẬP MÃ VOUCHER..."
+                       class="flex-1 bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs font-['JetBrains_Mono'] uppercase font-bold text-[#121316] placeholder:text-[#A6AAB6] focus:outline-none focus:border-[#121316]" />
+                <button type="button"
+                        id="btnApplyConcessionVoucher"
+                        onclick="applyConcessionVoucher()"
+                        class="px-3.5 py-2 bg-[#121316] text-white text-xs font-bold font-['JetBrains_Mono'] hover:bg-[#BA2D27] transition-colors shrink-0">
+                  Áp Dụng
+                </button>
+              </div>
+              <div id="concessionVoucherResult" class="hidden flex items-center justify-between text-xs font-['JetBrains_Mono'] text-[#10B981] bg-emerald-50 p-2 border border-emerald-200">
+                <span id="concessionVoucherMsg">Đã áp dụng giảm giá</span>
+                <button type="button" onclick="removeConcessionVoucher()" class="text-red-500 hover:text-red-700 text-[11px] font-bold ml-2">Gỡ mã</button>
+              </div>
+            </div>
+
+            <div id="voucherDiscountRow" class="hidden flex justify-between text-[#BA2D27]">
+              <span>Giảm giá Voucher:</span>
+              <span id="cartDiscountVal" class="font-bold">-0 đ</span>
+            </div>
+
             <div class="pt-3 border-t border-[#121316] flex items-baseline justify-between">
               <span class="font-bold uppercase text-[#121316]">Tổng thanh toán:</span>
               <span id="cartGrandTotal" class="font-serif text-2xl font-black text-[#BA2D27]">0 đ</span>
@@ -500,6 +527,7 @@
 <script>
   let concessionCart = [];
   let currentCinema = 'CGV Kim Cúc Plaza';
+  let appliedConcessionVoucher = null;
 
   function selectConcessionCinema(cinemaName, address, btnEl) {
     currentCinema = cinemaName;
@@ -553,13 +581,72 @@
     renderCart();
   }
 
+  async function applyConcessionVoucher() {
+    const input = document.getElementById('concessionVoucherCode');
+    const code = (input ? input.value : '').trim().toUpperCase();
+    if (!code) {
+      if (window.cinegoToast) window.cinegoToast.warning('Vui lòng nhập mã voucher!');
+      else alert('Vui lòng nhập mã voucher!');
+      return;
+    }
+
+    let subtotal = 0;
+    concessionCart.forEach(i => subtotal += (i.price * i.qty));
+    if (subtotal <= 0) {
+      if (window.cinegoToast) window.cinegoToast.warning('Vui lòng thêm bắp nước vào giỏ trước khi áp mã!');
+      else alert('Vui lòng thêm bắp nước vào giỏ trước khi áp mã!');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/kiem-tra-voucher', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, currentTotal: subtotal })
+      });
+      const data = await res.json();
+      if (data.success) {
+        appliedConcessionVoucher = {
+          code: data.code || code,
+          discountType: data.discountType,
+          discountValue: data.discountValue,
+          maxDiscountValue: data.maxDiscountValue || 0
+        };
+        const resultBox = document.getElementById('concessionVoucherResult');
+        const msgEl = document.getElementById('concessionVoucherMsg');
+        if (resultBox && msgEl) {
+          resultBox.classList.remove('hidden');
+          msgEl.innerText = `Đã áp dụng mã "${appliedConcessionVoucher.code}" thành công!`;
+        }
+        renderCart();
+        if (window.cinegoToast) window.cinegoToast.success(`Áp dụng mã ${appliedConcessionVoucher.code} thành công!`);
+      } else {
+        if (window.cinegoToast) window.cinegoToast.error(data.message || 'Mã voucher không hợp lệ');
+        else alert(data.message || 'Mã voucher không hợp lệ');
+      }
+    } catch (e) {
+      if (window.cinegoToast) window.cinegoToast.error('Lỗi khi kiểm tra mã voucher: ' + e.message);
+    }
+  }
+
+  function removeConcessionVoucher() {
+    appliedConcessionVoucher = null;
+    const input = document.getElementById('concessionVoucherCode');
+    const resultBox = document.getElementById('concessionVoucherResult');
+    if (input) input.value = '';
+    if (resultBox) resultBox.classList.add('hidden');
+    renderCart();
+    if (window.cinegoToast) window.cinegoToast.info('Đã gỡ mã voucher khỏi đơn.');
+  }
+
   function renderCart() {
     const listEl = document.getElementById('cartItemsList');
-    const emptyEl = document.getElementById('emptyCartMessage');
     const countBadge = document.getElementById('cartCountBadge');
     const subtotalEl = document.getElementById('cartSubtotal');
     const grandTotalEl = document.getElementById('cartGrandTotal');
     const btnSubmit = document.getElementById('btnSubmitConcessionOrder');
+    const discountRow = document.getElementById('voucherDiscountRow');
+    const discountValEl = document.getElementById('cartDiscountVal');
 
     if (concessionCart.length === 0) {
       listEl.innerHTML = `
@@ -570,17 +657,18 @@
       countBadge.innerText = '0';
       subtotalEl.innerText = '0 đ';
       grandTotalEl.innerText = '0 đ';
+      if (discountRow) discountRow.classList.add('hidden');
       btnSubmit.disabled = true;
       return;
     }
 
-    let total = 0;
+    let subtotal = 0;
     let count = 0;
     listEl.innerHTML = '';
 
     concessionCart.forEach((item, idx) => {
       const itemSum = item.price * item.qty;
-      total += itemSum;
+      subtotal += itemSum;
       count += item.qty;
 
       const row = document.createElement('div');
@@ -600,9 +688,31 @@
       listEl.appendChild(row);
     });
 
+    let discount = 0;
+    if (appliedConcessionVoucher) {
+      if (appliedConcessionVoucher.discountType === 'percentage') {
+        discount = Math.round((subtotal * appliedConcessionVoucher.discountValue) / 100);
+        if (appliedConcessionVoucher.maxDiscountValue > 0 && discount > appliedConcessionVoucher.maxDiscountValue) {
+          discount = appliedConcessionVoucher.maxDiscountValue;
+        }
+      } else {
+        discount = appliedConcessionVoucher.discountValue;
+      }
+      if (discount > subtotal) discount = subtotal;
+
+      if (discountRow && discountValEl) {
+        discountRow.classList.remove('hidden');
+        discountValEl.innerText = `-${discount.toLocaleString('vi-VN')} đ`;
+      }
+    } else {
+      if (discountRow) discountRow.classList.add('hidden');
+    }
+
+    const grandTotal = Math.max(0, subtotal - discount);
+
     countBadge.innerText = count;
-    subtotalEl.innerText = total.toLocaleString('vi-VN') + ' đ';
-    grandTotalEl.innerText = total.toLocaleString('vi-VN') + ' đ';
+    subtotalEl.innerText = subtotal.toLocaleString('vi-VN') + ' đ';
+    grandTotalEl.innerText = grandTotal.toLocaleString('vi-VN') + ' đ';
     btnSubmit.disabled = false;
   }
 
@@ -611,19 +721,41 @@
     const name = document.getElementById('custName').value.trim() || 'Khách Hàng';
     const phone = document.getElementById('custPhone').value.trim() || '0912345678';
     
-    let total = 0;
+    let subtotal = 0;
     const comboSummaries = [];
     concessionCart.forEach(i => {
-      total += (i.price * i.qty);
+      subtotal += (i.price * i.qty);
       comboSummaries.push(`${i.name} (${i.flavor || 'Chuẩn vị'}) x${i.qty}`);
     });
 
+    let discount = 0;
+    let voucherCode = '';
+    if (appliedConcessionVoucher) {
+      voucherCode = appliedConcessionVoucher.code;
+      if (appliedConcessionVoucher.discountType === 'percentage') {
+        discount = Math.round((subtotal * appliedConcessionVoucher.discountValue) / 100);
+        if (appliedConcessionVoucher.maxDiscountValue > 0 && discount > appliedConcessionVoucher.maxDiscountValue) {
+          discount = appliedConcessionVoucher.maxDiscountValue;
+        }
+      } else {
+        discount = appliedConcessionVoucher.discountValue;
+      }
+      if (discount > subtotal) discount = subtotal;
+    }
+
+    const finalTotal = Math.max(0, subtotal - discount);
     const code = 'CG-CORN-' + Math.floor(1000 + Math.random() * 9000);
+
     document.getElementById('modalOrderCode').innerText = code;
     document.getElementById('modalCinemaName').innerText = currentCinema;
     document.getElementById('modalCustName').innerText = name;
     document.getElementById('modalCustPhone').innerText = phone;
-    document.getElementById('modalTotalPaid').innerText = total.toLocaleString('vi-VN') + ' đ';
+    document.getElementById('modalTotalPaid').innerText = finalTotal.toLocaleString('vi-VN') + ' đ';
+
+    // Hiển thị thông báo Toast xác nhận đặt đơn
+    if (window.cinegoToast) {
+      window.cinegoToast.success(`Đặt bắp nước thành công! Mã nhận đơn: ${code}`);
+    }
 
     // Đồng bộ đơn hàng bắp nước lên MongoDB Backend
     fetch('/api/dat-bap-nuoc', {
@@ -634,8 +766,15 @@
         custName: name,
         custPhone: phone,
         comboDetails: comboSummaries.join(', '),
-        totalAmount: total
+        originalPrice: subtotal,
+        discountAmount: discount,
+        voucherCode: voucherCode,
+        totalAmount: finalTotal
       })
+    }).then(res => res.json()).then(data => {
+      if (data.success && window.cinegoToast) {
+        window.cinegoToast.info('Đơn đã được lưu vào Lịch Sử Vé / Vé Của Tôi.');
+      }
     }).catch(err => console.log('Concession notice:', err));
 
     document.getElementById('concessionModal').classList.remove('hidden');
@@ -643,7 +782,15 @@
 
   function closeConcessionModal() {
     document.getElementById('concessionModal').classList.add('hidden');
+    if (window.cinegoToast) {
+      window.cinegoToast.info(`Cảm ơn bạn! Vui lòng tới quầy ${currentCinema} để nhận bắp nước.`);
+    }
     concessionCart = [];
+    appliedConcessionVoucher = null;
+    const input = document.getElementById('concessionVoucherCode');
+    const resultBox = document.getElementById('concessionVoucherResult');
+    if (input) input.value = '';
+    if (resultBox) resultBox.classList.add('hidden');
     renderCart();
   }
 

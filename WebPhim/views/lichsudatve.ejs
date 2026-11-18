@@ -122,6 +122,10 @@
                   <a href="/ve/<%= ticket._id %>" class="btn-editorial-secondary text-xs !py-2.5 !px-3 font-semibold" title="Xem thẻ vé điện tử chuẩn">
                     Thẻ Vé →
                   </a>
+                  <a href="/chi-tiet-phim/<%= ticket.movie ? (ticket.movie._id || ticket.movie) : '' %>#danh-gia-phim" class="btn-editorial-secondary text-xs !py-2.5 !px-3 font-semibold text-[#A6853B] hover:text-[#BA2D27] flex items-center gap-1" title="Đánh giá phim sau khi xem">
+                    <span>★</span>
+                    <span>Đánh Giá</span>
+                  </a>
                 <% } %>
                 <button type="button" 
                         onclick="openTicketQRModal('<%= ticket._id.toString().substring(18).toUpperCase() %>', '<%= isConcessionOnly ? (ticket.comboDetails || 'Combo Bắp Nước') : (ticket.movie ? ticket.movie.title : 'Phim Điện Ảnh') %>', '<%= ticket.cinema || 'CGV Kim Cúc Plaza' %>', '<%= ticket.showDate %>', '<%= ticket.showTime || 'Fast-Track' %>', '<%= isConcessionOnly ? 'Quầy F&B' : (ticket.seats ? (Array.isArray(ticket.seats) ? ticket.seats.join(', ') : ticket.seats) : 'D5') %>')"
