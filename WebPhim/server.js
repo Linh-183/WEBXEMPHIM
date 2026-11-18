@@ -58,7 +58,6 @@ app.use((req, res, next) => {
 // ==========================================
 // 4. KẾT NỐI CƠ SỞ DỮ LIỆU MONGODB
 // ==========================================
-const autoSeedDatabase = require('./autoSeed');
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/cinego_db';
 
 let isConnected = false;
@@ -71,8 +70,6 @@ const connectDB = async () => {
         });
         isConnected = true;
         console.log('✅ KẾT NỐI MONGODB THÀNH CÔNG!');
-        // Tự động khởi tạo dữ liệu mẫu nếu database mới tinh trên Cloud
-        await autoSeedDatabase();
     } catch (err) {
         console.error('❌ LỖI KẾT NỐI MONGODB! Đang tự động kết nối lại sau 5 giây...', err.message);
         setTimeout(connectDB, 5000);
