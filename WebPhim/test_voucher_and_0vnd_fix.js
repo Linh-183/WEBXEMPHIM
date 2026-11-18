@@ -47,8 +47,8 @@ console.log('✓ TEST 2: Checkout form submits voucherCode & discountAmount to b
 const khachHangCode = fs.readFileSync(path.join(__dirname, 'dieu-huong', 'khach-hang.js'), 'utf8');
 
 // Check that usedVouchers prevents reuse
-assert(khachHangCode.includes('userInDb.usedVouchers.includes(upperCode)'), 'Must check if voucher was already used');
-assert(khachHangCode.includes('userInDb.usedVouchers.push(upperCode)'), 'Must record used voucher in userInDb.usedVouchers');
+assert(khachHangCode.includes('userInDb.usedVouchers.includes('), 'Must check if voucher was already used');
+assert(khachHangCode.includes('userInDb.usedVouchers.push('), 'Must record used voucher in userInDb.usedVouchers');
 assert(khachHangCode.includes('userInDb.vouchers.filter('), 'Must remove voucher from user.vouchers wallet on checkout');
 
 // Check that points are awarded based on base order value (before voucher)

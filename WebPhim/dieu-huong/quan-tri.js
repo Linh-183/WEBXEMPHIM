@@ -9,6 +9,26 @@ const FoodCombo = require('../models/FoodCombo');
 const Cinema = require('../models/Cinema');
 const FlashSale = require('../models/FlashSale');
 
+// Helper tính toán doanh số thực tế của đơn vé (kể cả khi khách dùng voucher giảm 100% về 0đ)
+function getTicketRevenue(t) {
+    if (!t) return 0;
+    if (typeof t.originalPrice === 'number' && t.originalPrice > 0) return t.originalPrice;
+    if (typeof t.totalPrice === 'number' && t.totalPrice > 0) return t.totalPrice;
+    // Tự động tính lại giá trị đơn nếu vé cũ chưa lưu originalPrice hoặc giảm về 0đ do voucher
+    let seatSum = 0;
+    if (Array.isArray(t.seats) && t.seats.length > 0) {
+        t.seats.forEach(s => {
+            const u = (s || '').toString().toUpperCase();
+            if (u.startsWith('F')) seatSum += 170000;
+            else if (u.startsWith('D') || u.startsWith('E')) seatSum += 95000;
+            else seatSum += 75000;
+        });
+    }
+    const cTotal = Number(t.comboTotal) || 0;
+    const fallback = seatSum + cTotal;
+    return fallback > 0 ? fallback : (t.totalPrice || 0);
+}
+
 router.get('/', async (req, res) => {
     try {
         const filter = req.query.filter || 'all'; 
@@ -39,7 +59,7 @@ router.get('/', async (req, res) => {
         }
 
         // 3. TÍNH DOANH THU & VÉ BÁN (TỪ CƠ SỞ DỮ LIỆU THỰC TẾ)
-        const allTickets = await Ticket.find({}, 'seats totalPrice cinema _id movie createdAt').populate('movie', 'title').lean();
+        const allTickets = await Ticket.find({}, 'seats totalPrice originalPrice comboTotal cinema _id movie createdAt').populate('movie', 'title').lean();
         
         let filteredTickets = allTickets;
         if (filter !== 'all') {
@@ -50,7 +70,7 @@ router.get('/', async (req, res) => {
         }
 
         const totalTickets = filteredTickets.reduce((sum, t) => sum + (t.seats ? t.seats.length : 0), 0);
-        const revenueNumber = filteredTickets.reduce((sum, t) => sum + (t.totalPrice || 0), 0);
+        const revenueNumber = filteredTickets.reduce((sum, t) => sum + getTicketRevenue(t), 0);
 
         // 4. TOP PHIM BÁN CHẠY (CHỈ LẤY PHIM CÓ PHÁT SINH VÉ THẬT)
         const movieSales = {};
@@ -92,7 +112,7 @@ router.get('/', async (req, res) => {
                 return time >= dayStart && time <= dayEnd;
             });
 
-            const dayRev = dayTickets.reduce((sum, t) => sum + (t.totalPrice || 0), 0);
+            const dayRev = dayTickets.reduce((sum, t) => sum + getTicketRevenue(t), 0);
             const daySeats = dayTickets.reduce((sum, t) => sum + (t.seats ? t.seats.length : 0), 0);
 
             // Đổi ra triệu đồng
@@ -107,7 +127,7 @@ router.get('/', async (req, res) => {
 
         filteredTickets.forEach(t => {
             const cName = (t.cinema || '').toLowerCase();
-            const price = t.totalPrice || 0;
+            const price = getTicketRevenue(t);
             if (cName.includes('cgv')) cgvRev += price;
             else if (cName.includes('starlight')) starlightRev += price;
             else if (cName.includes('dcine') || cName.includes('d-cine')) dcineRev += price;
@@ -510,7 +530,7 @@ router.get('/bao-cao', async (req, res) => {
             Movie.find().lean()
         ]);
 
-        const totalRevenue = tickets.reduce((sum, t) => sum + (t.totalPrice || 0), 0);
+        const totalRevenue = tickets.reduce((sum, t) => sum + getTicketRevenue(t), 0);
         const totalFnb = tickets.reduce((sum, t) => sum + (t.comboTotal || 0), 0);
         const totalSeatsSold = tickets.reduce((sum, t) => sum + (t.seats && Array.isArray(t.seats) ? t.seats.length : 1), 0);
         const aov = tickets.length > 0 ? Math.round(totalRevenue / tickets.length) : 0;
@@ -531,7 +551,7 @@ router.get('/bao-cao', async (req, res) => {
             });
 
             const list = tickets.filter(t => t.cinema === name);
-            const tRevenue = list.reduce((s, t) => s + (t.totalPrice || 0), 0);
+            const tRevenue = list.reduce((s, t) => s + getTicketRevenue(t), 0);
             const fnbRevenue = list.reduce((s, t) => s + (t.comboTotal || 0), 0);
             const ticketRevenue = Math.max(0, tRevenue - fnbRevenue);
             const ticketCount = list.reduce((s, t) => s + (t.seats && Array.isArray(t.seats) ? t.seats.length : 1), 0);

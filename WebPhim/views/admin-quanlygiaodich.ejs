@@ -65,7 +65,27 @@
                 <span class="text-[#BA2D27] font-bold"><%= seatList %></span>
               </td>
               <td class="py-3.5 px-4 font-['JetBrains_Mono'] text-[#7A7E8B] uppercase"><%= t.paymentMethod || 'VietQR' %></td>
-              <td class="py-3.5 px-4 font-['JetBrains_Mono'] font-bold text-[#121316]"><%= (t.totalPrice || 0).toLocaleString('vi-VN') %> đ</td>
+              <% 
+                let grossVal = (t.originalPrice && t.originalPrice > 0) ? t.originalPrice : (t.totalPrice || 0);
+                if (grossVal === 0 && Array.isArray(t.seats) && t.seats.length > 0) {
+                  let sSum = 0;
+                  t.seats.forEach(s => {
+                    const u = (s || '').toString().toUpperCase();
+                    if (u.startsWith('F')) sSum += 170000;
+                    else if (u.startsWith('D') || u.startsWith('E')) sSum += 95000;
+                    else sSum += 75000;
+                  });
+                  grossVal = sSum + (Number(t.comboTotal) || 0);
+                }
+              %>
+              <td class="py-3.5 px-4 font-['JetBrains_Mono'] font-bold text-[#121316]">
+                <%= grossVal.toLocaleString('vi-VN') %> đ
+                <% if (grossVal > (t.totalPrice || 0) || (t.discountAmount && t.discountAmount > 0)) { %>
+                  <span class="block text-[10px] text-[#10B981] font-normal">
+                    Voucher: -<%= (grossVal - (t.totalPrice || 0)).toLocaleString('vi-VN') %>đ (Thu: <%= (t.totalPrice || 0).toLocaleString('vi-VN') %>đ)
+                  </span>
+                <% } %>
+              </td>
               <td class="py-3.5 px-4">
                 <span class="px-2 py-0.5 bg-[#E8F8F0] text-[#10B981] font-['JetBrains_Mono'] text-[10px] font-bold uppercase">
                   Thành Công
@@ -73,7 +93,7 @@
               </td>
               <td class="py-3.5 px-4 text-right font-['JetBrains_Mono']">
                 <div class="flex items-center justify-end gap-2">
-                  <button type="button" onclick="showTicketDetail('<%= code %>', '<%= custName %>', '<%= movieTitle %>', '<%= seatList %>', '<%= (t.totalPrice || 0).toLocaleString() %> đ')" class="px-2 py-1 bg-white border border-[#E5E0D5] hover:border-[#121316] text-xs">
+                  <button type="button" onclick="showTicketDetail('<%= code %>', '<%= custName %>', '<%= movieTitle %>', '<%= seatList %>', '<%= grossVal.toLocaleString() %> đ')" class="px-2 py-1 bg-white border border-[#E5E0D5] hover:border-[#121316] text-xs">
                     Chi Tiết
                   </button>
                   <form action="/admin/giao-dich/xoa/<%= t._id %>" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đơn vé #<%= code %> này khỏi hệ thống?')" class="inline">

@@ -365,6 +365,7 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
         // 3. Xử lý Voucher và Kiểm tra tính hợp lệ, trừ voucher 1 lần duy nhất
         let appliedDiscount = 0;
         let validVoucherCode = '';
+        let voucherToRemoveId = null;
         const userInDb = await User.findById(req.session.user._id);
 
         if (voucherCode && voucherCode.trim()) {
@@ -392,19 +393,7 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
                     }
                 }
                 validVoucherCode = upperCode;
-
-                // Xóa voucher khỏi ví cá nhân của người dùng & ghi nhận đã dùng 1 lần duy nhất
-                if (userInDb) {
-                    if (!userInDb.usedVouchers) userInDb.usedVouchers = [];
-                    if (!userInDb.usedVouchers.includes(upperCode)) {
-                        userInDb.usedVouchers.push(upperCode);
-                    }
-                    if (Array.isArray(userInDb.vouchers)) {
-                        userInDb.vouchers = userInDb.vouchers.filter(id => id.toString() !== v._id.toString());
-                    }
-                    await userInDb.save();
-                    req.session.user = userInDb;
-                }
+                voucherToRemoveId = v._id;
 
                 // Nếu là mã voucher cá nhân (mã đổi điểm VCH- hoặc mã sinh nhật BDAY-) thì xóa vĩnh viễn khỏi DB
                 if (upperCode.startsWith('VCH') || upperCode.startsWith('BDAY')) {
@@ -416,14 +405,6 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
                 if (clientDiscount > 0) {
                     appliedDiscount = Math.min(clientDiscount, expectedBaseTotal);
                     validVoucherCode = upperCode;
-                    if (userInDb) {
-                        if (!userInDb.usedVouchers) userInDb.usedVouchers = [];
-                        if (!userInDb.usedVouchers.includes(upperCode)) {
-                            userInDb.usedVouchers.push(upperCode);
-                            await userInDb.save();
-                            req.session.user = userInDb;
-                        }
-                    }
                 }
             }
         }
@@ -463,18 +444,32 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
             seat: { $in: seatList }
         });
 
-        // Tích điểm tự động hào phóng: Tính điểm trên TỔNG GIÁ TRỊ ĐƠN HÀNG GỐC (trước khi trừ voucher)
-        // để khách hàng dù dùng voucher giảm về 0đ vẫn được tích đủ điểm thưởng xứng đáng!
+        // Cập nhật User một lần duy nhất: gỡ voucher khỏi ví, ghi nhận mã đã dùng, và CỘNG ĐIỂM THƯỞNG
         const baseOrderValue = expectedBaseTotal > 0 ? expectedBaseTotal : (Number(total) || 0);
         const earnedPoints = Math.max(Math.floor(verifiedTotalPrice / 1000), Math.floor(baseOrderValue / 1000));
-        if (earnedPoints > 0 && userInDb) {
-            userInDb.diemTichLuy = (userInDb.diemTichLuy || 0) + earnedPoints;
-            if (userInDb.diemTichLuy >= 1000) userInDb.hangHoiVien = 'KimCuong';
-            else if (userInDb.diemTichLuy >= 600) userInDb.hangHoiVien = 'Vang';
-            else if (userInDb.diemTichLuy >= 300) userInDb.hangHoiVien = 'Bac';
-            else userInDb.hangHoiVien = 'Dong';
+
+        if (userInDb) {
+            if (validVoucherCode) {
+                if (!userInDb.usedVouchers) userInDb.usedVouchers = [];
+                if (!userInDb.usedVouchers.includes(validVoucherCode)) {
+                    userInDb.usedVouchers.push(validVoucherCode);
+                }
+                if (voucherToRemoveId && Array.isArray(userInDb.vouchers)) {
+                    userInDb.vouchers = userInDb.vouchers.filter(id => id.toString() !== voucherToRemoveId.toString());
+                }
+            }
+
+            if (earnedPoints > 0) {
+                userInDb.diemTichLuy = (userInDb.diemTichLuy || 0) + earnedPoints;
+                if (userInDb.diemTichLuy >= 1000) userInDb.hangHoiVien = 'KimCuong';
+                else if (userInDb.diemTichLuy >= 600) userInDb.hangHoiVien = 'Vang';
+                else if (userInDb.diemTichLuy >= 300) userInDb.hangHoiVien = 'Bac';
+                else userInDb.hangHoiVien = 'Dong';
+            }
+
             await userInDb.save();
             req.session.user = userInDb;
+            await new Promise((resolve) => req.session.save(resolve));
         }
 
         // Chuyển hướng trực tiếp đến trang Thẻ Vé Điện Tử có mã QR CineGo Pass
@@ -944,8 +939,42 @@ router.get('/tai-khoan/thong-tin', checkLogin, async (req, res) => {
         const birthdayAwarded = await checkAndAwardBirthdayGift(thongTinUser);
         if (birthdayAwarded) {
             await thongTinUser.populate('vouchers');
-            req.session.user = thongTinUser;
         }
+
+        // Tự động kiểm tra và bù điểm cho mọi vé mà người dùng đã mua trong hệ thống (kể cả vé dùng voucher)
+        const myTickets = await Ticket.find({ user: thongTinUser._id }).lean();
+        if (myTickets.length > 0) {
+            let totalOrderPoints = 0;
+            myTickets.forEach(t => {
+                let orderVal = 0;
+                if (t.originalPrice && t.originalPrice > 0) orderVal = t.originalPrice;
+                else if (t.totalPrice && t.totalPrice > 0) orderVal = t.totalPrice;
+                else {
+                    let seatSum = 0;
+                    if (Array.isArray(t.seats)) {
+                        t.seats.forEach(s => {
+                            const u = (s || '').toString().toUpperCase();
+                            if (u.startsWith('F')) seatSum += 170000;
+                            else if (u.startsWith('D') || u.startsWith('E')) seatSum += 95000;
+                            else seatSum += 75000;
+                        });
+                    }
+                    orderVal = seatSum + (Number(t.comboTotal) || 0);
+                }
+                totalOrderPoints += Math.floor(orderVal / 1000);
+            });
+
+            // Nếu điểm tích lũy hiện tại thấp hơn số điểm xứng đáng từ lịch sử vé đã đặt:
+            if ((thongTinUser.diemTichLuy || 0) < totalOrderPoints) {
+                thongTinUser.diemTichLuy = totalOrderPoints;
+                if (thongTinUser.diemTichLuy >= 1000) thongTinUser.hangHoiVien = 'KimCuong';
+                else if (thongTinUser.diemTichLuy >= 600) thongTinUser.hangHoiVien = 'Vang';
+                else if (thongTinUser.diemTichLuy >= 300) thongTinUser.hangHoiVien = 'Bac';
+                else thongTinUser.hangHoiVien = 'Dong';
+                await thongTinUser.save();
+            }
+        }
+        req.session.user = thongTinUser;
 
         const allVouchers = await Voucher.find({ $or: [{ expiryDate: { $gte: new Date() } }, { expiryDate: null }] }).sort({ createdAt: -1 });
         const usedList = Array.isArray(thongTinUser.usedVouchers) ? thongTinUser.usedVouchers : [];
