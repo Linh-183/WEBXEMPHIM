@@ -134,4 +134,17 @@
   </div>
 </main>
 
+<script>
+  // Tự động làm sạch giỏ hàng CineGo sau khi thanh toán thành công và nhận vé điện tử
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      if (typeof window.clearHeaderCart === 'function') {
+        window.clearHeaderCart();
+      } else {
+        localStorage.removeItem('cinego_cart');
+      }
+    } catch(e) {}
+  });
+</script>
+
 <%- include('partials/footer') %>

@@ -99,25 +99,25 @@
          const eTime = new Date(activeFlashSale.endTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
          const remaining = Math.max(0, (activeFlashSale.totalQuantity || 50) - (activeFlashSale.claimedQuantity || 0));
     %>
-      <aside id="flashSaleTopBanner" class="w-full bg-[#121316] border-b-2 border-[#BA2D27] text-white py-2 px-4 shadow-md transition-all">
-        <div class="max-w-[1520px] mx-auto flex items-center justify-between gap-3 text-xs font-['JetBrains_Mono']">
-          <div class="flex items-center gap-2 overflow-hidden truncate">
-            <span class="px-2 py-0.5 bg-[#BA2D27] text-white font-bold text-[10px] uppercase tracking-wider animate-pulse rounded-xs shrink-0">
-              ⚡ ĐANG CÓ FLASH SALE
+      <aside id="flashSaleTopBanner" class="w-full bg-[#121316] border-b-2 border-[#BA2D27] text-white py-1.5 sm:py-2 px-2.5 sm:px-4 shadow-md transition-all">
+        <div class="max-w-[1520px] mx-auto flex items-center justify-between gap-2 sm:gap-3 text-xs font-['JetBrains_Mono']">
+          <div class="flex items-center gap-1.5 sm:gap-2 overflow-hidden truncate">
+            <span class="px-1.5 sm:px-2 py-0.5 bg-[#BA2D27] text-white font-bold text-[9px] sm:text-[10px] uppercase tracking-wider animate-pulse rounded-xs shrink-0">
+              ⚡ FLASH SALE
             </span>
-            <span class="text-white font-bold truncate">
-              Đang có Flash Sale: <strong class="text-[#D97706]"><%= activeFlashSale.title %></strong> — Áp dụng từ <strong class="text-amber-300"><%= sTime %></strong> đến <strong class="text-amber-300"><%= eTime %></strong> hôm nay!
+            <span class="text-white font-bold truncate text-[11px] sm:text-xs">
+              <span class="hidden xs:inline">Đang có Flash Sale: </span><strong class="text-[#D97706]"><%= activeFlashSale.title %></strong> (<strong class="text-amber-300"><%= sTime %></strong> - <strong class="text-amber-300"><%= eTime %></strong>)
             </span>
             <span class="hidden md:inline px-2 py-0.5 bg-white/10 text-white/80 text-[10px] rounded-xs shrink-0">
               Chỉ còn: <strong><%= remaining %></strong>/<%= activeFlashSale.totalQuantity || 50 %> voucher
             </span>
           </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <a href="/flash-sale" class="ml-2 px-3 py-1 bg-[#BA2D27] hover:bg-[#8E1F1A] text-white font-bold text-[10.5px] uppercase tracking-wider transition-colors flex items-center gap-1 shadow-sm whitespace-nowrap">
+          <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <a href="/flash-sale" class="px-2 sm:px-3 py-1 bg-[#BA2D27] hover:bg-[#8E1F1A] text-white font-bold text-[10px] sm:text-[10.5px] uppercase tracking-wider transition-colors flex items-center gap-1 shadow-sm whitespace-nowrap">
               <span>SĂN NGAY</span>
               <span>→</span>
             </a>
-            <button type="button" onclick="document.getElementById('flashSaleTopBanner').style.display='none'" class="text-white/60 hover:text-white px-1.5 py-0.5 text-sm leading-none" title="Đóng thông báo">
+            <button type="button" onclick="document.getElementById('flashSaleTopBanner').style.display='none'" class="text-white/60 hover:text-white px-1 py-0.5 text-sm leading-none" title="Đóng thông báo">
               ✕
             </button>
           </div>
@@ -127,22 +127,23 @@
          const sTime = new Date(upcomingFlashSale.startTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
          const eTime = new Date(upcomingFlashSale.endTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
     %>
-      <aside id="flashSaleTopBanner" class="w-full bg-[#1A1D24] border-b border-[#A6853B] text-white py-2 px-4 shadow-md transition-all">
-        <div class="max-w-[1520px] mx-auto flex items-center justify-between gap-3 text-xs font-['JetBrains_Mono']">
-          <div class="flex items-center gap-2 overflow-hidden truncate">
-            <span class="px-2 py-0.5 bg-[#A6853B] text-[#121316] font-bold text-[10px] uppercase tracking-wider rounded-xs shrink-0">
+      <aside id="flashSaleTopBanner" class="w-full bg-[#1A1D24] border-b border-[#A6853B] text-white py-1.5 sm:py-2 px-2.5 sm:px-4 shadow-md transition-all">
+        <div class="max-w-[1520px] mx-auto flex items-center justify-between gap-2 sm:gap-3 text-xs font-['JetBrains_Mono']">
+          <div class="flex items-center gap-1.5 sm:gap-2 overflow-hidden truncate">
+            <span class="px-1.5 sm:px-2 py-0.5 bg-[#A6853B] text-[#121316] font-bold text-[9px] sm:text-[10px] uppercase tracking-wider rounded-xs shrink-0">
               ⚡ SẮP DIỄN RA
             </span>
-            <span class="text-white font-bold truncate">
-              Flash Sale: <strong class="text-amber-300"><%= upcomingFlashSale.title %></strong> sẽ mở bán từ <strong class="text-[#FAF8F5]"><%= sTime %></strong> đến <strong class="text-[#FAF8F5]"><%= eTime %></strong> hôm nay!
+            <span class="text-white font-bold truncate text-[11px] sm:text-xs">
+              <span class="hidden xs:inline">Flash Sale: </span><strong class="text-amber-300"><%= upcomingFlashSale.title %></strong> (<strong class="text-[#FAF8F5]"><%= sTime %></strong> - <strong class="text-[#FAF8F5]"><%= eTime %></strong>)
             </span>
           </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <a href="/flash-sale" class="ml-2 px-3 py-1 bg-white hover:bg-[#FAF8F5] text-[#121316] font-bold text-[10.5px] uppercase tracking-wider transition-colors flex items-center gap-1 shadow-sm whitespace-nowrap">
-              <span>XEM CHI TIẾT</span>
+          <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <a href="/flash-sale" class="px-2 sm:px-3 py-1 bg-white hover:bg-[#FAF8F5] text-[#121316] font-bold text-[10px] sm:text-[10.5px] uppercase tracking-wider transition-colors flex items-center gap-1 shadow-sm whitespace-nowrap">
+              <span>XEM</span>
+              <span class="hidden xs:inline">CHI TIẾT</span>
               <span>→</span>
             </a>
-            <button type="button" onclick="document.getElementById('flashSaleTopBanner').style.display='none'" class="text-white/60 hover:text-white px-1.5 py-0.5 text-sm leading-none" title="Đóng thông báo">
+            <button type="button" onclick="document.getElementById('flashSaleTopBanner').style.display='none'" class="text-white/60 hover:text-white px-1 py-0.5 text-sm leading-none" title="Đóng thông báo">
               ✕
             </button>
           </div>
@@ -203,17 +204,17 @@
             <input type="text"
                    id="headerSearchInput"
                    name="keyword"
-                   placeholder="Tìm kiếm..."
+                   placeholder="Tìm..."
                    autocomplete="off"
-                   class="w-24 sm:w-36 lg:w-44 py-1.5 px-2 text-[11px] font-['Plus_Jakarta_Sans'] text-[#121316] placeholder:text-[#A6AAB6] bg-transparent focus:outline-none"
+                   class="w-16 xs:w-24 sm:w-36 lg:w-44 py-1.5 px-2 text-[11px] font-['Plus_Jakarta_Sans'] text-[#121316] placeholder:text-[#A6AAB6] bg-transparent focus:outline-none"
                    onfocus="openHeaderSearchDropdown()" />
             <button type="button" id="headerSearchClear" onclick="clearHeaderSearchInput()" class="hidden pr-2 text-[#A6AAB6] hover:text-[#121316]">
               <span class="material-symbols-outlined text-[15px]">close</span>
             </button>
           </form>
 
-          <!-- DROPDOWN ANCHORED DIRECTLY BELOW SEARCH -->
-          <div id="headerSearchDropdown" class="hidden absolute right-0 top-full mt-2 w-80 sm:w-96 bg-[#FAF8F5] border-2 border-[#121316] shadow-2xl z-50 p-4 max-h-[420px] overflow-y-auto">
+          <!-- DROPDOWN ANCHORED DIRECTLY BELOW SEARCH (ALWAYS RESPONSIVE WITHIN VIEWPORT) -->
+          <div id="headerSearchDropdown" class="hidden absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] max-w-sm sm:w-96 bg-[#FAF8F5] border-2 border-[#121316] shadow-2xl z-50 p-4 max-h-[420px] overflow-y-auto">
             <div class="flex items-center justify-between pb-2 border-b border-[#E5E0D5] text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">
               <span class="font-bold uppercase tracking-wider">KẾT QUẢ TÌM KIẾM</span>
               <span id="headerSearchCount" class="text-[#BA2D27] font-bold"></span>

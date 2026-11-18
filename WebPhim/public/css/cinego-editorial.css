@@ -397,20 +397,35 @@ img {
 /* RESPONSIVE MOBILE SCALING CHO GHẾ NGỒI TRÊN ĐIỆN THOẠI */
 @media (max-width: 640px) {
   .seat-unit {
-    width: 28px !important;
-    height: 26px !important;
+    width: 26px !important;
+    height: 25px !important;
     border-radius: 4px !important;
-    font-size: 8.5px !important;
+    font-size: 8px !important;
     letter-spacing: -0.5px !important;
   }
   .seat-unit.is-couple {
-    width: 60px !important;
-    font-size: 8px !important;
+    width: 56px !important;
+    font-size: 7.5px !important;
     border-radius: 4px !important;
   }
   .cinema-screen-arc {
     height: 12px !important;
     margin-bottom: 1.5rem !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .seat-unit {
+    width: 23px !important;
+    height: 23px !important;
+    border-radius: 3px !important;
+    font-size: 7px !important;
+    letter-spacing: -0.6px !important;
+  }
+  .seat-unit.is-couple {
+    width: 48px !important;
+    font-size: 6.5px !important;
+    border-radius: 3px !important;
   }
 }
 

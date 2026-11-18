@@ -1,7 +1,7 @@
 <%- include('partials/header') %>
 
 <main class="min-h-screen py-10 pb-24 bg-[#FAF8F5]">
-  <div class="max-w-[1520px] mx-auto px-6 sm:px-10 lg:px-12">
+  <div class="max-w-[1520px] mx-auto px-4 sm:px-8 lg:px-12">
     
     <!-- =========================================================================
          1. EDITORIAL HEADER & CINEMA PICKER
@@ -675,6 +675,15 @@
       window.cinegoToast.success(`Đặt bắp nước thành công! Mã nhận đơn: ${code}`);
     }
 
+    // Tự động làm sạch giỏ hàng bắp nước sau khi đặt hàng thành công
+    try {
+      if (typeof window.syncConcessionsToHeaderCart === 'function') {
+        window.syncConcessionsToHeaderCart([]);
+      } else if (typeof window.clearHeaderCart === 'function') {
+        window.clearHeaderCart();
+      }
+    } catch(e) {}
+
     // Đồng bộ đơn hàng bắp nước lên MongoDB Backend
     fetch('/api/dat-bap-nuoc', {
       method: 'POST',
@@ -716,6 +725,11 @@
     }
     concessionCart = [];
     appliedConcessionVoucher = null;
+    try {
+      if (typeof window.syncConcessionsToHeaderCart === 'function') {
+        window.syncConcessionsToHeaderCart([]);
+      }
+    } catch(e) {}
     const input = document.getElementById('concessionVoucherCode');
     const resultBox = document.getElementById('concessionVoucherResult');
     if (input) input.value = '';

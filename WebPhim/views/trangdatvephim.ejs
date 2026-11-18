@@ -490,17 +490,18 @@
         </div>
       </div>
 
-      <!-- Right: Continue to Checkout Button & Save to Cart Button -->
+      <!-- Right: Continue to Checkout Button & Save to Cart Button (Optimized for Mobile) -->
       <div class="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-end">
         <button type="button" 
                 onclick="saveCurrentBookingToCart(event)" 
-                class="hidden sm:inline-flex items-center justify-center gap-1.5 py-3 px-4 border border-[#121316] bg-white text-[#121316] text-xs font-bold hover:bg-[#F3EFE6] transition-colors whitespace-nowrap"
+                class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 py-2.5 sm:py-3 px-3 sm:px-4 border border-[#121316] bg-white text-[#121316] text-xs font-bold hover:bg-[#F3EFE6] transition-colors whitespace-nowrap"
                 title="Lưu vé & bắp nước vào giỏ hàng">
           <span class="material-symbols-outlined text-[16px]">shopping_cart</span>
-          <span>Lưu Giỏ Hàng</span>
+          <span class="hidden xs:inline">Lưu Giỏ Hàng</span>
+          <span class="xs:hidden">Giỏ Hàng</span>
         </button>
-        <button type="submit" id="btnContinueCheckout" disabled class="btn-editorial-primary w-full sm:w-auto py-3 sm:py-3.5 px-6 sm:px-8 text-xs font-bold block text-center disabled:opacity-40 disabled:cursor-not-allowed">
-          TIẾP TỤC ĐẾN BƯỚC THANH TOÁN →
+        <button type="submit" id="btnContinueCheckout" disabled class="btn-editorial-primary flex-[2] sm:flex-initial w-full sm:w-auto py-2.5 sm:py-3.5 px-4 sm:px-8 text-xs font-bold block text-center disabled:opacity-40 disabled:cursor-not-allowed">
+          TIẾP TỤC ĐẶT VÉ →
         </button>
       </div>
 

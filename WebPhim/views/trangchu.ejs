@@ -11,7 +11,7 @@
        1. THE CURATED MASTHEAD SPOTLIGHT (COMPACT POSTER HERO CAROUSEL)
        ========================================================================= -->
   <section id="heroCarouselSection" class="bg-[#0E1015] text-[#FAF8F5] border-b border-white/10 relative overflow-hidden">
-    <div class="max-w-[1520px] mx-auto px-6 sm:px-10 lg:px-14 py-8 lg:py-12 relative z-10">
+    <div class="max-w-[1520px] mx-auto px-4 sm:px-8 lg:px-14 py-8 lg:py-12 relative z-10">
       <% if (heroList.length > 0) { %>
       <!-- Hero Slides Container (Khung cố định 100%, chống đổi kích cỡ khi chuyển phim) -->
       <div id="heroSlidesContainer" class="relative w-full h-[720px] sm:h-[660px] lg:h-[460px] overflow-hidden">
@@ -82,19 +82,15 @@
 
               </div>
 
-              <!-- Right Column: Compact 3:4 Poster Canvas (Kích cỡ đứng im 100%, không co dãn, không nhảy vị trí) -->
-              <div class="lg:col-span-5 flex justify-center lg:justify-end items-center" style="min-width: 320px;">
-                <div class="cinego-hero-poster-frame bg-[#151820] border border-white/20 shadow-2xl" 
-                     style="width: 320px; height: 426px; min-width: 320px; min-height: 426px; max-width: 320px; max-height: 426px; flex-shrink: 0; position: relative; overflow: hidden;">
+              <!-- Right Column: Compact 3:4 Poster Canvas (Responsive across all mobile screen widths) -->
+              <div class="lg:col-span-5 flex justify-center lg:justify-end items-center w-full">
+                <div class="cinego-hero-poster-frame bg-[#151820] border border-white/20 shadow-2xl relative overflow-hidden w-[240px] xs:w-[280px] sm:w-[320px] h-[320px] xs:h-[373px] sm:h-[426px] shrink-0 mx-auto">
                   <img src="<%= item.posterUrl || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=80' %>" 
                        alt="<%= item.title %>" 
-                       class="filter brightness-[0.9] contrast-[1.05]" 
+                       class="w-full h-full object-cover object-center filter brightness-[0.9] contrast-[1.05]" 
                        loading="<%= idx === 0 ? 'eager' : 'lazy' %>"
                        fetchpriority="<%= idx === 0 ? 'high' : 'auto' %>"
-                       decoding="async"
-                       width="320"
-                       height="426"
-                       style="width: 320px; height: 426px; min-width: 320px; min-height: 426px; max-width: 320px; max-height: 426px; object-fit: cover; object-position: center; display: block; transform: none; transition: none;" />
+                       decoding="async" />
                   
                   <div class="absolute inset-0 bg-gradient-to-t from-[#0E1015] via-transparent to-transparent opacity-80 pointer-events-none"></div>
 
