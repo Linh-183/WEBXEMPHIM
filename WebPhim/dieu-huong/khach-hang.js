@@ -224,7 +224,8 @@ router.get('/dat-ve/:id', checkLogin, async (req, res, next) => {
         const phim = await Movie.findById(req.params.id);
         if (!phim) return res.status(404).render('404', { title: '404 — Không Tìm Thấy Suất Chiếu' });
         const seatConfig = await SeatConfig.findOne().lean();
-        res.render('trangdatvephim', { phim, seatConfig, error: req.query.error || null }); 
+        const combos = await FoodCombo.find({ isActive: true }).sort({ category: 1, price: 1 }).lean();
+        res.render('trangdatvephim', { phim, seatConfig, combos, error: req.query.error || null }); 
     } catch (error) { next(error); }
 });
 
@@ -318,7 +319,8 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
             }
         }
         const vouchers = await Voucher.find({ $or: [{ expiryDate: { $gte: new Date() } }, { expiryDate: null }] });
-        res.render('trangthanhtoan', { phim, cinema: selectedCinema, showDate, showTime, seats: seatList, total: Number(total), comboDetails, comboTotal: Number(comboTotal), vouchers, savedVouchers });
+        const availableCombos = await FoodCombo.find({ isActive: true }).sort({ category: 1, price: 1 }).lean();
+        res.render('trangthanhtoan', { phim, cinema: selectedCinema, showDate, showTime, seats: seatList, total: Number(total), comboDetails, comboTotal: Number(comboTotal), vouchers, savedVouchers, availableCombos });
     } catch(error) { 
         console.error("Lỗi thanh toán:", error);
         res.status(500).send("Lỗi thanh toán: " + error.message); 

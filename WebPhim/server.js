@@ -58,7 +58,16 @@ app.use((req, res, next) => {
 // ==========================================
 // 4. KẾT NỐI CƠ SỞ DỮ LIỆU MONGODB
 // ==========================================
+const dns = require('dns');
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/cinego_db';
+
+if (MONGODB_URI.startsWith('mongodb+srv://')) {
+    try {
+        dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+    } catch (dnsErr) {
+        console.warn('DNS resolver set warning:', dnsErr.message);
+    }
+}
 
 let isConnected = false;
 const connectDB = async () => {
