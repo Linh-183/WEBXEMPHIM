@@ -58,12 +58,27 @@ app.use((req, res, next) => {
 // ==========================================
 // 4. KẾT NỐI CƠ SỞ DỮ LIỆU MONGODB
 // ==========================================
+const autoSeedDatabase = require('./autoSeed');
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/cinego_db';
-mongoose.connect(MONGODB_URI, { 
-    serverSelectionTimeoutMS: 5000 
-})
-.then(() => console.log('✅ KẾT NỐI MONGODB THÀNH CÔNG!'))
-.catch(err => console.error('❌ LỖI KẾT NỐI MONGODB!', err));
+
+let isConnected = false;
+const connectDB = async () => {
+    if (isConnected) return;
+    try {
+        await mongoose.connect(MONGODB_URI, { 
+            serverSelectionTimeoutMS: 30000,
+            connectTimeoutMS: 30000
+        });
+        isConnected = true;
+        console.log('✅ KẾT NỐI MONGODB THÀNH CÔNG!');
+        // Tự động khởi tạo dữ liệu mẫu nếu database mới tinh trên Cloud
+        await autoSeedDatabase();
+    } catch (err) {
+        console.error('❌ LỖI KẾT NỐI MONGODB! Đang tự động kết nối lại sau 5 giây...', err.message);
+        setTimeout(connectDB, 5000);
+    }
+};
+connectDB();
 
 // ==========================================
 // 5. ĐIỀU HƯỚNG ROUTER (ROUTING)
@@ -121,6 +136,6 @@ cron.schedule('0 0 * * *', async () => {
 // ==========================================
 // 7. KHỞI CHẠY MÁY CHỦ
 // ==========================================
-app.listen(PORT, () => {
-    console.log(`🚀 Server CineGo đang chạy tại http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server CineGo đang chạy tại http://0.0.0.0:${PORT}`);
 }); 
