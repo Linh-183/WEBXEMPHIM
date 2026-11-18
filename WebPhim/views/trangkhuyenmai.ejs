@@ -225,7 +225,21 @@
 </main>
 
 <script>
+  const isUserLoggedIn = <%= (typeof user !== 'undefined' && user && user._id) ? 'true' : 'false' %>;
+
   function saveVoucherToWallet(btn, code) {
+    if (!isUserLoggedIn) {
+      if (window.cinegoToast) {
+        window.cinegoToast.warning('Bạn cần có tài khoản và đăng nhập để lưu mã ưu đãi vào ví!');
+      } else {
+        alert('Bạn cần có tài khoản và đăng nhập để lưu mã ưu đãi vào ví!');
+      }
+      setTimeout(() => {
+        window.location.href = '/dang-nhap?returnTo=' + encodeURIComponent(window.location.pathname) + '&warning=' + encodeURIComponent('Vui lòng đăng nhập để lưu mã ưu đãi vào ví!');
+      }, 500);
+      return;
+    }
+
     fetch('/api/luu-voucher', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -240,13 +254,16 @@
         btn.classList.add('bg-[#10B981]', 'text-white', 'border', 'border-[#10B981]');
         btn.innerHTML = '<span class="material-symbols-outlined text-sm">check</span><span>Đã Lưu Vào Ví</span>';
       } else {
+        if (data.requireLogin) {
+          window.location.href = '/dang-nhap?returnTo=' + encodeURIComponent(window.location.pathname) + '&warning=' + encodeURIComponent(data.message);
+          return;
+        }
         if (window.cinegoToast) window.cinegoToast.info(data.message);
         else alert(data.message);
       }
     })
     .catch(err => {
-      if (window.cinegoToast) window.cinegoToast.error('Vui lòng đăng nhập để lưu mã ưu đãi vào ví!');
-      else alert('Vui lòng đăng nhập để lưu mã ưu đãi vào ví!');
+      window.location.href = '/dang-nhap?returnTo=' + encodeURIComponent(window.location.pathname) + '&warning=' + encodeURIComponent('Vui lòng đăng nhập để lưu mã ưu đãi vào ví!');
     });
   }
 

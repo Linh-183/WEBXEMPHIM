@@ -3,13 +3,14 @@
 <%
   const activeList = (typeof activeSales !== 'undefined' && Array.isArray(activeSales)) ? activeSales : [];
   const upcomingList = (typeof upcomingSales !== 'undefined' && Array.isArray(upcomingSales)) ? upcomingSales : [];
+  const isAuth = (typeof user !== 'undefined' && user && user._id);
 %>
 
 <main class="min-h-screen py-12 pb-24 bg-[#FAF8F5]">
   <div class="max-w-7xl mx-auto px-4 sm:px-8">
     
     <!-- Masthead -->
-    <div class="pb-8 border-b border-[#E5E0D5] mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div class="pb-8 border-b border-[#E5E0D5] mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
       <div>
         <span class="archival-index">SỰ KIỆN SĂN VÉ CINEGO</span>
         <h1 class="editorial-headline mt-1">Khung Giờ Vàng Flash Sale</h1>
@@ -22,6 +23,24 @@
         QUY TẮC: <strong class="text-[#BA2D27]">1 TÀI KHOẢN / 1 VÉ TRONG 1 ĐỢT</strong>
       </div>
     </div>
+
+    <!-- Thông báo nếu chưa đăng nhập -->
+    <% if (!isAuth) { %>
+      <div class="mb-8 p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-xs font-['JetBrains_Mono'] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+        <div class="flex items-center gap-2.5">
+          <span class="material-symbols-outlined text-amber-600 text-lg">account_circle</span>
+          <span><strong>YÊU CẦU TÀI KHOẢN:</strong> Bạn cần có tài khoản và đăng nhập CineGo để nhận và lưu mã Flash Sale vào ví cá nhân.</span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <a href="/dang-nhap?returnTo=/flash-sale&warning=Vui%20l%C3%B2ng%20%C4%91%C4%83ng%20nh%E1%BA%ADp%20t%C3%A0i%20kho%E1%BA%A3n%20%C4%91%E1%BB%83%20l%C6%B0u%20m%C3%A3%20Flash%20Sale!" class="px-3 py-1.5 bg-[#121316] hover:bg-[#BA2D27] text-white font-bold text-[11px] transition-colors">
+            Đăng Nhập Ngay →
+          </a>
+          <a href="/dang-ky" class="px-3 py-1.5 bg-white border border-[#E5E0D5] text-[#121316] font-bold text-[11px] hover:border-[#121316] transition-colors">
+            Đăng Ký
+          </a>
+        </div>
+      </div>
+    <% } %>
 
     <!-- Active Slot Banner Section -->
     <% if (activeList.length > 0) { %>
@@ -54,17 +73,28 @@
               </div>
 
               <div class="pt-3 flex flex-wrap items-center gap-3">
-                <button type="button" 
-                        onclick="quickBuyFlashSale('<%= sale._id %>', '<%= sale.voucherCode %>', '<%= (sale.movie && sale.movie._id) ? sale.movie._id : '' %>')" 
-                        class="btn-editorial-primary text-xs !py-3 !px-6 font-bold !bg-[#BA2D27] text-white flex items-center gap-2 shadow-md hover:!bg-[#9B241F]">
-                  <span>⚡</span>
-                  <span>THÊM VÀO GIỎ & MUA VÉ NHANH →</span>
-                </button>
-                <button type="button" 
-                        onclick="claimFlashVoucher('<%= sale._id %>', '<%= sale.voucherCode %>')" 
-                        class="btn-editorial-secondary text-xs !py-3 !px-5 font-['JetBrains_Mono'] font-bold">
-                  Lưu Mã (<%= (sale.salePrice / 1000) %>K) Vào Ví
-                </button>
+                <% if (!isAuth) { %>
+                  <a href="/dang-nhap?returnTo=/flash-sale&warning=Vui%20l%C3%B2ng%20%C4%91%C4%83ng%20nh%E1%BA%ADp%20t%C3%A0i%20kho%E1%BA%A3n%20%C4%91%E1%BB%83%20l%C6%B0u%20v%C3%A0%20s%C4%83n%20m%C3%A3%20Flash%20Sale!" 
+                     class="btn-editorial-primary text-xs !py-3 !px-6 font-bold !bg-[#BA2D27] text-white flex items-center gap-2 shadow-md hover:!bg-[#9B241F]">
+                    <span class="material-symbols-outlined text-[16px]">lock</span>
+                    <span>ĐĂNG NHẬP ĐỂ SĂN VÉ FLASH SALE →</span>
+                  </a>
+                  <a href="/dang-ky" class="btn-editorial-secondary text-xs !py-3 !px-5 font-['JetBrains_Mono'] font-bold">
+                    Đăng Ký Tài Khoản
+                  </a>
+                <% } else { %>
+                  <button type="button" 
+                          onclick="quickBuyFlashSale('<%= sale._id %>', '<%= sale.voucherCode %>', '<%= (sale.movie && sale.movie._id) ? sale.movie._id : '' %>')" 
+                          class="btn-editorial-primary text-xs !py-3 !px-6 font-bold !bg-[#BA2D27] text-white flex items-center gap-2 shadow-md hover:!bg-[#9B241F]">
+                    <span>⚡</span>
+                    <span>THÊM VÀO GIỎ & MUA VÉ NHANH →</span>
+                  </button>
+                  <button type="button" 
+                          onclick="claimFlashVoucher('<%= sale._id %>', '<%= sale.voucherCode %>')" 
+                          class="btn-editorial-secondary text-xs !py-3 !px-5 font-['JetBrains_Mono'] font-bold">
+                    Lưu Mã (<%= (sale.salePrice / 1000) %>K) Vào Ví
+                  </button>
+                <% } %>
                 <a href="/phim" class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B] hover:text-[#121316] underline ml-2">
                   Xem Lịch Chiếu Phim
                 </a>
@@ -156,17 +186,42 @@
 </main>
 
 <script>
+  const isUserLoggedIn = <%= (typeof user !== 'undefined' && user && user._id) ? 'true' : 'false' %>;
+
   async function quickBuyFlashSale(saleId, voucherCode, movieId) {
+    if (!isUserLoggedIn) {
+      if (window.cinegoToast) {
+        window.cinegoToast.warning('Bạn cần có tài khoản và đăng nhập để lưu mã Flash Sale!');
+      } else {
+        alert('Bạn cần có tài khoản và đăng nhập để lưu mã Flash Sale!');
+      }
+      setTimeout(() => {
+        window.location.href = '/dang-nhap?returnTo=' + encodeURIComponent(window.location.pathname) + '&warning=' + encodeURIComponent('Vui lòng đăng nhập tài khoản để săn vé Flash Sale!');
+      }, 500);
+      return;
+    }
+
     try {
       // 1. Tự động lưu mã voucher vào ví người dùng
-      await fetch('/api/nhan-flash-voucher', {
+      const res = await fetch('/api/nhan-flash-voucher', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ saleId })
       });
+      const data = await res.json();
+      
+      if (!data.success) {
+        if (data.requireLogin) {
+          window.location.href = '/dang-nhap?returnTo=' + encodeURIComponent(window.location.pathname) + '&warning=' + encodeURIComponent(data.message || 'Vui lòng đăng nhập!');
+          return;
+        }
+        if (window.cinegoToast) window.cinegoToast.error(data.message || 'Không thể nhận mã Flash Sale!');
+        else alert(data.message || 'Không thể nhận mã Flash Sale!');
+        return;
+      }
       
       if (window.cinegoToast) {
-        window.cinegoToast.success(`Đã thêm mã Flash Sale ${voucherCode} vào giỏ! Đang chuyển đến chọn ghế...`);
+        window.cinegoToast.success(`Đã lưu mã Flash Sale ${voucherCode} vào ví! Đang chuyển đến chọn ghế...`);
       }
       
       // 2. Chuyển hướng trực tiếp tới trang đặt vé có pre-fill voucher
@@ -176,7 +231,7 @@
         } else {
           window.location.href = `/phim?flashVoucher=${voucherCode}`;
         }
-      }, 500);
+      }, 600);
     } catch (e) {
       if (movieId) {
         window.location.href = `/dat-ve/${movieId}?flashVoucher=${voucherCode}`;
@@ -187,6 +242,18 @@
   }
 
   function claimFlashVoucher(saleId, code) {
+    if (!isUserLoggedIn) {
+      if (window.cinegoToast) {
+        window.cinegoToast.warning('Bạn cần có tài khoản và đăng nhập để lưu mã Flash Sale vào ví!');
+      } else {
+        alert('Bạn cần có tài khoản và đăng nhập để lưu mã Flash Sale vào ví!');
+      }
+      setTimeout(() => {
+        window.location.href = '/dang-nhap?returnTo=' + encodeURIComponent(window.location.pathname) + '&warning=' + encodeURIComponent('Vui lòng đăng nhập để lưu mã Flash Sale vào ví!');
+      }, 500);
+      return;
+    }
+
     fetch('/api/nhan-flash-voucher', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -198,13 +265,16 @@
         if (window.cinegoToast) window.cinegoToast.success(data.message);
         else alert(data.message);
       } else {
+        if (data.requireLogin) {
+          window.location.href = '/dang-nhap?returnTo=' + encodeURIComponent(window.location.pathname) + '&warning=' + encodeURIComponent(data.message);
+          return;
+        }
         if (window.cinegoToast) window.cinegoToast.error(data.message || 'Không thể nhận voucher');
         else alert(data.message || 'Không thể nhận voucher');
       }
     })
     .catch(err => {
-      if (window.cinegoToast) window.cinegoToast.error('Vui lòng đăng nhập để nhận mã Flash Sale!');
-      else alert('Vui lòng đăng nhập để nhận mã Flash Sale!');
+      window.location.href = '/dang-nhap?returnTo=' + encodeURIComponent(window.location.pathname) + '&warning=' + encodeURIComponent('Vui lòng đăng nhập để lưu mã Flash Sale!');
     });
   }
 

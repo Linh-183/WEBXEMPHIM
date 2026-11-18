@@ -654,15 +654,32 @@ router.get('/flash-sale', async (req, res) => {
     }
 });
 
-// API Người Dùng Nhận Mã Ưu Đãi Flash Sale Vào Ví
-router.post('/api/nhan-flash-voucher', checkLogin, async (req, res) => {
+// API Người Dùng Nhận Mã Ưu Đãi Flash Sale Vào Ví (Bắt buộc phải có tài khoản)
+router.post('/api/nhan-flash-voucher', async (req, res) => {
     try {
+        if (!req.session || !req.session.user || !req.session.user._id) {
+            return res.status(401).json({
+                success: false,
+                requireLogin: true,
+                message: 'Vui lòng đăng nhập tài khoản để lưu mã Flash Sale vào ví!'
+            });
+        }
+
         const { saleId } = req.body;
         if (!isValidObjectId(saleId)) return res.json({ success: false, message: 'Đợt Flash Sale không hợp lệ.' });
         
+        const user = await User.findById(req.session.user._id);
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                requireLogin: true,
+                message: 'Tài khoản không tồn tại hoặc phiên đăng nhập đã hết hạn!'
+            });
+        }
+        if (!user.vouchers) user.vouchers = [];
+
         let sale = await FlashSale.findById(saleId);
         let targetVoucher = null;
-
         const now = new Date();
 
         if (sale) {
@@ -671,7 +688,7 @@ router.post('/api/nhan-flash-voucher', checkLogin, async (req, res) => {
                 return res.json({ success: false, message: 'Khung giờ Flash Sale chưa bắt đầu hoặc đã kết thúc.' });
             }
             if (sale.claimedQuantity >= sale.totalQuantity) {
-                return res.json({ success: false, message: 'Đợt Flash Sale này đã hết số lượng vé mở bán.' });
+                return res.json({ success: false, message: 'Rất tiếc! Số lượng vé trong khung giờ Flash Sale này đã được săn hết.' });
             }
 
             // Tự động tạo voucher trong bảng Voucher nếu chưa có
@@ -686,6 +703,14 @@ router.post('/api/nhan-flash-voucher', checkLogin, async (req, res) => {
                     maxDiscountValue: sale.originalPrice - sale.salePrice,
                     expiryDate: sale.endTime,
                     applicableTo: 'all'
+                });
+            }
+
+            // Kiểm tra xem người dùng đã lưu mã này chưa
+            if (user.vouchers.some(vId => vId.toString() === targetVoucher._id.toString())) {
+                return res.json({
+                    success: false,
+                    message: `Mã ${targetVoucher.code} đã có trong ví của bạn rồi! Hãy áp dụng khi đặt vé.`
                 });
             }
 
@@ -706,7 +731,15 @@ router.post('/api/nhan-flash-voucher', checkLogin, async (req, res) => {
             }
             const maxL = targetVoucher.maxQuantity || 50;
             if ((targetVoucher.claimedQuantity || 0) >= maxL) {
-                return res.json({ success: false, message: 'Số lượng voucher Flash Sale trong khung giờ đã được lưu hết.' });
+                return res.json({ success: false, message: 'Rất tiếc! Số lượng voucher Flash Sale trong khung giờ đã được lưu hết.' });
+            }
+
+            // Kiểm tra xem người dùng đã lưu mã này chưa
+            if (user.vouchers.some(vId => vId.toString() === targetVoucher._id.toString())) {
+                return res.json({
+                    success: false,
+                    message: `Mã ${targetVoucher.code} đã có trong ví của bạn rồi! Hãy áp dụng khi thanh toán.`
+                });
             }
 
             targetVoucher.claimedQuantity = (targetVoucher.claimedQuantity || 0) + 1;
@@ -714,20 +747,13 @@ router.post('/api/nhan-flash-voucher', checkLogin, async (req, res) => {
         }
 
         // Lưu voucher vào tài khoản của khách hàng
-        const user = await User.findById(req.session.user._id);
-        if (user && targetVoucher) {
-            if (!user.vouchers) user.vouchers = [];
-            const alreadyHas = user.vouchers.some(vId => vId.toString() === targetVoucher._id.toString());
-            if (!alreadyHas) {
-                user.vouchers.push(targetVoucher._id);
-                await user.save();
-            }
-            req.session.user.vouchers = user.vouchers;
-        }
+        user.vouchers.push(targetVoucher._id);
+        await user.save();
+        req.session.user.vouchers = user.vouchers;
 
         res.json({ 
             success: true, 
-            message: `Bạn đã nhận mã ${targetVoucher.code} vào ví thành công! Hãy kiểm tra giỏ hàng hoặc thanh toán để áp dụng.` 
+            message: `Bạn đã lưu mã Flash Sale ${targetVoucher.code} vào ví thành công! Hãy kiểm tra ví để áp dụng khi đặt vé.` 
         });
     } catch (err) {
         res.status(500).json({ success: false, message: 'Lỗi hệ thống: ' + err.message });
