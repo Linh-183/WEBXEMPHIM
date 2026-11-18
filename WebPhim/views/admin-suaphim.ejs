@@ -70,6 +70,15 @@
             </select>
           </div>
 
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Định Dạng Rạp Chiếu</label>
+            <select name="format" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-bold focus:outline-none focus:border-[#121316]">
+              <option value="2D Standard" <%= (!phim.format || phim.format === '2D Standard') ? 'selected' : '' %>>Rạp Thường (Standard 2D)</option>
+              <option value="IMAX Laser" <%= phim.format === 'IMAX Laser' ? 'selected' : '' %>>Rạp IMAX Laser (Đại Dương Ảnh)</option>
+              <option value="3D Standard" <%= phim.format === '3D Standard' ? 'selected' : '' %>>Rạp 3D Standard</option>
+            </select>
+          </div>
+
           <!-- Giá vé bán (VNĐ) -->
           <div>
             <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">

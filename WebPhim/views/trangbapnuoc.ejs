@@ -116,7 +116,7 @@
         <div class="flex flex-wrap items-center gap-2 border-b border-[#E5E0D5] pb-4 font-['Plus_Jakarta_Sans'] text-xs font-bold uppercase tracking-wider">
           <button type="button" onclick="filterMenu('all', this)" class="category-btn px-4 py-2 bg-[#121316] text-white">Tất Cả Thực Đơn</button>
           <button type="button" onclick="filterMenu('combo', this)" class="category-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#474A54] hover:border-[#121316]">Combo Tiết Kiệm</button>
-          <button type="button" onclick="filterMenu('popcorn', this)" class="category-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#474A54] hover:border-[#121316]">Bắp Rang Nóng</button>
+          <button type="button" onclick="filterMenu('popcorn', this)" class="category-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#474A54] hover:border-[#121316]">Bắp Rang</button>
           <button type="button" onclick="filterMenu('drink', this)" class="category-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#474A54] hover:border-[#121316]">Nước Giải Khát</button>
           <button type="button" onclick="filterMenu('snack', this)" class="category-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#474A54] hover:border-[#121316]">Snack & Món Ăn Nóng</button>
         </div>
@@ -390,16 +390,49 @@
     document.querySelectorAll('.category-btn').forEach(b => {
       b.className = 'category-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#474A54] hover:border-[#121316]';
     });
-    btnEl.className = 'category-btn px-4 py-2 bg-[#121316] text-white';
+    if (btnEl) btnEl.className = 'category-btn px-4 py-2 bg-[#121316] text-white';
 
     const cards = document.querySelectorAll('.menu-item-card');
+    let visibleCount = 0;
     cards.forEach(c => {
-      if (category === 'all' || c.getAttribute('data-category') === category) {
-        c.style.display = 'flex';
+      const cat = (c.getAttribute('data-category') || '').toLowerCase().trim();
+      const title = (c.querySelector('h3') ? c.querySelector('h3').innerText : '').toLowerCase();
+      
+      let match = false;
+      if (category === 'all') {
+        match = true;
+      } else if (category === 'popcorn') {
+        match = (cat === 'popcorn' || title.includes('bắp') || title.includes('popcorn'));
+      } else if (category === 'drink') {
+        match = (cat === 'drink' || title.includes('nước') || title.includes('pepsi') || title.includes('coke') || title.includes('trà') || title.includes('sprite'));
+      } else if (category === 'snack') {
+        match = (cat === 'snack' || title.includes('snack') || title.includes('xúc xích') || title.includes('khoai tây') || title.includes('món ăn'));
+      } else if (category === 'combo') {
+        match = (cat === 'combo' || title.includes('combo'));
       } else {
+        match = (cat === category);
+      }
+
+      if (match) {
+        c.classList.remove('hidden');
+        c.style.display = 'flex';
+        visibleCount++;
+      } else {
+        c.classList.add('hidden');
         c.style.display = 'none';
       }
     });
+
+    let emptyNotice = document.getElementById('noCategoryFilterNotice');
+    if (!emptyNotice) {
+      emptyNotice = document.createElement('div');
+      emptyNotice.id = 'noCategoryFilterNotice';
+      emptyNotice.className = 'col-span-full py-12 text-center text-[#7A7E8B] text-xs font-[\'JetBrains_Mono\'] bg-[#FAF8F5] border border-[#E5E0D5] p-6 space-y-2';
+      emptyNotice.innerHTML = '<span class="text-2xl block">🍿</span><p class="font-bold text-[#121316]">Chưa có món nào thuộc danh mục này.</p><p class="text-[11px] text-[#A6AAB6]">Vui lòng chọn danh mục khác để xem thêm thực đơn bắp nước.</p>';
+      const grid = document.getElementById('concessionItemsGrid');
+      if (grid) grid.appendChild(emptyNotice);
+    }
+    emptyNotice.classList.toggle('hidden', visibleCount > 0);
   }
 
   function addToConcessionCart(id, name, price, flavor) {
@@ -556,6 +589,10 @@
     subtotalEl.innerText = subtotal.toLocaleString('vi-VN') + ' đ';
     grandTotalEl.innerText = grandTotal.toLocaleString('vi-VN') + ' đ';
     btnSubmit.disabled = false;
+
+    if (typeof window.syncConcessionsToHeaderCart === 'function') {
+      window.syncConcessionsToHeaderCart(concessionCart);
+    }
   }
 
   function processConcessionCheckout() {

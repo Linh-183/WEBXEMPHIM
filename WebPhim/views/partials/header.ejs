@@ -166,6 +166,18 @@
           </div>
         </div>
 
+        <!-- SHOPPING CART TRIGGER (HÌNH XE ĐẨY CỬA HÀNG CẠNH TÊN USER) -->
+        <div class="relative inline-block text-left" id="headerCartContainer">
+          <button type="button" 
+                  id="headerCartBtn" 
+                  onclick="toggleHeaderCartDrawer(event)" 
+                  class="relative flex items-center justify-center p-1.5 sm:py-1.5 sm:px-2 border border-[#E5E0D5] hover:border-[#121316] bg-white text-[#121316] hover:text-[#BA2D27] transition-all cursor-pointer select-none"
+                  title="Giỏ hàng vé & bắp nước">
+            <span class="material-symbols-outlined text-[19px]">shopping_cart</span>
+            <span id="headerCartBadge" class="hidden absolute -top-1.5 -right-1.5 min-w-[17px] h-[17px] px-1 bg-[#BA2D27] text-white text-[9px] font-['JetBrains_Mono'] font-bold rounded-full flex items-center justify-center leading-none shadow-sm">0</span>
+          </button>
+        </div>
+
         <!-- User Authentication State -->
         <% if (typeof user !== 'undefined' && user) { %>
           <% if (user.vaiTro === 'admin') { %>
@@ -309,6 +321,52 @@
           <a href="/dang-ky" class="btn-editorial-primary w-full text-center">Đăng Ký Tài Khoản</a>
         <% } %>
       </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       5. SHOPPING CART SLIDE-OVER DRAWER (GIỎ HÀNG VÉ & BẮP NƯỚC)
+       ========================================================================= -->
+  <div id="headerCartDrawerOverlay" class="hidden fixed inset-0 z-50 bg-[#121316]/60 backdrop-blur-xs transition-opacity duration-300" onclick="closeHeaderCartDrawer()">
+    <div id="headerCartDrawer" 
+         class="fixed top-0 right-0 w-full max-w-md h-full bg-[#FAF8F5] border-l border-[#E5E0D5] flex flex-col justify-between shadow-2xl transition-transform duration-300 transform translate-x-full overflow-hidden" 
+         onclick="event.stopPropagation()">
+      
+      <!-- Drawer Header -->
+      <div class="p-5 sm:p-6 border-b border-[#E5E0D5] bg-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <span class="material-symbols-outlined text-2xl text-[#BA2D27]">shopping_cart</span>
+          <div>
+            <span class="font-['JetBrains_Mono'] text-[9.5px] uppercase tracking-widest text-[#7A7E8B] block font-bold">GIỎ HÀNG CINEGO</span>
+            <h3 class="font-serif text-lg font-bold text-[#121316] leading-none mt-0.5">Vé & Bắp Nước Đang Chọn</h3>
+          </div>
+        </div>
+        <button type="button" onclick="closeHeaderCartDrawer()" class="w-8 h-8 rounded-full hover:bg-[#FAF8F5] border border-transparent hover:border-[#E5E0D5] flex items-center justify-center text-[#7A7E8B] hover:text-[#121316] transition-all cursor-pointer">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <!-- Drawer Body: List of Items -->
+      <div class="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6" id="headerCartDrawerBody">
+        <!-- Rendered dynamically by JavaScript -->
+      </div>
+
+      <!-- Drawer Footer: Checkout Actions -->
+      <div class="p-5 sm:p-6 border-t border-[#E5E0D5] bg-white space-y-3" id="headerCartDrawerFooter">
+        <div class="flex items-center justify-between text-xs font-['JetBrains_Mono']">
+          <span class="text-[#7A7E8B] uppercase tracking-wider">Tổng Tạm Tính:</span>
+          <span id="headerCartGrandTotal" class="text-lg font-bold text-[#BA2D27]">0 đ</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="clearHeaderCart()" class="btn-editorial-secondary text-xs !py-3 !px-3 font-semibold text-[#7A7E8B] hover:text-[#BA2D27] shrink-0" title="Xóa toàn bộ giỏ">
+            <span class="material-symbols-outlined text-base">delete</span>
+          </button>
+          <button type="button" id="btnHeaderCartCheckout" onclick="proceedHeaderCartCheckout()" class="btn-editorial-primary text-xs !py-3 w-full text-center flex-1 font-bold">
+            TIẾP TỤC ĐẶT VÉ & THANH TOÁN →
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -486,4 +544,282 @@
         }
       });
     })();
+
+    // ==========================================
+    // GLOBAL CINEGO SHOPPING CART ENGINE
+    // ==========================================
+    window.getCinegoCart = function() {
+      try {
+        const raw = localStorage.getItem('cinego_cart');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return {
+            ticket: parsed.ticket || null,
+            concessions: Array.isArray(parsed.concessions) ? parsed.concessions : []
+          };
+        }
+      } catch(e) {}
+      return { ticket: null, concessions: [] };
+    };
+
+    window.saveCinegoCart = function(cart) {
+      try {
+        localStorage.setItem('cinego_cart', JSON.stringify(cart));
+      } catch(e) {}
+      window.updateHeaderCartBadge();
+      window.renderHeaderCartDrawer();
+    };
+
+    window.saveTicketToHeaderCart = function(ticketItem, comboList) {
+      const cart = window.getCinegoCart();
+      cart.ticket = ticketItem;
+      if (Array.isArray(comboList) && comboList.length > 0) {
+        comboList.forEach(c => {
+          const ex = cart.concessions.find(item => item.id === c.id && item.flavor === c.flavor);
+          if (ex) { ex.qty = c.qty; }
+          else { cart.concessions.push(c); }
+        });
+      }
+      window.saveCinegoCart(cart);
+    };
+
+    window.syncConcessionsToHeaderCart = function(concessionItems) {
+      const cart = window.getCinegoCart();
+      cart.concessions = concessionItems || [];
+      window.saveCinegoCart(cart);
+    };
+
+    window.updateHeaderCartBadge = function() {
+      const cart = window.getCinegoCart();
+      const badge = document.getElementById('headerCartBadge');
+      if (!badge) return;
+      let count = 0;
+      if (cart.ticket && Array.isArray(cart.ticket.seats)) {
+        count += cart.ticket.seats.length;
+      }
+      if (Array.isArray(cart.concessions)) {
+        cart.concessions.forEach(c => count += (c.qty || 1));
+      }
+      if (count > 0) {
+        badge.innerText = count > 99 ? '99+' : count;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    };
+
+    window.toggleHeaderCartDrawer = function(e) {
+      if (e) e.stopPropagation();
+      const overlay = document.getElementById('headerCartDrawerOverlay');
+      const drawer = document.getElementById('headerCartDrawer');
+      if (!overlay || !drawer) return;
+      const isHidden = overlay.classList.contains('hidden');
+      if (isHidden) {
+        window.openHeaderCartDrawer();
+      } else {
+        window.closeHeaderCartDrawer();
+      }
+    };
+
+    window.openHeaderCartDrawer = function() {
+      const overlay = document.getElementById('headerCartDrawerOverlay');
+      const drawer = document.getElementById('headerCartDrawer');
+      if (!overlay || !drawer) return;
+      window.renderHeaderCartDrawer();
+      overlay.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        drawer.classList.remove('translate-x-full');
+      });
+    };
+
+    window.closeHeaderCartDrawer = function() {
+      const overlay = document.getElementById('headerCartDrawerOverlay');
+      const drawer = document.getElementById('headerCartDrawer');
+      if (!overlay || !drawer) return;
+      drawer.classList.add('translate-x-full');
+      setTimeout(() => {
+        overlay.classList.add('hidden');
+      }, 280);
+    };
+
+    window.removeHeaderCartTicket = function() {
+      const cart = window.getCinegoCart();
+      cart.ticket = null;
+      window.saveCinegoCart(cart);
+      if (window.cinegoToast) window.cinegoToast.success('Đã xóa vé xem phim khỏi giỏ hàng.');
+    };
+
+    window.changeHeaderCartConcessionQty = function(index, delta) {
+      const cart = window.getCinegoCart();
+      if (cart.concessions && cart.concessions[index]) {
+        cart.concessions[index].qty += delta;
+        if (cart.concessions[index].qty <= 0) {
+          cart.concessions.splice(index, 1);
+        }
+        window.saveCinegoCart(cart);
+      }
+    };
+
+    window.clearHeaderCart = function() {
+      window.saveCinegoCart({ ticket: null, concessions: [] });
+      if (window.cinegoToast) window.cinegoToast.success('Đã làm trống giỏ hàng.');
+    };
+
+    window.proceedHeaderCartCheckout = function() {
+      const cart = window.getCinegoCart();
+      if (cart.ticket && cart.ticket.movieId) {
+        const t = cart.ticket;
+        const seatsStr = Array.isArray(t.seats) ? t.seats.join(',') : t.seats;
+        const url = `/dat-ve/${t.movieId}?cinema=${encodeURIComponent(t.cinema || '')}&date=${encodeURIComponent(t.showDate || '')}&time=${encodeURIComponent(t.showTime || '')}&seats=${encodeURIComponent(seatsStr || '')}`;
+        window.location.href = url;
+      } else if (cart.concessions && cart.concessions.length > 0) {
+        window.location.href = '/bap-nuoc';
+      } else {
+        window.location.href = '/phim';
+      }
+    };
+
+    window.renderHeaderCartDrawer = function() {
+      const body = document.getElementById('headerCartDrawerBody');
+      const totalEl = document.getElementById('headerCartGrandTotal');
+      const checkoutBtn = document.getElementById('btnHeaderCartCheckout');
+      if (!body) return;
+
+      const cart = window.getCinegoCart();
+      const hasTicket = cart.ticket && cart.ticket.movieId;
+      const hasConcessions = Array.isArray(cart.concessions) && cart.concessions.length > 0;
+
+      if (!hasTicket && !hasConcessions) {
+        body.innerHTML = `
+          <div class="py-16 text-center space-y-4">
+            <div class="w-16 h-16 mx-auto rounded-full bg-[#F3EFE6] flex items-center justify-center text-[#7A7E8B]">
+              <span class="material-symbols-outlined text-3xl">shopping_cart</span>
+            </div>
+            <div>
+              <h4 class="font-serif text-base font-bold text-[#121316]">Giỏ Hàng Đang Trống</h4>
+              <p class="text-xs text-[#7A7E8B] mt-1 max-w-xs mx-auto">
+                Bạn chưa có vé phim hoặc combo bắp nước nào. Hãy chọn suất chiếu hoặc đặt trước bắp nước nhé!
+              </p>
+            </div>
+            <div class="pt-2 flex flex-col gap-2 max-w-xs mx-auto">
+              <a href="/phim" onclick="closeHeaderCartDrawer()" class="btn-editorial-primary text-xs !py-2.5 block text-center font-bold">
+                Khám Phá Phim Chiếu Rạp →
+              </a>
+              <a href="/bap-nuoc" onclick="closeHeaderCartDrawer()" class="btn-editorial-secondary text-xs !py-2 block text-center">
+                Đặt Bắp Nước & Combo →
+              </a>
+            </div>
+          </div>
+        `;
+        if (totalEl) totalEl.innerText = '0 đ';
+        if (checkoutBtn) {
+          checkoutBtn.innerText = 'CHỌN PHIM ĐẶT VÉ →';
+          checkoutBtn.onclick = function() { window.location.href = '/phim'; };
+        }
+        return;
+      }
+
+      let grandTotal = 0;
+      let html = '';
+
+      // 1. Phân mục Vé Phim
+      if (hasTicket) {
+        const t = cart.ticket;
+        const tPrice = Number(t.seatTotal) || 0;
+        grandTotal += tPrice;
+        const seatCodes = Array.isArray(t.seats) ? t.seats.join(', ') : (t.seats || 'Chưa chọn');
+        const isImax = (t.format === 'IMAX Laser');
+
+        html += `
+          <div class="bg-white border border-[#E5E0D5] p-4 space-y-3 shadow-xs">
+            <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-2 text-[10px] font-['JetBrains_Mono']">
+              <span class="font-bold text-[#BA2D27] uppercase tracking-wider flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">movie</span> VÉ XEM PHIM
+              </span>
+              <button type="button" onclick="removeHeaderCartTicket()" class="text-[#A6AAB6] hover:text-[#BA2D27] transition-colors" title="Xóa vé">
+                <span class="material-symbols-outlined text-[15px]">close</span>
+              </button>
+            </div>
+
+            <div class="flex gap-3">
+              <img src="${t.posterUrl || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=200&q=80'}" alt="${t.movieTitle}" class="w-14 h-20 object-cover border border-[#E5E0D5] shrink-0 bg-[#EFEBE3]" />
+              <div class="flex-1 min-w-0">
+                <h4 class="font-serif font-bold text-sm text-[#121316] truncate">${t.movieTitle}</h4>
+                <div class="inline-block mt-0.5 px-1.5 py-0.5 text-[9px] font-['JetBrains_Mono'] font-bold uppercase ${isImax ? 'bg-[#121316] text-[#D97706]' : 'bg-[#EFEBE3] text-[#121316]'}">
+                  ${isImax ? 'RẠP IMAX LASER' : 'RẠP THƯỜNG (2D)'}
+                </div>
+                <div class="text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B] mt-1">
+                  <div>${t.cinema || 'CGV Kim Cúc Plaza'}</div>
+                  <div>${t.showTime || '19:30'} • ${t.showDate || ''}</div>
+                  <div class="text-[#BA2D27] font-bold mt-0.5">Ghế: ${seatCodes}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-[#E5E0D5] flex items-center justify-between font-['JetBrains_Mono'] text-xs">
+              <span class="text-[#7A7E8B] text-[10px]">Tiền vé:</span>
+              <span class="font-bold text-[#121316]">${tPrice.toLocaleString('vi-VN')} đ</span>
+            </div>
+          </div>
+        `;
+      }
+
+      // 2. Phân mục Bắp Nước
+      if (hasConcessions) {
+        let concTotal = 0;
+        html += `
+          <div class="bg-white border border-[#E5E0D5] p-4 space-y-3 shadow-xs">
+            <div class="border-b border-[#E5E0D5] pb-2 text-[10px] font-['JetBrains_Mono'] font-bold text-[#A6853B] uppercase tracking-wider flex items-center gap-1">
+              <span>🍿</span> BẮP NƯỚC & COMBO
+            </div>
+            <div class="divide-y divide-[#E5E0D5]">
+        `;
+
+        cart.concessions.forEach((c, idx) => {
+          const itemSum = (Number(c.price) || 0) * (Number(c.qty) || 1);
+          concTotal += itemSum;
+          html += `
+            <div class="py-2.5 flex items-center justify-between text-xs">
+              <div class="flex-1 pr-2 min-w-0">
+                <div class="font-bold text-[#121316] truncate">${c.name}</div>
+                <div class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">${c.flavor || 'Chuẩn vị'} • ${Number(c.price).toLocaleString('vi-VN')}đ</div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button type="button" onclick="changeHeaderCartConcessionQty(${idx}, -1)" class="w-5 h-5 bg-[#F3EFE6] border border-[#E5E0D5] text-[#121316] font-bold text-xs flex items-center justify-center hover:bg-white">-</button>
+                <span class="font-['JetBrains_Mono'] font-bold text-xs w-4 text-center">${c.qty}</span>
+                <button type="button" onclick="changeHeaderCartConcessionQty(${idx}, 1)" class="w-5 h-5 bg-[#121316] text-white font-bold text-xs flex items-center justify-center hover:bg-[#BA2D27]">+</button>
+              </div>
+            </div>
+          `;
+        });
+
+        grandTotal += concTotal;
+        html += `
+            </div>
+            <div class="pt-2 border-t border-[#E5E0D5] flex items-center justify-between font-['JetBrains_Mono'] text-xs">
+              <span class="text-[#7A7E8B] text-[10px]">Tiền bắp nước:</span>
+              <span class="font-bold text-[#121316]">${concTotal.toLocaleString('vi-VN')} đ</span>
+            </div>
+          </div>
+        `;
+      }
+
+      body.innerHTML = html;
+      if (totalEl) totalEl.innerText = grandTotal.toLocaleString('vi-VN') + ' đ';
+      if (checkoutBtn) {
+        if (hasTicket) {
+          checkoutBtn.innerText = 'TIẾP TỤC ĐẶT VÉ & THANH TOÁN →';
+        } else {
+          checkoutBtn.innerText = 'THANH TOÁN ĐƠN BẮP NƯỚC →';
+        }
+        checkoutBtn.onclick = proceedHeaderCartCheckout;
+      }
+    };
+
+    // Khởi tạo số lượng giỏ hàng khi nạp trang
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', window.updateHeaderCartBadge);
+    } else {
+      window.updateHeaderCartBadge();
+    }
   </script>

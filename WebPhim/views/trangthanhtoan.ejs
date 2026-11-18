@@ -85,9 +85,14 @@
                   Vị Trí Ghế Ngồi Của Bạn
                 </h2>
               </div>
-              <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">
-                <%= typeof cinema !== 'undefined' ? cinema : 'CGV Kim Cúc Plaza' %> • <%= typeof showTime !== 'undefined' ? showTime : '19:30' %>
-              </span>
+              <div class="text-right">
+                <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B] block">
+                  <%= typeof cinema !== 'undefined' ? cinema : 'CGV Kim Cúc Plaza' %> • <%= typeof showTime !== 'undefined' ? showTime : '19:30' %>
+                </span>
+                <span class="inline-block mt-0.5 px-2 py-0.5 font-['JetBrains_Mono'] text-[10px] font-bold uppercase <%= (phim && phim.format === 'IMAX Laser') ? 'bg-[#121316] text-[#D97706] border border-[#D97706]' : 'bg-[#EFEBE3] text-[#121316]' %>">
+                  <%= (phim && phim.format) ? ((phim.format === 'IMAX Laser') ? 'Rạp IMAX Laser' : (phim.format === '3D Standard' ? 'Rạp 3D Standard' : 'Rạp Thường (Standard 2D)')) : 'Rạp Thường (Standard 2D)' %>
+                </span>
+              </div>
             </div>
 
             <!-- Mini Auditorium Seat Map -->
@@ -393,17 +398,23 @@
                 <h3 class="font-serif text-xl font-bold text-[#121316] mt-1">
                   <%= phim ? phim.title : 'Phim Đã Chọn' %>
                 </h3>
-                <span class="text-xs text-[#BA2D27] font-semibold block mt-0.5">
-                  <%= typeof cinema !== 'undefined' ? cinema : 'CGV Kim Cúc Plaza' %>
-                </span>
+                <div class="flex items-center flex-wrap gap-2 mt-1">
+                  <span class="text-xs text-[#BA2D27] font-semibold">
+                    <%= typeof cinema !== 'undefined' ? cinema : 'CGV Kim Cúc Plaza' %>
+                  </span>
+                  <span class="text-[#CDC6B8]">•</span>
+                  <span class="px-2 py-0.5 font-['JetBrains_Mono'] text-[10px] font-bold uppercase <%= (phim && phim.format === 'IMAX Laser') ? 'bg-[#121316] text-[#D97706] border border-[#D97706]' : 'bg-[#EFEBE3] text-[#121316]' %>">
+                    <%= (phim && phim.format) ? ((phim.format === 'IMAX Laser') ? 'Rạp IMAX Laser' : (phim.format === '3D Standard' ? 'Rạp 3D Standard' : 'Rạp Thường (2D)')) : 'Rạp Thường (2D)' %>
+                  </span>
+                </div>
               </div>
               <div class="w-10 h-10 bg-[#121316] text-white flex items-center justify-center font-serif font-bold text-sm">
-                C
+                <%= (phim && phim.format === 'IMAX Laser') ? 'IMAX' : '2D' %>
               </div>
             </div>
 
             <!-- Screening Details Ledger -->
-            <div class="grid grid-cols-2 gap-3 text-xs font-['JetBrains_Mono'] py-2 border-b border-[#E5E0D5]">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs font-['JetBrains_Mono'] py-2 border-b border-[#E5E0D5]">
               <div>
                 <span class="text-[#7A7E8B] block text-[10px] uppercase">Suất Chiếu:</span>
                 <span class="font-bold text-[#121316]"><%= typeof showTime !== 'undefined' ? showTime : '19:30' %></span>
@@ -411,6 +422,10 @@
               <div>
                 <span class="text-[#7A7E8B] block text-[10px] uppercase">Ngày Chiếu:</span>
                 <span class="font-bold text-[#121316]"><%= typeof showDate !== 'undefined' && showDate ? showDate : new Date().toISOString().split('T')[0] %></span>
+              </div>
+              <div>
+                <span class="text-[#7A7E8B] block text-[10px] uppercase">Định Dạng Rạp:</span>
+                <span class="font-bold text-[#121316]"><%= (phim && phim.format === 'IMAX Laser') ? 'IMAX Laser' : 'Rạp Thường (2D)' %></span>
               </div>
               <div class="col-span-2">
                 <span class="text-[#7A7E8B] block text-[10px] uppercase">Ghế Ngồi Đã Chọn:</span>

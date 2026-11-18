@@ -49,9 +49,14 @@
         <% tickets.forEach(function(ticket, idx) { %>
           <% 
             const isConcessionOnly = !ticket.movie || (ticket.seats && (Array.isArray(ticket.seats) ? ticket.seats.includes('Quầy F&B') : ticket.seats === 'Quầy F&B'));
-            const todayStr = new Date().toISOString().split('T')[0];
-            const isUpcoming = (!isConcessionOnly && ticket.showDate && ticket.showDate >= todayStr);
-            const isPast = (!isConcessionOnly && ticket.showDate && ticket.showDate < todayStr);
+            let todayStr = '';
+            try {
+              todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date());
+            } catch(e) {
+              todayStr = new Date().toISOString().split('T')[0];
+            }
+            const isUpcoming = (ticket.showDate && ticket.showDate >= todayStr);
+            const isPast = (ticket.showDate && ticket.showDate < todayStr);
           %>
           <div class="ticket-item-card ticket-pass ticket-pass-horizontal p-6 sm:p-8 bg-white border border-[#E5E0D5] flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:border-[#121316] transition-all"
                data-type="<%= isConcessionOnly ? 'concession' : 'movie' %>"
@@ -284,23 +289,49 @@
     btn.classList.add('bg-[#121316]', 'text-white');
 
     const cards = document.querySelectorAll('.ticket-item-card');
+    let matchCount = 0;
     cards.forEach(card => {
       const cType = card.getAttribute('data-type');
       const isUpcoming = card.getAttribute('data-upcoming') === 'true';
       const isPast = card.getAttribute('data-past') === 'true';
 
+      let match = false;
       if (type === 'all') {
-        card.style.display = 'flex';
+        match = true;
       } else if (type === 'concession') {
-        card.style.display = (cType === 'concession') ? 'flex' : 'none';
+        match = (cType === 'concession');
       } else if (type === 'movie') {
-        card.style.display = (cType === 'movie') ? 'flex' : 'none';
+        match = (cType === 'movie');
       } else if (type === 'upcoming') {
-        card.style.display = isUpcoming ? 'flex' : 'none';
+        match = isUpcoming;
       } else if (type === 'past') {
-        card.style.display = isPast ? 'flex' : 'none';
+        match = isPast;
+      }
+
+      if (match) {
+        card.classList.remove('hidden');
+        card.style.display = 'flex';
+        matchCount++;
+      } else {
+        card.classList.add('hidden');
+        card.style.display = 'none';
       }
     });
+
+    let emptyNotice = document.getElementById('emptyFilterNotice');
+    if (!emptyNotice) {
+      emptyNotice = document.createElement('div');
+      emptyNotice.id = 'emptyFilterNotice';
+      emptyNotice.className = 'py-16 text-center text-[#7A7E8B] text-xs font-[\'JetBrains_Mono\'] bg-white border border-[#E5E0D5] p-8 space-y-2 shadow-xs';
+      emptyNotice.innerHTML = `
+        <span class="text-3xl block">🎟️</span>
+        <p class="font-bold text-[#121316] text-sm font-serif">Không tìm thấy vé hoặc giao dịch nào phù hợp với bộ lọc này.</p>
+        <p class="text-[11px] text-[#A6AAB6]">Vui lòng chọn tab khác hoặc đặt vé mới để trải nghiệm điện ảnh cùng CineGo.</p>
+      `;
+      const container = document.getElementById('tickets-list-container');
+      if (container) container.appendChild(emptyNotice);
+    }
+    emptyNotice.classList.toggle('hidden', matchCount > 0);
   }
 </script>
 

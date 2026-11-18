@@ -21,6 +21,8 @@
         <div class="flex flex-wrap items-center gap-2.5 font-['JetBrains_Mono'] text-xs text-[#7A7E8B] mt-2">
           <span class="px-2 py-0.5 bg-[#BA2D27] text-white font-bold"><%= phim.ageRating || 'P' %></span>
           <span>•</span>
+          <span class="px-2 py-0.5 <%= (phim && phim.format === 'IMAX Laser') ? 'bg-[#D97706] text-[#121316]' : 'bg-[#121316] text-[#FAF8F5]' %> font-bold"><%= (phim && phim.format === 'IMAX Laser') ? 'IMAX Laser' : '2D Standard' %></span>
+          <span>•</span>
           <span><%= phim.duration || 120 %> Phút</span>
           <span>•</span>
           <span class="text-[#121316] font-semibold"><%= phim.genre || 'Điện ảnh' %></span>
@@ -229,13 +231,23 @@
     <!-- =========================================================================
          BƯỚC 3: CHỌN GHẾ NGỒI (SEAT MAP TRỰC QUAN)
          ========================================================================= -->
-    <div class="bg-[#0E1015] border border-white/10 p-6 sm:p-12 mb-8 overflow-x-auto shadow-2xl relative">
+    <div class="bg-[#0E1015] border border-white/10 p-3 sm:p-8 md:p-12 mb-8 overflow-x-auto shadow-2xl relative">
       <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
         <div class="flex items-center gap-2">
           <span class="w-6 h-6 bg-[#BA2D27] text-white font-['JetBrains_Mono'] text-xs font-bold flex items-center justify-center">3</span>
-          <h2 class="font-serif text-lg font-bold text-white">Chọn Ghế Ngồi Trong Phòng Chiếu</h2>
+          <h2 class="font-serif text-base sm:text-lg font-bold text-white">Chọn Ghế Ngồi Trong Phòng Chiếu</h2>
         </div>
-        <span class="text-xs font-['JetBrains_Mono'] text-white/60">PHÒNG CHIẾU SỐ 1 • MÀN ẢNH RỘNG</span>
+        <div class="flex items-center gap-2">
+          <span class="px-2 py-0.5 <%= (phim && phim.format === 'IMAX Laser') ? 'bg-[#D97706] text-[#121316]' : 'bg-white/10 text-white/80' %> font-['JetBrains_Mono'] text-[10px] font-bold uppercase rounded-xs">
+            <%= (phim && phim.format === 'IMAX Laser') ? 'RẠP IMAX LASER' : 'RẠP TIÊU CHUẨN (2D)' %>
+          </span>
+          <span class="hidden sm:inline text-xs font-['JetBrains_Mono'] text-white/60">PHÒNG CHIẾU SỐ 1</span>
+        </div>
+      </div>
+
+      <!-- Mobile scroll hint -->
+      <div class="block sm:hidden text-center text-[10px] text-white/50 mb-3 font-['JetBrains_Mono']">
+        ⇄ Bạn có thể vuốt ngang sơ đồ để xem trọn vẹn các ghế
       </div>
 
       <!-- Screen Arc -->
@@ -262,7 +274,7 @@
         }
         const vipStartRow = Math.max(1, Math.floor(nRows * 0.45));
       %>
-      <div class="min-w-[620px] max-w-2xl mx-auto space-y-3.5 text-center mt-6 transition-opacity" id="auditoriumSeatMatrix">
+      <div class="w-max min-w-full sm:min-w-[560px] max-w-2xl mx-auto space-y-2 sm:space-y-3.5 text-center mt-4 sm:mt-6 transition-opacity px-1" id="auditoriumSeatMatrix">
         <% for(let r = 0; r < nRows; r++) { %>
           <% 
             const rChar = String.fromCharCode(65 + r); 
@@ -282,8 +294,8 @@
             </div>
           <% } %>
 
-          <div class="flex items-center justify-center gap-2">
-            <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold <%= isVIPRow ? 'text-[#D97706]' : 'text-white/50' %>"><%= rChar %></span>
+          <div class="flex items-center justify-center gap-1 sm:gap-2">
+            <span class="w-4 sm:w-6 font-['JetBrains_Mono'] text-[10px] sm:text-xs font-bold <%= isVIPRow ? 'text-[#D97706]' : 'text-white/50' %>"><%= rChar %></span>
 
             <% if (isLastRow) { %>
               <% for(let c = 1; c <= nCols; c += 2) { %>
@@ -302,14 +314,14 @@
                   const sClass = (sType === 'vip') ? 'is-vip' : ((sType === 'couple') ? 'is-couple' : '');
                 %>
                 <% if (sType === 'empty') { %>
-                  <div class="w-[38px] h-[35px] invisible"></div>
+                  <div class="w-[28px] sm:w-[38px] h-[26px] sm:h-[35px] invisible"></div>
                 <% } else { %>
                   <div class="seat-unit seat-free <%= sClass %>" data-seat="<%= sCode %>" data-price="<%= sPrice %>" data-type="<%= sType %>"><%= sCode %></div>
                 <% } %>
               <% } %>
             <% } %>
 
-            <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold <%= isVIPRow ? 'text-[#D97706]' : 'text-white/50' %>"><%= rChar %></span>
+            <span class="w-4 sm:w-6 font-['JetBrains_Mono'] text-[10px] sm:text-xs font-bold <%= isVIPRow ? 'text-[#D97706]' : 'text-white/50' %>"><%= rChar %></span>
           </div>
 
         <% } %>
@@ -454,33 +466,40 @@
     <input type="hidden" name="comboTotal" id="input_comboTotal" value="0" />
     <input type="hidden" name="preVoucher" id="input_preVoucher" value="" />
 
-    <div class="max-w-[1440px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 font-['JetBrains_Mono']">
+    <div class="max-w-[1440px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 font-['JetBrains_Mono']">
       
       <!-- Left: Cinema, Time, Seats and Price summary -->
-      <div class="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-start text-xs">
-        <div>
-          <span class="block text-[10px] text-[#7A7E8B] uppercase tracking-wider">Suất chiếu đã chọn:</span>
-          <div class="text-[#121316] font-bold mt-0.5" id="summaryScreening">
+      <div class="grid grid-cols-3 sm:flex items-center gap-2 sm:gap-6 w-full sm:w-auto text-xs">
+        <div class="truncate">
+          <span class="block text-[9px] sm:text-[10px] text-[#7A7E8B] uppercase tracking-wider truncate">Suất chiếu:</span>
+          <div class="text-[#121316] font-bold text-[11px] sm:text-xs truncate mt-0.5" id="summaryScreening">
             CGV Kim Cúc Plaza • <%= initDefaultTime %>
           </div>
         </div>
-        <div class="border-l border-[#E5E0D5] pl-6">
-          <span class="block text-[10px] text-[#7A7E8B] uppercase tracking-wider">Ghế đã chọn:</span>
-          <div id="selectedSeatsLabel" class="text-[#121316] font-bold mt-0.5">
+        <div class="border-l border-[#E5E0D5] pl-2 sm:pl-6 truncate">
+          <span class="block text-[9px] sm:text-[10px] text-[#7A7E8B] uppercase tracking-wider truncate">Ghế đã chọn:</span>
+          <div id="selectedSeatsLabel" class="text-[#121316] font-bold text-[11px] sm:text-xs truncate mt-0.5">
             <span class="text-[#A6AAB6] italic font-normal">Chưa chọn ghế</span>
           </div>
         </div>
-        <div class="border-l border-[#E5E0D5] pl-6">
-          <span class="block text-[10px] text-[#7A7E8B] uppercase tracking-wider">Tổng tiền tạm tính:</span>
-          <div id="totalPriceLabel" class="text-xl font-bold text-[#BA2D27] mt-0.5">
+        <div class="border-l border-[#E5E0D5] pl-2 sm:pl-6 text-right sm:text-left">
+          <span class="block text-[9px] sm:text-[10px] text-[#7A7E8B] uppercase tracking-wider">Tạm tính:</span>
+          <div id="totalPriceLabel" class="text-sm sm:text-xl font-bold text-[#BA2D27] mt-0.5 whitespace-nowrap">
             0 đ
           </div>
         </div>
       </div>
 
-      <!-- Right: Continue to Checkout Button -->
-      <div class="flex items-center gap-4 w-full sm:w-auto justify-end">
-        <button type="submit" id="btnContinueCheckout" disabled class="btn-editorial-primary w-full sm:w-auto py-3.5 px-8 text-xs font-bold block text-center disabled:opacity-40 disabled:cursor-not-allowed">
+      <!-- Right: Continue to Checkout Button & Save to Cart Button -->
+      <div class="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-end">
+        <button type="button" 
+                onclick="saveCurrentBookingToCart(event)" 
+                class="hidden sm:inline-flex items-center justify-center gap-1.5 py-3 px-4 border border-[#121316] bg-white text-[#121316] text-xs font-bold hover:bg-[#F3EFE6] transition-colors whitespace-nowrap"
+                title="Lưu vé & bắp nước vào giỏ hàng">
+          <span class="material-symbols-outlined text-[16px]">shopping_cart</span>
+          <span>Lưu Giỏ Hàng</span>
+        </button>
+        <button type="submit" id="btnContinueCheckout" disabled class="btn-editorial-primary w-full sm:w-auto py-3 sm:py-3.5 px-6 sm:px-8 text-xs font-bold block text-center disabled:opacity-40 disabled:cursor-not-allowed">
           TIẾP TỤC ĐẾN BƯỚC THANH TOÁN →
         </button>
       </div>
@@ -956,6 +975,19 @@
 
     renderShowtimes();
 
+    function parseSeatInfo(code) {
+      if (!code) return null;
+      const parts = code.split('-');
+      const m = parts[0].match(/^([A-Za-z]+)(\d+)$/);
+      if (!m) return null;
+      const row = m[1].toUpperCase();
+      const cols = parts.map(p => {
+        const pm = p.match(/^([A-Za-z]+)(\d+)$/);
+        return pm ? parseInt(pm[2], 10) : NaN;
+      }).filter(n => !isNaN(n));
+      return { row, cols };
+    }
+
     // Delegated seat click handlers
     document.addEventListener('click', (e) => {
       const seat = e.target.closest('.seat-unit');
@@ -997,7 +1029,32 @@
         return;
       }
 
+      const currentSeatInfo = parseSeatInfo(seatCode);
+
       if (seat.classList.contains('seat-selected')) {
+        // Kiểm tra nếu bỏ chọn ghế này thì các ghế còn lại có bị đứt đoạn không:
+        if (selectedSeats.length > 2 && currentSeatInfo) {
+          const remaining = selectedSeats.filter(s => s.code !== seatCode);
+          let remainingCols = [];
+          remaining.forEach(s => {
+            const info = parseSeatInfo(s.code);
+            if (info) remainingCols.push(...info.cols);
+          });
+          remainingCols = [...new Set(remainingCols)].sort((a, b) => a - b);
+          let isContiguous = true;
+          for (let i = 1; i < remainingCols.length; i++) {
+            if (remainingCols[i] !== remainingCols[i-1] + 1) {
+              isContiguous = false;
+              break;
+            }
+          }
+          if (!isContiguous) {
+            const msg = 'Vui lòng bỏ chọn ghế từ hai đầu ngoài cùng để tránh để lại khoảng trống ở giữa!';
+            if (window.cinegoToast) window.cinegoToast.warning(msg);
+            else alert(msg);
+            return;
+          }
+        }
         seat.classList.remove('seat-selected');
         selectedSeats = selectedSeats.filter(s => s.code !== seatCode);
         seatTotal -= price;
@@ -1007,6 +1064,42 @@
           else alert('Bạn chỉ có thể chọn tối đa 8 ghế trong một lần đặt vé.');
           return;
         }
+
+        // RÀNG BUỘC 1: Phải chọn các ghế trong cùng 1 hàng
+        if (selectedSeats.length > 0 && currentSeatInfo) {
+          const firstInfo = parseSeatInfo(selectedSeats[0].code);
+          if (firstInfo && currentSeatInfo.row !== firstInfo.row) {
+            const msg = `Vui lòng chỉ chọn các ghế trong cùng một hàng (Hàng ${firstInfo.row})! Nếu muốn đổi sang hàng ${currentSeatInfo.row}, hãy hủy các ghế đã chọn trước.`;
+            if (window.cinegoToast) window.cinegoToast.warning(msg);
+            else alert(msg);
+            return;
+          }
+
+          // RÀNG BUỘC 2: Các ghế chọn phải nằm sát bên nhau (liền kề liên tiếp, không chọn cách quãng)
+          let allCols = [];
+          selectedSeats.forEach(s => {
+            const info = parseSeatInfo(s.code);
+            if (info) allCols.push(...info.cols);
+          });
+          allCols.push(...currentSeatInfo.cols);
+          allCols = [...new Set(allCols)].sort((a, b) => a - b);
+
+          let isContiguous = true;
+          for (let i = 1; i < allCols.length; i++) {
+            if (allCols[i] !== allCols[i-1] + 1) {
+              isContiguous = false;
+              break;
+            }
+          }
+
+          if (!isContiguous) {
+            const msg = `Vui lòng chọn ghế nằm sát bên (liền kề) với ghế bạn đang chọn trong Hàng ${firstInfo.row}!`;
+            if (window.cinegoToast) window.cinegoToast.warning(msg);
+            else alert(msg);
+            return;
+          }
+        }
+
         seat.classList.add('seat-selected');
         selectedSeats.push({ code: seatCode, price: price });
         seatTotal += price;
@@ -1130,6 +1223,64 @@
       priceLabel.innerText = grandTotal.toLocaleString('vi-VN') + ' đ';
       btnSubmit.disabled = false;
       document.getElementById('input_seats').value = seatCodes.join(',');
+    }
+  }
+  function saveCurrentBookingToCart(e) {
+    if (e) e.preventDefault();
+    if (!selectedSeats || selectedSeats.length === 0) {
+      if (window.cinegoToast) window.cinegoToast.warning('Vui lòng chọn ít nhất 1 ghế để lưu vào giỏ hàng!');
+      else alert('Vui lòng chọn ít nhất 1 ghế để lưu vào giỏ hàng!');
+      return;
+    }
+    const movieTitle = '<%= phim ? phim.title.replace(/'/g, "\\'") : "" %>';
+    const moviePoster = '<%= phim ? (phim.posterUrl || "").replace(/'/g, "\\'") : "" %>';
+    const movieFormat = '<%= (phim && phim.format) ? phim.format : "2D Standard" %>';
+    const cinemaVal = document.getElementById('input_cinema').value;
+    const showDateVal = document.getElementById('input_showDate').value;
+    const showTimeVal = document.getElementById('input_showTime').value;
+    const seatCodes = selectedSeats.map(s => s.code);
+    
+    // Thu thập combo bắp nước nếu có
+    const comboList = [];
+    Object.keys(comboItems).forEach(id => {
+      const item = comboItems[id];
+      if (item && item.qty > 0) {
+        comboList.push({
+          id: id,
+          name: item.name,
+          flavor: item.flavor || 'Mặc định',
+          price: item.price,
+          qty: item.qty
+        });
+      }
+    });
+
+    const ticketItem = {
+      movieId: currentMovieId,
+      movieTitle: movieTitle,
+      posterUrl: moviePoster,
+      format: movieFormat,
+      cinema: cinemaVal,
+      showDate: showDateVal,
+      showTime: showTimeVal,
+      seats: seatCodes,
+      seatTotal: seatTotal,
+      comboDetails: document.getElementById('input_comboDetails').value,
+      comboTotal: comboTotal,
+      grandTotal: seatTotal + comboTotal,
+      savedAt: new Date().toISOString()
+    };
+
+    if (typeof window.saveTicketToHeaderCart === 'function') {
+      window.saveTicketToHeaderCart(ticketItem, comboList);
+      if (window.cinegoToast) {
+        window.cinegoToast.success(`Đã lưu vé "${movieTitle}" (${seatCodes.join(', ')}) vào Giỏ Hàng!`);
+      }
+      if (typeof window.openHeaderCartDrawer === 'function') {
+        window.openHeaderCartDrawer();
+      }
+    } else {
+      if (window.cinegoToast) window.cinegoToast.success('Đã lưu vào giỏ hàng thành công!');
     }
   }
 </script>

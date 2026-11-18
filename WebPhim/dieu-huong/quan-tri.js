@@ -277,6 +277,7 @@ router.post('/phim/them', async (req, res) => {
         const safeDuration = Number(duration) || 120;
         const safePrice = Number(price) > 0 ? Number(price) : 75000;
         const safeOriginalPrice = Number(originalPrice) > 0 ? Number(originalPrice) : 95000;
+        const safeFormat = (req.body.format && ['2D Standard', 'IMAX Laser', '3D Standard'].includes(req.body.format)) ? req.body.format : '2D Standard';
 
         await new Movie({ 
             title: title.trim(), 
@@ -289,6 +290,7 @@ router.post('/phim/them', async (req, res) => {
             ageRating: ageRating || 'T16', 
             price: safePrice,
             originalPrice: safeOriginalPrice,
+            format: safeFormat,
             status: status || 'DangChieu', 
             description: description ? description.trim() : '', 
             showtimes: formattedShowtimes 
@@ -349,6 +351,7 @@ router.post('/phim/sua/:id', async (req, res) => {
 
         const safePrice = Number(price) > 0 ? Number(price) : 75000;
         const safeOriginalPrice = Number(originalPrice) > 0 ? Number(originalPrice) : 95000;
+        const safeFormat = (req.body.format && ['2D Standard', 'IMAX Laser', '3D Standard'].includes(req.body.format)) ? req.body.format : '2D Standard';
 
         await Movie.findByIdAndUpdate(idPhim, {
             title, 
@@ -358,6 +361,7 @@ router.post('/phim/sua/:id', async (req, res) => {
             ageRating, 
             price: safePrice,
             originalPrice: safeOriginalPrice,
+            format: safeFormat,
             duration: Number(duration) || 0, 
             genre, 
             director, 

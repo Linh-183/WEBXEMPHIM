@@ -11,6 +11,11 @@ const movieSchema = new mongoose.Schema({
     ageRating: { type: String, enum: ['P', 'K', 'T13', 'T16', 'T18', 'C'], default: 'P' },
     price: { type: Number, default: 75000 },          // Giá bán vé (VNĐ)
     originalPrice: { type: Number, default: 95000 },  // Giá gốc niêm yết (VNĐ)
+    format: { 
+        type: String, 
+        enum: ['2D Standard', 'IMAX Laser', '3D Standard'], 
+        default: '2D Standard' 
+    },
     status: { type: String, enum: ['DangChieu', 'SapChieu', 'NgungChieu'], default: 'DangChieu' },
     description: { type: String },
     

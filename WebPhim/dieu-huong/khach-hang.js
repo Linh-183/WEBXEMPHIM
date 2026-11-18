@@ -269,6 +269,16 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
         }
 
         if (seatList.length > 0) {
+            // Kiểm tra ràng buộc bảo vệ: toàn bộ ghế phải nằm trong cùng 1 hàng
+            const rows = seatList.map(s => {
+                const m = s.match(/^([A-Za-z]+)(\d+)/);
+                return m ? m[1].toUpperCase() : null;
+            }).filter(Boolean);
+            const uniqueRows = [...new Set(rows)];
+            if (uniqueRows.length > 1) {
+                return res.redirect(`/dat-ve/${movieId}?error=${encodeURIComponent('Vui lòng chỉ chọn các ghế trong cùng một hàng!')}`);
+            }
+
             // 0.1 Tự động giải phóng toàn bộ các ghế giữ đã quá hạn 5 phút (300s) trong DB
             const lockThreshold = new Date(Date.now() - 5 * 60 * 1000);
             await SeatLock.deleteMany({ createdAt: { $lt: lockThreshold } });
@@ -760,6 +770,10 @@ router.post('/api/luu-voucher', async (req, res) => {
             return res.status(404).json({ success: false, message: "Mã khuyến mãi không tồn tại trên hệ thống!" });
         }
 
+        if (voucher.isReward) {
+            return res.status(400).json({ success: false, message: "Mã ưu đãi này chỉ dành cho đổi điểm thưởng thành viên, không thể lưu trực tiếp!" });
+        }
+
         if (voucher.expiryDate && new Date(voucher.expiryDate) < new Date()) {
             return res.json({ success: false, message: "Mã khuyến mãi này đã hết hạn sử dụng!" });
         }
@@ -1038,7 +1052,13 @@ router.post('/api/mo-khoa-ghe', async (req, res) => {
 });
 
 router.get('/khuyen-mai', async (req, res) => {
-    try { res.render('trangkhuyenmai', { vouchers: await Voucher.find().sort({ createdAt: -1 }) }); } catch (error) { res.status(500).send("Lỗi tải trang"); }
+    try { 
+        res.render('trangkhuyenmai', { 
+            vouchers: await Voucher.find({ isReward: { $ne: true } }).sort({ createdAt: -1 }) 
+        }); 
+    } catch (error) { 
+        res.status(500).send("Lỗi tải trang"); 
+    }
 });
 router.get('/uu-dai', (req, res) => res.redirect('/khuyen-mai'));
 

@@ -1,7 +1,7 @@
 <%- include('partials/header') %>
 
 <%
-  const promoVouchers = (typeof vouchers !== 'undefined' && Array.isArray(vouchers)) ? vouchers : [];
+  const promoVouchers = (typeof vouchers !== 'undefined' && Array.isArray(vouchers)) ? vouchers.filter(v => v && !v.isReward) : [];
 %>
 
 <main class="min-h-screen py-12 pb-24 bg-[#FAF8F5]">
