@@ -284,7 +284,8 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
         if (req.session.user && req.session.user._id) {
             const currentUserWithVouchers = await User.findById(req.session.user._id).populate('vouchers');
             if (currentUserWithVouchers && currentUserWithVouchers.vouchers) {
-                savedVouchers = currentUserWithVouchers.vouchers;
+                const usedList = Array.isArray(currentUserWithVouchers.usedVouchers) ? currentUserWithVouchers.usedVouchers : [];
+                savedVouchers = currentUserWithVouchers.vouchers.filter(v => v && v.code && !usedList.includes(v.code.toUpperCase()));
             }
         }
         const vouchers = await Voucher.find({ $or: [{ expiryDate: { $gte: new Date() } }, { expiryDate: null }] });
@@ -298,7 +299,7 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
 // [GIA CỐ BẢO MẬT & CHỐNG DOUBLE BOOKING] Xác thực giá tiền và kiểm tra trùng ghế ở Backend
 router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
     try {
-        const { phimId, cinema, showDate, showTime, seats, total, finalAmount, payment_method, comboDetails, comboTotal } = req.body;
+        const { phimId, cinema, showDate, showTime, seats, total, finalAmount, payment_method, comboDetails, comboTotal, voucherCode, discountAmount } = req.body;
         
         if (!seats || seats.trim() === '') {
             return res.redirect(`/dat-ve/${phimId}?error=${encodeURIComponent('Vui lòng chọn ít nhất 1 ghế trước khi thanh toán!')}`);
@@ -361,10 +362,80 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
         const safeComboTotal = Number(comboTotal) || 0;
         const expectedBaseTotal = calculatedSeatPrice + safeComboTotal;
 
-        // Kiểm tra finalAmount hợp lệ (không âm và không vượt quá tổng tạm tính)
-        let verifiedTotalPrice = finalAmount ? Number(finalAmount) : Number(total);
-        if (isNaN(verifiedTotalPrice) || verifiedTotalPrice < 0 || verifiedTotalPrice > expectedBaseTotal) {
-            verifiedTotalPrice = expectedBaseTotal;
+        // 3. Xử lý Voucher và Kiểm tra tính hợp lệ, trừ voucher 1 lần duy nhất
+        let appliedDiscount = 0;
+        let validVoucherCode = '';
+        const userInDb = await User.findById(req.session.user._id);
+
+        if (voucherCode && voucherCode.trim()) {
+            const upperCode = voucherCode.trim().toUpperCase();
+            const v = await Voucher.findOne({ code: upperCode });
+            const hasUsed = userInDb && Array.isArray(userInDb.usedVouchers) && userInDb.usedVouchers.includes(upperCode);
+
+            if (hasUsed) {
+                return res.redirect(`/dat-ve/${phimId}?error=${encodeURIComponent(`Mã voucher ${upperCode} đã được bạn sử dụng trước đó. Mỗi voucher chỉ dùng được 1 lần duy nhất!`)}`);
+            }
+
+            if (v) {
+                if (v.expiryDate && new Date(v.expiryDate) < new Date()) {
+                    return res.redirect(`/dat-ve/${phimId}?error=${encodeURIComponent(`Mã voucher ${upperCode} đã hết hạn sử dụng!`)}`);
+                }
+                if (expectedBaseTotal < (v.minOrderValue || 0)) {
+                    return res.redirect(`/dat-ve/${phimId}?error=${encodeURIComponent(`Đơn hàng tối thiểu để áp dụng mã ${upperCode} là ${v.minOrderValue.toLocaleString('vi-VN')}đ`)}`);
+                }
+                if (v.discountType === 'fixed') {
+                    appliedDiscount = v.discountValue;
+                } else if (v.discountType === 'percentage') {
+                    appliedDiscount = Math.round((expectedBaseTotal * v.discountValue) / 100);
+                    if (v.maxDiscountValue > 0 && appliedDiscount > v.maxDiscountValue) {
+                        appliedDiscount = v.maxDiscountValue;
+                    }
+                }
+                validVoucherCode = upperCode;
+
+                // Xóa voucher khỏi ví cá nhân của người dùng & ghi nhận đã dùng 1 lần duy nhất
+                if (userInDb) {
+                    if (!userInDb.usedVouchers) userInDb.usedVouchers = [];
+                    if (!userInDb.usedVouchers.includes(upperCode)) {
+                        userInDb.usedVouchers.push(upperCode);
+                    }
+                    if (Array.isArray(userInDb.vouchers)) {
+                        userInDb.vouchers = userInDb.vouchers.filter(id => id.toString() !== v._id.toString());
+                    }
+                    await userInDb.save();
+                    req.session.user = userInDb;
+                }
+
+                // Nếu là mã voucher cá nhân (mã đổi điểm VCH- hoặc mã sinh nhật BDAY-) thì xóa vĩnh viễn khỏi DB
+                if (upperCode.startsWith('VCH') || upperCode.startsWith('BDAY')) {
+                    await Voucher.deleteOne({ _id: v._id });
+                }
+            } else {
+                // Hỗ trợ mã voucher đặc biệt nếu có từ client gửi lên (VD: CINEGO300 v.v.)
+                const clientDiscount = Math.max(0, expectedBaseTotal - (Number(finalAmount) || 0));
+                if (clientDiscount > 0) {
+                    appliedDiscount = Math.min(clientDiscount, expectedBaseTotal);
+                    validVoucherCode = upperCode;
+                    if (userInDb) {
+                        if (!userInDb.usedVouchers) userInDb.usedVouchers = [];
+                        if (!userInDb.usedVouchers.includes(upperCode)) {
+                            userInDb.usedVouchers.push(upperCode);
+                            await userInDb.save();
+                            req.session.user = userInDb;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Tính số tiền thực thanh toán (tối thiểu là 0đ)
+        let verifiedTotalPrice = Math.max(0, expectedBaseTotal - appliedDiscount);
+        // Nếu không có voucher nhưng client gửi finalAmount hợp lệ
+        if (!validVoucherCode && typeof finalAmount !== 'undefined') {
+            const fNum = Number(finalAmount);
+            if (!isNaN(fNum) && fNum >= 0 && fNum <= expectedBaseTotal) {
+                verifiedTotalPrice = fNum;
+            }
         }
 
         const savedTicket = await new Ticket({
@@ -376,6 +447,9 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
             seats: seatList,
             comboDetails: comboDetails || '',
             comboTotal: safeComboTotal,
+            originalPrice: expectedBaseTotal,
+            discountAmount: appliedDiscount,
+            voucherCode: validVoucherCode,
             totalPrice: verifiedTotalPrice,
             paymentMethod: payment_method || 'vietqr'
         }).save();
@@ -389,19 +463,18 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
             seat: { $in: seatList }
         });
 
-        // Tích điểm tự động hào phóng: 1.000đ = 1 Điểm & Cập nhật hạng hội viên (Đồng -> Bạc -> Vàng -> Kim Cương)
-        const earnedPoints = Math.floor(verifiedTotalPrice / 1000);
-        if (earnedPoints > 0 && req.session.user && req.session.user._id) {
-            const userInDb = await User.findById(req.session.user._id);
-            if (userInDb) {
-                userInDb.diemTichLuy = (userInDb.diemTichLuy || 0) + earnedPoints;
-                if (userInDb.diemTichLuy >= 1000) userInDb.hangHoiVien = 'KimCuong';
-                else if (userInDb.diemTichLuy >= 600) userInDb.hangHoiVien = 'Vang';
-                else if (userInDb.diemTichLuy >= 300) userInDb.hangHoiVien = 'Bac';
-                else userInDb.hangHoiVien = 'Dong';
-                await userInDb.save();
-                req.session.user = userInDb;
-            }
+        // Tích điểm tự động hào phóng: Tính điểm trên TỔNG GIÁ TRỊ ĐƠN HÀNG GỐC (trước khi trừ voucher)
+        // để khách hàng dù dùng voucher giảm về 0đ vẫn được tích đủ điểm thưởng xứng đáng!
+        const baseOrderValue = expectedBaseTotal > 0 ? expectedBaseTotal : (Number(total) || 0);
+        const earnedPoints = Math.max(Math.floor(verifiedTotalPrice / 1000), Math.floor(baseOrderValue / 1000));
+        if (earnedPoints > 0 && userInDb) {
+            userInDb.diemTichLuy = (userInDb.diemTichLuy || 0) + earnedPoints;
+            if (userInDb.diemTichLuy >= 1000) userInDb.hangHoiVien = 'KimCuong';
+            else if (userInDb.diemTichLuy >= 600) userInDb.hangHoiVien = 'Vang';
+            else if (userInDb.diemTichLuy >= 300) userInDb.hangHoiVien = 'Bac';
+            else userInDb.hangHoiVien = 'Dong';
+            await userInDb.save();
+            req.session.user = userInDb;
         }
 
         // Chuyển hướng trực tiếp đến trang Thẻ Vé Điện Tử có mã QR CineGo Pass
@@ -518,13 +591,23 @@ router.get('/danh-gia', (req, res) => {
     res.render('trangdanhgia', { user: req.session.user || null, title: 'Bình Phẩm & Đánh Giá Điện Ảnh — CineGo' });
 });
 
-// [ĐÃ SỬA] API Kiểm tra Voucher
+// [ĐÃ SỬA] API Kiểm tra Voucher (Chống tái sử dụng voucher 1 lần)
 router.post('/api/kiem-tra-voucher', checkLogin, async (req, res) => {
     try {
         const { code, currentTotal } = req.body;
-        const v = await Voucher.findOne({ code: code.toUpperCase() });
+        const upperCode = (code || '').trim().toUpperCase();
+        const v = await Voucher.findOne({ code: upperCode });
         if (!v) return res.json({ success: false, message: "Mã không tồn tại!" });
         if (v.expiryDate && new Date(v.expiryDate) < new Date()) return res.json({ success: false, message: "Mã đã hết hạn!" });
+        
+        // Kiểm tra xem người dùng hiện tại đã dùng mã voucher này chưa
+        if (req.session.user && req.session.user._id) {
+            const userInDb = await User.findById(req.session.user._id);
+            if (userInDb && Array.isArray(userInDb.usedVouchers) && userInDb.usedVouchers.includes(upperCode)) {
+                return res.json({ success: false, message: "Bạn đã sử dụng mã voucher này rồi! Mỗi voucher chỉ dùng được 1 lần." });
+            }
+        }
+
         if (currentTotal < (v.minOrderValue || 0)) return res.json({ success: false, message: `Đơn tối thiểu là ${v.minOrderValue.toLocaleString('vi-VN')}đ` });
         res.json({ success: true, discountType: v.discountType, discountValue: v.discountValue, maxDiscountValue: v.maxDiscountValue || 0, message: "Áp dụng mã thành công!" });
     } catch (error) { res.status(500).json({ success: false, message: "Lỗi hệ thống khi kiểm tra voucher" }); }
@@ -864,11 +947,15 @@ router.get('/tai-khoan/thong-tin', checkLogin, async (req, res) => {
             req.session.user = thongTinUser;
         }
 
-        const vouchers = await Voucher.find({ $or: [{ expiryDate: { $gte: new Date() } }, { expiryDate: null }] }).sort({ createdAt: -1 });
+        const allVouchers = await Voucher.find({ $or: [{ expiryDate: { $gte: new Date() } }, { expiryDate: null }] }).sort({ createdAt: -1 });
+        const usedList = Array.isArray(thongTinUser.usedVouchers) ? thongTinUser.usedVouchers : [];
+        const activeSavedVouchers = (Array.isArray(thongTinUser.vouchers) ? thongTinUser.vouchers : []).filter(v => v && v.code && !usedList.includes(v.code.toUpperCase()));
+        const activeSystemVouchers = allVouchers.filter(v => v && v.code && !usedList.includes(v.code.toUpperCase()));
+
         res.render('thongtincanhan', { 
             user: thongTinUser, 
-            vouchers: vouchers || [], 
-            savedVouchers: thongTinUser.vouchers || [],
+            vouchers: activeSystemVouchers || [], 
+            savedVouchers: activeSavedVouchers || [],
             birthdayCelebration: birthdayAwarded,
             error: req.query.error || null, 
             success: req.query.success || (birthdayAwarded ? 'Chúc mừng sinh nhật! Bạn vừa nhận được Voucher Sinh Nhật 100K và +100 điểm thưởng!' : null)

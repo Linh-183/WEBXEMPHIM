@@ -61,6 +61,8 @@
       <input type="hidden" name="seats" id="input_seats" value="<%= typeof seats !== 'undefined' && Array.isArray(seats) ? seats.join(',') : (typeof seats !== 'undefined' ? seats : '') %>" />
       <input type="hidden" name="total" id="input_base_total" value="<%= typeof total !== 'undefined' ? total : 0 %>" />
       <input type="hidden" name="finalAmount" id="input_final_amount" value="<%= typeof total !== 'undefined' ? total : 0 %>" />
+      <input type="hidden" name="voucherCode" id="input_voucher_code" value="" />
+      <input type="hidden" name="discountAmount" id="input_discount_amount" value="0" />
       <input type="hidden" name="comboDetails" value="<%= typeof comboDetails !== 'undefined' ? comboDetails : '' %>" />
       <input type="hidden" name="comboTotal" value="<%= typeof comboTotal !== 'undefined' ? comboTotal : 0 %>" />
 
@@ -649,20 +651,26 @@
         document.getElementById('voucherDiscountDisplay').innerText = '-' + discount.toLocaleString('vi-VN') + ' đ';
         document.getElementById('grandTotalDisplay').innerText = currentFinal.toLocaleString('vi-VN') + ' đ';
         document.getElementById('input_final_amount').value = currentFinal;
+        document.getElementById('input_voucher_code').value = code.toUpperCase();
+        document.getElementById('input_discount_amount').value = discount;
 
         if (window.cinegoToast) window.cinegoToast.success('Áp dụng mã giảm: -' + discount.toLocaleString('vi-VN') + 'đ');
       } else {
         feedback.className = 'p-3 bg-red-50 text-red-700 border border-red-200 text-xs font-["JetBrains_Mono"]';
         feedback.innerText = '✕ ' + (data.message || 'Mã không hợp lệ!');
+        document.getElementById('input_voucher_code').value = '';
+        document.getElementById('input_discount_amount').value = 0;
       }
     } catch (e) {
       feedback.classList.remove('hidden');
       feedback.className = 'p-3 bg-red-50 text-red-700 border border-red-200 text-xs font-["JetBrains_Mono"]';
       feedback.innerText = '✕ Lỗi kết nối hoặc mã ưu đãi không hợp lệ!';
+      document.getElementById('input_voucher_code').value = '';
+      document.getElementById('input_discount_amount').value = 0;
     }
   }
 
-  function applySimulatedDiscount(discount, msg) {
+  function applySimulatedDiscount(discount, msg, vCode = '') {
     const feedback = document.getElementById('voucherFeedback');
     feedback.classList.remove('hidden');
     feedback.className = 'p-3 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-["JetBrains_Mono"]';
@@ -673,6 +681,8 @@
     document.getElementById('voucherDiscountDisplay').innerText = '-' + discount.toLocaleString('vi-VN') + ' đ';
     document.getElementById('grandTotalDisplay').innerText = currentFinal.toLocaleString('vi-VN') + ' đ';
     document.getElementById('input_final_amount').value = currentFinal;
+    if (vCode) document.getElementById('input_voucher_code').value = vCode.toUpperCase();
+    document.getElementById('input_discount_amount').value = discount;
 
     if (window.cinegoToast) window.cinegoToast.success(msg);
   }

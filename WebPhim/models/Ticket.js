@@ -11,6 +11,9 @@ const ticketSchema = new mongoose.Schema({
     // [SỬA #4] Thêm 2 trường này — trước đây bị thiếu khiến dữ liệu combo bị mất khi lưu
     comboDetails: { type: String, default: '' },
     comboTotal: { type: Number, default: 0 },
+    originalPrice: { type: Number, default: 0 },
+    discountAmount: { type: Number, default: 0 },
+    voucherCode: { type: String, default: '' },
     totalPrice: { type: Number, required: true },
     paymentMethod: { type: String }
 }, { timestamps: true });

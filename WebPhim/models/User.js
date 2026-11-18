@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
     favoriteGenres: [{ type: String }],
     lastBirthdayGiftYear: { type: Number }, // Năm gần nhất đã nhận quà sinh nhật
     vouchers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Voucher' }], // Danh sách voucher đã lưu vào ví
+    usedVouchers: [{ type: String }], // Danh sách các mã voucher người dùng đã sử dụng (chống tái sử dụng voucher 1 lần)
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date }
 }, { timestamps: true });
