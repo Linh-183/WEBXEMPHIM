@@ -28,7 +28,7 @@ console.log('✓ TEST 3: Admin transactions view displays gross revenue + vouche
 
 // 4. Verify khach-hang.js auto-heals user loyalty points on profile visit
 const khachHangCode = fs.readFileSync(path.join(__dirname, 'dieu-huong', 'khach-hang.js'), 'utf8');
-assert(khachHangCode.includes('< totalOrderPoints'), 'Profile route must auto-audit and restore missing points');
+assert(khachHangCode.includes('totalOrderPoints') && khachHangCode.includes('netExpectedPoints'), 'Profile route must auto-audit and restore missing points');
 console.log('✓ TEST 4: Self-healing loyalty points system verified - PASSED!');
 
 console.log('====================================================');

@@ -8,6 +8,39 @@ const Voucher = require('../models/Voucher');
 const FoodCombo = require('../models/FoodCombo');
 const Cinema = require('../models/Cinema');
 const FlashSale = require('../models/FlashSale');
+const SeatConfig = require('../models/SeatConfig');
+
+// Helper chuẩn hóa giờ chiếu: Luôn bảo đảm định dạng HH:mm có dấu : ở giữa (VD: 21 giờ -> 21:00, 21h -> 21:00, 21 -> 21:00)
+function normalizeTimeSlot(t) {
+    if (!t) return null;
+    let s = (t || '').toString().trim().toLowerCase();
+    if (!s) return null;
+    s = s.replace(/giờ|gio/g, 'h').replace(/\s+/g, '');
+    let m = s.match(/^(\d{1,2})[h:.](\d{1,2})$/);
+    if (m) {
+        let h = parseInt(m[1], 10);
+        let min = parseInt(m[2], 10);
+        if (h <= 23 && min <= 59) {
+            return String(h).padStart(2, '0') + ':' + String(min).padStart(2, '0');
+        }
+    }
+    m = s.match(/^(\d{1,2})h?$/);
+    if (m) {
+        let h = parseInt(m[1], 10);
+        if (h <= 23) {
+            return String(h).padStart(2, '0') + ':00';
+        }
+    }
+    if (/^\d{3,4}$/.test(s)) {
+        const padded = s.padStart(4, '0');
+        const h = parseInt(padded.slice(0, 2), 10);
+        const min = parseInt(padded.slice(2), 10);
+        if (h <= 23 && min <= 59) {
+            return String(h).padStart(2, '0') + ':' + String(min).padStart(2, '0');
+        }
+    }
+    return t.trim();
+}
 
 // Helper tính toán doanh số thực tế của đơn vé (kể cả khi khách dùng voucher giảm 100% về 0đ hoặc giảm giá lớn)
 function getTicketRevenue(t) {
@@ -211,27 +244,6 @@ router.post('/phim/them', async (req, res) => {
             return res.redirect('/admin/phim?action=them&error=' + encodeURIComponent('Vui lòng nhập tên phim!'));
         }
 
-        // Chuẩn hóa giờ chiếu bảo đảm có dấu : ở giữa (HH:MM)
-        const normalizeTimeSlot = (t) => {
-            t = (t || '').toString().trim();
-            if (!t) return null;
-            if (/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(t)) {
-                const [h, m] = t.split(':');
-                return h.padStart(2, '0') + ':' + m;
-            }
-            if (/^\d{3,4}$/.test(t)) {
-                const padded = t.padStart(4, '0');
-                const h = padded.slice(0, 2);
-                const m = padded.slice(2);
-                if (parseInt(h) <= 23 && parseInt(m) <= 59) return h + ':' + m;
-            }
-            if (/^\d{1,2}$/.test(t)) {
-                const h = t.padStart(2, '0');
-                if (parseInt(h) <= 23) return h + ':00';
-            }
-            return t;
-        };
-
         let formattedShowtimes = [];
         if (Array.isArray(show_date)) {
             for (let i = 0; i < show_date.length; i++) {
@@ -303,26 +315,6 @@ router.post('/phim/sua/:id', async (req, res) => {
         const cinemas = req.body.cinema || [];
         const rooms = req.body.room || [];
 
-        const normalizeTimeSlot = (t) => {
-            t = (t || '').toString().trim();
-            if (!t) return null;
-            if (/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(t)) {
-                const [h, m] = t.split(':');
-                return h.padStart(2, '0') + ':' + m;
-            }
-            if (/^\d{3,4}$/.test(t)) {
-                const padded = t.padStart(4, '0');
-                const h = padded.slice(0, 2);
-                const m = padded.slice(2);
-                if (parseInt(h) <= 23 && parseInt(m) <= 59) return h + ':' + m;
-            }
-            if (/^\d{1,2}$/.test(t)) {
-                const h = t.padStart(2, '0');
-                if (parseInt(h) <= 23) return h + ':00';
-            }
-            return t;
-        };
-
         const showtimes = [];
         
         if (Array.isArray(showDates)) {
@@ -389,49 +381,7 @@ router.post('/phim/xoa/:id', async (req, res) => {
     }
 });
 
-router.get('/quan-ly-rap', async (req, res, next) => {
-    try {
-        let dbCinemas = await Cinema.find().lean();
-        if (dbCinemas.length === 0) {
-            // Tự động khởi tạo dữ liệu 3 rạp chuẩn Quy Nhơn nếu collection trống
-            await Cinema.insertMany([
-                { name: 'CGV Kim Cúc Plaza', code: 'cgv-kim-cuc', location: 'Tầng 3, Kim Cúc Plaza, TP. Quy Nhơn', totalSeats: 270, phone: '12345678' },
-                { name: 'Starlight Nguyễn Kim', code: 'starlight-nguyen-kim', location: 'Tầng 4, TTTM Nguyễn Kim, Số 06 Trần Phú, TP. Quy Nhơn', totalSeats: 210, phone: '12345678' },
-                { name: 'DCine Quy Nhơn', code: 'dcine-quy-nhon', location: 'Ngã ba Đống Đa, P. Thị Nại, TP. Quy Nhơn', totalSeats: 200, phone: '12345678' }
-            ]);
-            dbCinemas = await Cinema.find().lean();
-        }
-
-        const allTickets = await Ticket.find().populate('movie').lean();
-        const validTickets = allTickets.filter(t => t.movie != null);
-
-        const cinemas = dbCinemas.map(cinema => {
-            const cinemaName = cinema.name;
-            const ticketsInCinema = validTickets.filter(t => t.cinema && (t.cinema.includes(cinemaName) || cinemaName.includes(t.cinema)));
-            let bookedSeats = [];
-            ticketsInCinema.forEach(t => {
-                if (t.seats) bookedSeats = bookedSeats.concat(t.seats);
-            });
-            const cap = cinema.totalSeats || 50;
-            const occupied = bookedSeats.length;
-            const empty = Math.max(0, cap - occupied);
-            const rate = Math.min(100, Math.round((occupied / cap) * 100));
-
-            return {
-                ...cinema,
-                totalSeats: cap,
-                occupiedSeats: occupied,
-                emptySeats: empty,
-                occupancyRate: rate,
-                bookedSeats: JSON.stringify(bookedSeats)
-            };
-        });
-        res.render('admin-quanlyrap', { user: req.session.user, cinemas });
-    } catch (error) { 
-        console.error("Lỗi Quản Lý Rạp:", error);
-        next(error); 
-    }
-});
+router.get('/quan-ly-rap', (req, res) => res.redirect('/admin/so-do-ghe'));
 
 router.get('/khuyen-mai', async (req, res, next) => {
     try { 
@@ -651,7 +601,7 @@ router.get('/suat-chieu', async (req, res) => {
     }
 });
 
-// 4. Thiết kế Sơ đồ Ghế
+// 4. Thiết kế Sơ đồ Ghế & Định Giá Vé Từng Loại Ghế (CRUD MongoDB)
 router.get('/so-do-ghe', async (req, res) => {
     try {
         let cinemas = await Cinema.find().lean();
@@ -662,10 +612,78 @@ router.get('/so-do-ghe', async (req, res) => {
                 { name: 'DCine Quy Nhơn', location: 'Ngã ba Đống Đa, P. Thị Nại, TP. Quy Nhơn' }
             ];
         }
-        res.render('admin-sodoghe', { user: req.session.user, cinemas });
+        let seatConfig = await SeatConfig.findOne().lean();
+        if (!seatConfig) {
+            const created = await new SeatConfig({
+                rows: 6,
+                cols: 10,
+                priceStandard: 75000,
+                priceVIP: 95000,
+                priceCouple: 170000
+            }).save();
+            seatConfig = created.toObject();
+        }
+        res.render('admin-sodoghe', { 
+            user: req.session.user, 
+            cinemas, 
+            seatConfig,
+            success: req.query.success || null,
+            error: req.query.error || null
+        });
     } catch (error) {
         console.error("Lỗi Sơ Đồ Ghế:", error);
         res.status(500).send("Lỗi tải trang thiết kế sơ đồ ghế");
+    }
+});
+
+router.post('/so-do-ghe', async (req, res) => {
+    try {
+        const { rows, cols, priceStandard, priceVIP, priceCouple, seatMatrix } = req.body;
+        const rNum = Math.max(1, Math.min(26, Number(rows) || 6));
+        const cNum = Math.max(1, Math.min(30, Number(cols) || 10));
+        const pStd = Math.max(0, Number(priceStandard) || 75000);
+        const pVIP = Math.max(0, Number(priceVIP) || 95000);
+        const pCouple = Math.max(0, Number(priceCouple) || 170000);
+
+        let parsedMatrix = {};
+        if (typeof seatMatrix === 'string' && seatMatrix.trim()) {
+            try { parsedMatrix = JSON.parse(seatMatrix); } catch(e) {}
+        } else if (typeof seatMatrix === 'object' && seatMatrix !== null) {
+            parsedMatrix = seatMatrix;
+        }
+
+        let cfg = await SeatConfig.findOne();
+        if (!cfg) {
+            cfg = new SeatConfig({
+                rows: rNum,
+                cols: cNum,
+                priceStandard: pStd,
+                priceVIP: pVIP,
+                priceCouple: pCouple,
+                seatMatrix: parsedMatrix
+            });
+        } else {
+            cfg.rows = rNum;
+            cfg.cols = cNum;
+            cfg.priceStandard = pStd;
+            cfg.priceVIP = pVIP;
+            cfg.priceCouple = pCouple;
+            if (Object.keys(parsedMatrix).length > 0) {
+                cfg.seatMatrix = parsedMatrix;
+            }
+        }
+        await cfg.save();
+
+        if (req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
+            return res.json({ success: true, message: 'Đã lưu cấu hình sơ đồ ghế và giá vé thành công!', cfg });
+        }
+        res.redirect('/admin/so-do-ghe?success=' + encodeURIComponent('Đã lưu cấu hình số hàng ghế và giá vé thành công!'));
+    } catch (err) {
+        console.error('Lỗi lưu sơ đồ ghế:', err);
+        if (req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
+            return res.status(500).json({ success: false, message: err.message });
+        }
+        res.redirect('/admin/so-do-ghe?error=' + encodeURIComponent(err.message));
     }
 });
 

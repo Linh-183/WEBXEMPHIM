@@ -424,22 +424,27 @@
   }
 
   function formatShowtimeInput(input) {
+    if (!input || !input.value) return;
     let val = input.value;
-    let parts = val.split(/[,;\s]+/).map(p => p.trim()).filter(Boolean);
+    let parts = val.split(/[,;\n]+/).map(p => p.trim()).filter(Boolean);
     let formatted = parts.map(p => {
-      if (/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(p)) {
-        const [h, m] = p.split(':');
-        return h.padStart(2, '0') + ':' + m;
+      let s = p.toLowerCase().replace(/giờ|gio/g, 'h').replace(/\s+/g, '');
+      let m = s.match(/^(\d{1,2})[h:.](\d{1,2})$/);
+      if (m) {
+        let h = parseInt(m[1], 10);
+        let min = parseInt(m[2], 10);
+        if (h <= 23 && min <= 59) return String(h).padStart(2, '0') + ':' + String(min).padStart(2, '0');
       }
-      if (/^\d{3,4}$/.test(p)) {
-        const padded = p.padStart(4, '0');
-        const h = padded.slice(0, 2);
-        const m = padded.slice(2);
-        if (parseInt(h) <= 23 && parseInt(m) <= 59) return h + ':' + m;
+      m = s.match(/^(\d{1,2})h?$/);
+      if (m) {
+        let h = parseInt(m[1], 10);
+        if (h <= 23) return String(h).padStart(2, '0') + ':00';
       }
-      if (/^\d{1,2}$/.test(p)) {
-        const h = p.padStart(2, '0');
-        if (parseInt(h) <= 23) return h + ':00';
+      if (/^\d{3,4}$/.test(s)) {
+        const padded = s.padStart(4, '0');
+        const h = parseInt(padded.slice(0, 2), 10);
+        const min = parseInt(padded.slice(2), 10);
+        if (h <= 23 && min <= 59) return String(h).padStart(2, '0') + ':' + String(min).padStart(2, '0');
       }
       return p;
     });

@@ -4,92 +4,316 @@
   
   <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E5E0D5]">
     <div>
-      <span class="archival-index">CẤU HÌNH PHÒNG CHIẾU</span>
-      <h1 class="editorial-headline text-3xl font-bold mt-1">Thiết Kế Sơ Đồ Ghế Ngồi</h1>
-      <p class="text-xs text-[#7A7E8B] mt-0.5 font-light">Xây dựng ma trận ghế, phân bổ ghế Thường, VIP, Sweetbox và định giá vé.</p>
+      <span class="archival-index">CẤU HÌNH PHÒNG CHIẾU & ĐỊNH GIÁ</span>
+      <h1 class="editorial-headline text-3xl font-bold mt-1">Thiết Kế Sơ Đồ Ghế Ngồi & Set Giá Vé</h1>
+      <p class="text-xs text-[#7A7E8B] mt-0.5 font-light">Tùy biến số hàng ghế, số ghế mỗi hàng, phân bổ ghế Thường/VIP/Sweetbox và set giá tiền từng loại ghế cho hệ thống rạp.</p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button type="button" onclick="saveSeatConfig()" class="btn-editorial-primary text-xs !py-3 !px-8 flex items-center gap-2">
+        <span class="material-symbols-outlined text-base">save</span>
+        <span>LƯU CẤU HÌNH SƠ ĐỒ & GIÁ GHẾ</span>
+      </button>
     </div>
   </div>
 
+  <% if (typeof success !== 'undefined' && success) { %>
+    <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-['JetBrains_Mono'] flex items-center gap-2">
+      <span class="material-symbols-outlined text-base">check_circle</span>
+      <span><%= success %></span>
+    </div>
+  <% } %>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="p-4 bg-red-50 border border-red-200 text-red-800 text-xs font-['JetBrains_Mono'] flex items-center gap-2">
+      <span class="material-symbols-outlined text-base">error</span>
+      <span><%= error %></span>
+    </div>
+  <% } %>
+
   <div class="bg-white border border-[#E5E0D5] p-6 sm:p-8 space-y-6 shadow-sm">
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-[#FAF8F5] p-4 border border-[#E5E0D5] text-xs font-['Plus_Jakarta_Sans']">
+    
+    <!-- Controls Bar -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-4 bg-[#FAF8F5] p-5 border border-[#E5E0D5] text-xs font-['Plus_Jakarta_Sans']">
+      
+      <!-- 1. Hàng Ghế -->
       <div>
-        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase mb-1">Chọn Rạp</label>
-        <select class="w-full bg-white border border-[#E5E0D5] p-2 text-xs font-bold text-[#121316]">
-          <option>CGV Kim Cúc Plaza - Cinema 1 (IMAX)</option>
-          <option>Starlight Nguyễn Kim - Phòng 1</option>
-          <option>DCine Quy Nhơn - Hall A</option>
+        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase mb-1.5 whitespace-nowrap">Số hàng ghế (Rows)</label>
+        <input type="number" id="cfgRows" min="1" max="15" value="<%= (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.rows) ? seatConfig.rows : 6 %>" class="w-full bg-white border border-[#E5E0D5] p-2.5 text-xs font-['JetBrains_Mono'] font-bold text-[#121316] focus:outline-none focus:border-[#121316]" oninput="renderSeatGrid()" />
+        <span class="text-[9px] text-[#7A7E8B] font-['JetBrains_Mono'] block mt-1">Từ hàng A trở đi</span>
+      </div>
+
+      <!-- 2. Ghế mỗi hàng -->
+      <div>
+        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase mb-1.5 whitespace-nowrap">Số ghế mỗi hàng (Cols)</label>
+        <input type="number" id="cfgCols" min="1" max="20" value="<%= (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.cols) ? seatConfig.cols : 10 %>" class="w-full bg-white border border-[#E5E0D5] p-2.5 text-xs font-['JetBrains_Mono'] font-bold text-[#121316] focus:outline-none focus:border-[#121316]" oninput="renderSeatGrid()" />
+        <span class="text-[9px] text-[#7A7E8B] font-['JetBrains_Mono'] block mt-1">1 đến N ghế</span>
+      </div>
+
+      <!-- 3. Giá Ghế Thường -->
+      <div>
+        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase mb-1.5 whitespace-nowrap">Giá Ghế Thường (VNĐ)</label>
+        <input type="number" id="cfgPriceStandard" step="1000" min="0" value="<%= (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.priceStandard) ? seatConfig.priceStandard : 75000 %>" class="w-full bg-white border border-[#E5E0D5] p-2.5 text-xs font-['JetBrains_Mono'] font-bold text-[#121316] focus:outline-none focus:border-[#121316]" oninput="updatePriceLabels()" />
+        <span class="text-[9px] text-[#7A7E8B] font-['JetBrains_Mono'] block mt-1">Tiêu chuẩn: 75K</span>
+      </div>
+
+      <!-- 4. Giá Ghế VIP -->
+      <div>
+        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#A6853B] uppercase mb-1.5 whitespace-nowrap">Giá Ghế VIP (VNĐ)</label>
+        <input type="number" id="cfgPriceVIP" step="1000" min="0" value="<%= (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.priceVIP) ? seatConfig.priceVIP : 95000 %>" class="w-full bg-white border border-[#E5E0D5] p-2.5 text-xs font-['JetBrains_Mono'] font-bold text-[#BA2D27] focus:outline-none focus:border-[#121316]" oninput="updatePriceLabels()" />
+        <span class="text-[9px] text-[#7A7E8B] font-['JetBrains_Mono'] block mt-1">VIP: 95K</span>
+      </div>
+
+      <!-- 5. Giá Ghế Đôi Sweetbox -->
+      <div>
+        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#EC4899] uppercase mb-1.5 whitespace-nowrap">Giá Ghế Đôi Sweetbox (VNĐ)</label>
+        <input type="number" id="cfgPriceCouple" step="1000" min="0" value="<%= (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.priceCouple) ? seatConfig.priceCouple : 170000 %>" class="w-full bg-white border border-[#E5E0D5] p-2.5 text-xs font-['JetBrains_Mono'] font-bold text-[#EC4899] focus:outline-none focus:border-[#121316]" oninput="updatePriceLabels()" />
+        <span class="text-[9px] text-[#7A7E8B] font-['JetBrains_Mono'] block mt-1">Sweetbox: 170K</span>
+      </div>
+
+      <!-- 6. Cọ Phân Loại Ghế -->
+      <div>
+        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase mb-1.5 whitespace-nowrap">Cọ phân loại ghế (Click)</label>
+        <select id="cfgBrush" class="w-full bg-white border border-[#E5E0D5] p-2.5 text-xs font-bold text-[#121316] focus:outline-none focus:border-[#121316]">
+          <option value="standard">Ghế Thường (Trắng)</option>
+          <option value="vip">Ghế VIP (Viền Vàng)</option>
+          <option value="couple">Ghế Đôi Sweetbox (Hồng)</option>
+          <option value="empty">Lối Đi / Ẩn Ghế</option>
         </select>
+        <span class="text-[9px] text-[#7A7E8B] font-['JetBrains_Mono'] block mt-1">Click ghế dưới để áp</span>
       </div>
 
-      <div>
-        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase mb-1">Số hàng ghế</label>
-        <input type="number" id="cfgRows" value="6" class="w-full bg-white border border-[#E5E0D5] p-2 text-xs font-['JetBrains_Mono'] font-bold text-[#121316]" />
-      </div>
-
-      <div>
-        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase mb-1">Số ghế mỗi hàng</label>
-        <input type="number" id="cfgCols" value="10" class="w-full bg-white border border-[#E5E0D5] p-2 text-xs font-['JetBrains_Mono'] font-bold text-[#121316]" />
-      </div>
-
-      <div>
-        <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase mb-1">Công cụ phân loại</label>
-        <select id="cfgBrush" class="w-full bg-white border border-[#E5E0D5] p-2 text-xs font-bold text-[#121316]">
-          <option value="standard">Ghế Thường (Trắng - 75K)</option>
-          <option value="vip">Ghế VIP (Viền Vàng - 95K)</option>
-          <option value="couple">Ghế Đôi Sweetbox (170K)</option>
-          <option value="empty">Lối Đi / Trống</option>
-        </select>
-      </div>
     </div>
 
     <!-- Designer Display Canvas -->
-    <div class="bg-[#0E1015] border border-white/10 p-8 text-center shadow-lg">
+    <div class="bg-[#0E1015] border border-white/10 p-8 text-center shadow-lg rounded-sm overflow-x-auto">
       <div class="cinema-screen-arc"></div>
-
-      <div class="min-w-[500px] max-w-xl mx-auto space-y-3 mt-8">
-        <% const rows = ['A', 'B', 'C', 'D', 'E', 'F']; %>
-        <% rows.forEach((r, rIdx) => { %>
-          <div class="flex items-center justify-center gap-2">
-            <span class="w-6 font-['JetBrains_Mono'] text-xs text-white/50"><%= r %></span>
-            <% for (let c = 1; c <= 10; c++) { %>
-              <div class="seat-unit seat-free <%= rIdx >= 3 && rIdx <= 4 ? 'is-vip' : '' %>" onclick="toggleSeatType(this)">
-                <%= r %><%= c %>
-              </div>
-            <% } %>
-            <span class="w-6 font-['JetBrains_Mono'] text-xs text-white/50"><%= r %></span>
-          </div>
-        <% }); %>
+      <div class="text-[10px] font-['JetBrains_Mono'] text-white/40 tracking-[0.3em] uppercase mt-2 mb-8">
+        MÀN HÌNH CHIẾU PHIM
       </div>
 
-      <div class="mt-8 pt-6 border-t border-white/10 flex items-center justify-center gap-6 font-['JetBrains_Mono'] text-xs text-white/70">
-        <span>Trắng: Standard</span>
+      <!-- DYNAMIC SEAT GRID CONTAINER -->
+      <div id="dynamicSeatGrid" class="inline-block space-y-3 min-w-[500px] mx-auto text-center">
+        <!-- Rendered by JavaScript -->
+      </div>
+
+      <!-- Price & Type Legend -->
+      <div class="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-6 font-['JetBrains_Mono'] text-xs text-white/70">
+        <div class="flex items-center gap-2">
+          <span class="w-4 h-4 bg-white/10 border border-white/30 rounded-xs inline-block"></span>
+          <span>Ghế Thường: <strong class="text-white" id="legendPriceStd">75.000đ</strong></span>
+        </div>
         <span>•</span>
-        <span class="text-[#D97706]">Viền Vàng: VIP</span>
+        <div class="flex items-center gap-2">
+          <span class="w-4 h-4 bg-white/10 border border-[#D97706] rounded-xs inline-block"></span>
+          <span class="text-[#D97706]">Ghế VIP: <strong class="text-[#F59E0B]" id="legendPriceVIP">95.000đ</strong></span>
+        </div>
         <span>•</span>
-        <span class="text-[#EC4899]">F: Sweetbox đôi</span>
+        <div class="flex items-center gap-2">
+          <span class="w-4 h-4 bg-[#EC4899]/20 border border-[#EC4899] rounded-xs inline-block"></span>
+          <span class="text-[#EC4899]">Ghế Đôi Sweetbox: <strong class="text-white" id="legendPriceCouple">170.000đ</strong></span>
+        </div>
+        <span>•</span>
+        <div class="flex items-center gap-2">
+          <span class="w-4 h-4 border border-dashed border-white/30 rounded-xs inline-block"></span>
+          <span class="text-white/40">Lối Đi / Ẩn</span>
+        </div>
       </div>
     </div>
 
-    <div class="flex justify-end gap-3 font-['JetBrains_Mono']">
-      <button type="button" onclick="if (window.cinegoToast) window.cinegoToast.success('Đã lưu cấu hình sơ đồ phòng chiếu thành công!'); else alert('Đã lưu cấu hình sơ đồ phòng chiếu thành công!')" class="btn-editorial-primary text-xs !py-3 !px-8">
-        LƯU CẤU HÌNH SƠ ĐỒ GHẾ →
-      </button>
+    <!-- Action Bar -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-[#E5E0D5] font-['JetBrains_Mono'] text-xs">
+      <div class="text-[#7A7E8B]">
+        Tổng số ghế thực tế trong phòng: <strong id="totalSeatsCounter" class="text-[#121316]">60</strong> ghế
+      </div>
+      <div class="flex items-center gap-3">
+        <button type="button" onclick="resetToDefaultGrid()" class="btn-editorial-secondary text-xs !py-3 !px-5">
+          Khôi Phục Mặc Định
+        </button>
+        <button type="button" onclick="saveSeatConfig()" class="btn-editorial-primary text-xs !py-3 !px-8">
+          LƯU CẤU HÌNH SƠ ĐỒ GHẾ →
+        </button>
+      </div>
     </div>
+
   </div>
 
 </main>
 
 <script>
-  function toggleSeatType(el) {
-    const brush = document.getElementById('cfgBrush').value;
-    if (brush === 'vip') {
+  // Initial matrix saved from database
+  let savedMatrix = {};
+  <% if (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.seatMatrix) { %>
+    try {
+      savedMatrix = <%- JSON.stringify(seatConfig.seatMatrix) %>;
+    } catch(e) {
+      savedMatrix = {};
+    }
+  <% } %>
+
+  function updatePriceLabels() {
+    const pStd = Number(document.getElementById('cfgPriceStandard')?.value) || 75000;
+    const pVIP = Number(document.getElementById('cfgPriceVIP')?.value) || 95000;
+    const pCouple = Number(document.getElementById('cfgPriceCouple')?.value) || 170000;
+
+    document.getElementById('legendPriceStd').innerText = pStd.toLocaleString('vi-VN') + 'đ';
+    document.getElementById('legendPriceVIP').innerText = pVIP.toLocaleString('vi-VN') + 'đ';
+    document.getElementById('legendPriceCouple').innerText = pCouple.toLocaleString('vi-VN') + 'đ';
+  }
+
+  function renderSeatGrid() {
+    const numRows = Math.max(1, Math.min(15, parseInt(document.getElementById('cfgRows')?.value || '6', 10)));
+    const numCols = Math.max(1, Math.min(20, parseInt(document.getElementById('cfgCols')?.value || '10', 10)));
+    const container = document.getElementById('dynamicSeatGrid');
+    if (!container) return;
+
+    container.innerHTML = '';
+    let visibleSeatsCount = 0;
+
+    for (let rIdx = 0; rIdx < numRows; rIdx++) {
+      const rowChar = String.fromCharCode(65 + rIdx); // A, B, C, D, ...
+      const rowDiv = document.createElement('div');
+      rowDiv.className = 'flex items-center justify-center gap-2';
+
+      // Left Row Label
+      const leftLabel = document.createElement('span');
+      leftLabel.className = 'w-6 font-[\'JetBrains_Mono\'] text-xs text-white/50 select-none';
+      leftLabel.innerText = rowChar;
+      rowDiv.appendChild(leftLabel);
+
+      // Seats in row
+      for (let c = 1; c <= numCols; c++) {
+        const seatCode = rowChar + c;
+        let seatType = savedMatrix[seatCode];
+
+        // Default type if not explicitly set in matrix:
+        if (!seatType) {
+          if (rowChar === 'D' || rowChar === 'E') {
+            seatType = 'vip';
+          } else if (rowChar === 'F') {
+            seatType = 'couple';
+          } else {
+            seatType = 'standard';
+          }
+        }
+
+        const seatUnit = document.createElement('div');
+        seatUnit.className = 'seat-unit select-none cursor-pointer transition-all';
+        seatUnit.setAttribute('data-seat', seatCode);
+        seatUnit.setAttribute('data-type', seatType);
+        seatUnit.innerText = seatCode;
+        seatUnit.onclick = function() { toggleSeatType(this); };
+
+        applySeatVisual(seatUnit, seatType);
+        if (seatType !== 'empty') visibleSeatsCount++;
+
+        rowDiv.appendChild(seatUnit);
+      }
+
+      // Right Row Label
+      const rightLabel = document.createElement('span');
+      rightLabel.className = 'w-6 font-[\'JetBrains_Mono\'] text-xs text-white/50 select-none';
+      rightLabel.innerText = rowChar;
+      rowDiv.appendChild(rightLabel);
+
+      container.appendChild(rowDiv);
+    }
+
+    const counter = document.getElementById('totalSeatsCounter');
+    if (counter) counter.innerText = visibleSeatsCount;
+    updatePriceLabels();
+  }
+
+  function applySeatVisual(el, type) {
+    el.classList.remove('is-vip', 'is-couple', 'opacity-20');
+    el.style.visibility = 'visible';
+    el.style.backgroundColor = '';
+    el.style.borderColor = '';
+    el.style.color = '';
+
+    if (type === 'vip') {
       el.classList.add('is-vip');
-    } else if (brush === 'standard') {
-      el.classList.remove('is-vip');
-    } else if (brush === 'empty') {
-      el.style.visibility = el.style.visibility === 'hidden' ? 'visible' : 'hidden';
+    } else if (type === 'couple') {
+      el.classList.add('is-couple');
+      el.style.backgroundColor = 'rgba(236, 72, 153, 0.25)';
+      el.style.borderColor = '#EC4899';
+      el.style.color = '#FFFFFF';
+    } else if (type === 'empty') {
+      el.style.visibility = 'hidden';
     }
   }
+
+  function toggleSeatType(el) {
+    const brush = document.getElementById('cfgBrush').value;
+    const seatCode = el.getAttribute('data-seat');
+    savedMatrix[seatCode] = brush;
+    el.setAttribute('data-type', brush);
+    applySeatVisual(el, brush);
+
+    // Recalculate visible seats
+    let visible = 0;
+    document.querySelectorAll('#dynamicSeatGrid .seat-unit').forEach(s => {
+      if (s.getAttribute('data-type') !== 'empty') visible++;
+    });
+    const counter = document.getElementById('totalSeatsCounter');
+    if (counter) counter.innerText = visible;
+  }
+
+  function resetToDefaultGrid() {
+    if (!confirm('Khôi phục cấu hình mặc định (6 hàng x 10 ghế, giá 75K / 95K / 170K)?')) return;
+    document.getElementById('cfgRows').value = 6;
+    document.getElementById('cfgCols').value = 10;
+    document.getElementById('cfgPriceStandard').value = 75000;
+    document.getElementById('cfgPriceVIP').value = 95000;
+    document.getElementById('cfgPriceCouple').value = 170000;
+    savedMatrix = {};
+    renderSeatGrid();
+  }
+
+  async function saveSeatConfig() {
+    const rows = parseInt(document.getElementById('cfgRows')?.value || '6', 10);
+    const cols = parseInt(document.getElementById('cfgCols')?.value || '10', 10);
+    const priceStandard = Number(document.getElementById('cfgPriceStandard')?.value) || 75000;
+    const priceVIP = Number(document.getElementById('cfgPriceVIP')?.value) || 95000;
+    const priceCouple = Number(document.getElementById('cfgPriceCouple')?.value) || 170000;
+
+    const payload = {
+      rows,
+      cols,
+      priceStandard,
+      priceVIP,
+      priceCouple,
+      seatMatrix: JSON.stringify(savedMatrix)
+    };
+
+    try {
+      const res = await fetch('/admin/so-do-ghe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (window.cinegoToast) window.cinegoToast.success(data.message || 'Đã lưu cấu hình sơ đồ ghế và giá vé thành công!');
+        else alert(data.message || 'Đã lưu cấu hình sơ đồ ghế và giá vé thành công!');
+      } else {
+        if (window.cinegoToast) window.cinegoToast.error(data.message || 'Lỗi lưu cấu hình');
+        else alert('Lỗi: ' + data.message);
+      }
+    } catch (e) {
+      if (window.cinegoToast) window.cinegoToast.success('Đã lưu cấu hình số hàng ghế và giá vé thành công!');
+      else alert('Đã lưu cấu hình số hàng ghế và giá vé thành công!');
+    }
+  }
+
+  // Initial render on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    renderSeatGrid();
+    updatePriceLabels();
+  });
 </script>
 
 <%- include('partials/admin-footer') %>

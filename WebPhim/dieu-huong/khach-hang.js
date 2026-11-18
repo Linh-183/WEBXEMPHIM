@@ -11,6 +11,7 @@ const Voucher = require('../models/Voucher');
 const FoodCombo = require('../models/FoodCombo');
 const SeatLock = require('../models/SeatLock');
 const FlashSale = require('../models/FlashSale');
+const SeatConfig = require('../models/SeatConfig');
 const { checkLogin } = require('../trung-gian/xac-thuc');
 
 // Hàm kiểm tra ObjectId MongoDB hợp lệ chống lỗi 500 CastError
@@ -195,7 +196,8 @@ router.get('/dat-ve/:id', checkLogin, async (req, res, next) => {
 
         const phim = await Movie.findById(req.params.id);
         if (!phim) return res.status(404).render('404', { title: '404 — Không Tìm Thấy Suất Chiếu' });
-        res.render('trangdatvephim', { phim, error: req.query.error || null }); 
+        const seatConfig = await SeatConfig.findOne().lean();
+        res.render('trangdatvephim', { phim, seatConfig, error: req.query.error || null }); 
     } catch (error) { next(error); }
 });
 
@@ -346,16 +348,21 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
             return res.redirect(`/dat-ve/${phimId}?error=${encodeURIComponent('Rất tiếc! Một trong các ghế bạn chọn vừa được khách hàng khác thanh toán trước. Vui lòng chọn ghế khác.')}`);
         }
 
-        // 2. Tính toán lại giá vé ở Backend (Chống gian lận Client sửa giá POST request)
+        // 2. Tính toán lại giá vé ở Backend theo cấu hình giá của Admin (Chống gian lận Client sửa giá POST request)
+        const seatCfg = await SeatConfig.findOne().lean();
+        const cfgStd = seatCfg?.priceStandard || 75000;
+        const cfgVIP = seatCfg?.priceVIP || 95000;
+        const cfgCouple = seatCfg?.priceCouple || 170000;
+
         let calculatedSeatPrice = 0;
         seatList.forEach(code => {
             const upper = code.toUpperCase();
             if (upper.startsWith('F')) {
-                calculatedSeatPrice += 170000; // Ghế đôi Sweetbox
+                calculatedSeatPrice += cfgCouple; // Ghế đôi Sweetbox
             } else if (upper.startsWith('D') || upper.startsWith('E')) {
-                calculatedSeatPrice += 95000;  // Ghế VIP
+                calculatedSeatPrice += cfgVIP;    // Ghế VIP
             } else {
-                calculatedSeatPrice += 75000;  // Ghế tiêu chuẩn
+                calculatedSeatPrice += cfgStd;    // Ghế tiêu chuẩn
             }
         });
 
@@ -981,9 +988,11 @@ router.get('/tai-khoan/thong-tin', checkLogin, async (req, res) => {
                 totalOrderPoints += Math.floor(orderVal / 1000);
             });
 
+            // Tính số điểm tích lũy sau khi trừ đi các điểm đã sử dụng để đổi voucher:
+            const netExpectedPoints = Math.max(0, totalOrderPoints - (thongTinUser.diemDaDung || 0));
             // Nếu điểm tích lũy hiện tại thấp hơn số điểm xứng đáng từ lịch sử vé đã đặt:
-            if ((thongTinUser.diemTichLuy || 0) < totalOrderPoints) {
-                thongTinUser.diemTichLuy = totalOrderPoints;
+            if ((thongTinUser.diemTichLuy || 0) < netExpectedPoints) {
+                thongTinUser.diemTichLuy = netExpectedPoints;
                 if (thongTinUser.diemTichLuy >= 1000) thongTinUser.hangHoiVien = 'KimCuong';
                 else if (thongTinUser.diemTichLuy >= 600) thongTinUser.hangHoiVien = 'Vang';
                 else if (thongTinUser.diemTichLuy >= 300) thongTinUser.hangHoiVien = 'Bac';
@@ -1071,8 +1080,9 @@ router.post('/api/doi-diem-voucher', checkLogin, async (req, res) => {
             });
         }
 
-        // Khấu trừ điểm tích lũy thật vào MongoDB
+        // Khấu trừ điểm tích lũy thật vào MongoDB và ghi nhận số điểm đã sử dụng
         user.diemTichLuy -= cost;
+        user.diemDaDung = (user.diemDaDung || 0) + cost;
 
         // Cập nhật lại cấp bậc hội viên
         if (user.diemTichLuy >= 1000) user.hangHoiVien = 'KimCuong';

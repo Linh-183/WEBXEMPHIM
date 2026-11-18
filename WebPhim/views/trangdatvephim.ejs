@@ -247,71 +247,76 @@
       </div>
 
       <!-- SEAT ROWS CONTAINER -->
+      <% 
+        const pStd = (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.priceStandard) ? seatConfig.priceStandard : 75000;
+        const pVIP = (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.priceVIP) ? seatConfig.priceVIP : 95000;
+        const pCouple = (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.priceCouple) ? seatConfig.priceCouple : 170000;
+      %>
       <div class="min-w-[620px] max-w-2xl mx-auto space-y-3.5 text-center mt-6 transition-opacity" id="auditoriumSeatMatrix">
         
-        <!-- Row A (Standard 75k) -->
+        <!-- Row A (Standard) -->
         <div class="flex items-center justify-center gap-2">
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">A</span>
           <% for(let i=1; i<=10; i++) { %>
-            <div class="seat-unit seat-free" data-seat="A<%= i %>" data-price="75000" data-type="standard">A<%= i %></div>
+            <div class="seat-unit seat-free" data-seat="A<%= i %>" data-price="<%= pStd %>" data-type="standard">A<%= i %></div>
           <% } %>
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">A</span>
         </div>
 
-        <!-- Row B (Standard 75k) -->
+        <!-- Row B (Standard) -->
         <div class="flex items-center justify-center gap-2">
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">B</span>
           <% for(let i=1; i<=10; i++) { %>
-            <div class="seat-unit seat-free" data-seat="B<%= i %>" data-price="75000" data-type="standard">B<%= i %></div>
+            <div class="seat-unit seat-free" data-seat="B<%= i %>" data-price="<%= pStd %>" data-type="standard">B<%= i %></div>
           <% } %>
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">B</span>
         </div>
 
-        <!-- Row C (Standard 75k) -->
+        <!-- Row C (Standard) -->
         <div class="flex items-center justify-center gap-2">
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">C</span>
           <% for(let i=1; i<=10; i++) { %>
-            <div class="seat-unit seat-free" data-seat="C<%= i %>" data-price="75000" data-type="standard">C<%= i %></div>
+            <div class="seat-unit seat-free" data-seat="C<%= i %>" data-price="<%= pStd %>" data-type="standard">C<%= i %></div>
           <% } %>
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">C</span>
         </div>
 
         <!-- Divider VIP -->
         <div class="py-2 font-['JetBrains_Mono'] text-[11px] font-bold uppercase tracking-[0.2em] text-[#D97706]">
-          — KHU VỰC GHẾ TRUNG TÂM VIP (95.000đ) —
+          — KHU VỰC GHẾ TRUNG TÂM VIP (<%= pVIP.toLocaleString('vi-VN') %>đ) —
         </div>
 
-        <!-- Row D (VIP 95k) -->
+        <!-- Row D (VIP) -->
         <div class="flex items-center justify-center gap-2">
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-[#D97706]">D</span>
           <% for(let i=1; i<=10; i++) { %>
-            <div class="seat-unit seat-free is-vip" data-seat="D<%= i %>" data-price="95000" data-type="vip">D<%= i %></div>
+            <div class="seat-unit seat-free is-vip" data-seat="D<%= i %>" data-price="<%= pVIP %>" data-type="vip">D<%= i %></div>
           <% } %>
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-[#D97706]">D</span>
         </div>
 
-        <!-- Row E (VIP 95k) -->
+        <!-- Row E (VIP) -->
         <div class="flex items-center justify-center gap-2">
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-[#D97706]">E</span>
           <% for(let i=1; i<=10; i++) { %>
-            <div class="seat-unit seat-free is-vip" data-seat="E<%= i %>" data-price="95000" data-type="vip">E<%= i %></div>
+            <div class="seat-unit seat-free is-vip" data-seat="E<%= i %>" data-price="<%= pVIP %>" data-type="vip">E<%= i %></div>
           <% } %>
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-[#D97706]">E</span>
         </div>
 
         <!-- Divider Sweetbox -->
         <div class="py-2 font-['JetBrains_Mono'] text-[11px] font-bold uppercase tracking-[0.2em] text-white/50">
-          — HÀNG GHẾ ĐÔI SWEETBOX (170.000đ / 2 Người) —
+          — HÀNG GHẾ ĐÔI SWEETBOX (<%= pCouple.toLocaleString('vi-VN') %>đ / 2 Người) —
         </div>
 
-        <!-- Row F (Sweetbox Couple 170k) -->
+        <!-- Row F (Sweetbox Couple) -->
         <div class="flex items-center justify-center gap-3">
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">F</span>
-          <div class="seat-unit seat-free is-couple" data-seat="F1-F2" data-price="170000" data-type="couple">F1-F2</div>
-          <div class="seat-unit seat-free is-couple" data-seat="F3-F4" data-price="170000" data-type="couple">F3-F4</div>
-          <div class="seat-unit seat-free is-couple" data-seat="F5-F6" data-price="170000" data-type="couple">F5-F6</div>
-          <div class="seat-unit seat-free is-couple" data-seat="F7-F8" data-price="170000" data-type="couple">F7-F8</div>
-          <div class="seat-unit seat-free is-couple" data-seat="F9-F10" data-price="170000" data-type="couple">F9-F10</div>
+          <div class="seat-unit seat-free is-couple" data-seat="F1-F2" data-price="<%= pCouple %>" data-type="couple">F1-F2</div>
+          <div class="seat-unit seat-free is-couple" data-seat="F3-F4" data-price="<%= pCouple %>" data-type="couple">F3-F4</div>
+          <div class="seat-unit seat-free is-couple" data-seat="F5-F6" data-price="<%= pCouple %>" data-type="couple">F5-F6</div>
+          <div class="seat-unit seat-free is-couple" data-seat="F7-F8" data-price="<%= pCouple %>" data-type="couple">F7-F8</div>
+          <div class="seat-unit seat-free is-couple" data-seat="F9-F10" data-price="<%= pCouple %>" data-type="couple">F9-F10</div>
           <span class="w-6 font-['JetBrains_Mono'] text-xs font-bold text-white/50">F</span>
         </div>
 
@@ -321,7 +326,7 @@
       <div class="mt-10 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-5 sm:gap-8 font-['Plus_Jakarta_Sans'] text-xs">
         <div class="flex items-center gap-2">
           <div class="w-6 h-6 rounded bg-white border border-[#CBD5E1]"></div>
-          <span class="text-white/80 font-medium">Ghế Trống (75k)</span>
+          <span class="text-white/80 font-medium">Ghế Trống (<%= (pStd/1000) %>k)</span>
         </div>
         <div class="flex items-center gap-2">
           <div class="w-6 h-6 rounded bg-[#BA2D27] text-white flex items-center justify-center font-bold text-[10px]">✓</div>
@@ -329,11 +334,11 @@
         </div>
         <div class="flex items-center gap-2">
           <div class="w-6 h-6 rounded bg-white border-b-2 border-b-[#D97706]"></div>
-          <span class="text-[#D97706] font-bold">Ghế VIP (95k)</span>
+          <span class="text-[#D97706] font-bold">Ghế VIP (<%= (pVIP/1000) %>k)</span>
         </div>
         <div class="flex items-center gap-2">
           <div class="w-10 h-6 rounded bg-white border border-[#CBD5E1] text-[9px] font-bold text-center leading-6 text-[#121316]">SWEET</div>
-          <span class="text-white/80 font-medium">Ghế Đôi (170k)</span>
+          <span class="text-white/80 font-medium">Ghế Đôi (<%= (pCouple/1000) %>k)</span>
         </div>
         <div class="flex items-center gap-2">
           <div class="w-6 h-6 rounded bg-[#64748B] opacity-60 text-white flex items-center justify-center text-[10px]">✕</div>

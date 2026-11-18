@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
     gioiTinh: { type: String, enum: ['Nam', 'Nữ', 'Khác', 'Nu', 'Khac'] },
     vaiTro: { type: String, default: 'user' }, // 'user' hoặc 'admin'
     diemTichLuy: { type: Number, default: 0 },
+    diemDaDung: { type: Number, default: 0 }, // Tổng điểm thưởng người dùng đã đổi lấy voucher
     hangHoiVien: { type: String, default: 'Dong', enum: ['Dong', 'Bac', 'Vang', 'KimCuong'] },
     favoriteGenres: [{ type: String }],
     lastBirthdayGiftYear: { type: Number }, // Năm gần nhất đã nhận quà sinh nhật
