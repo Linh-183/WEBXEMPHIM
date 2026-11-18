@@ -741,7 +741,13 @@
   });
 
   // Run on ready to sync active card
-  document.addEventListener('DOMContentLoaded', updatePaymentMethodCards);
+  document.addEventListener('DOMContentLoaded', () => {
+    updatePaymentMethodCards();
+    const autoVoucher = '<%= (typeof preVoucher !== "undefined" && preVoucher) ? preVoucher : "" %>';
+    if (autoVoucher) {
+      fillVoucher(autoVoucher);
+    }
+  });
   updatePaymentMethodCards();
 </script>
 

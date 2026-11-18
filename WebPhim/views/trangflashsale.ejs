@@ -53,14 +53,20 @@
                 <span>✓ Áp dụng tại: <strong class="text-[#121316]"><%= sale.cinema || '3 cụm rạp Quy Nhơn' %></strong></span>
               </div>
 
-              <div class="pt-3 flex items-center gap-4">
+              <div class="pt-3 flex flex-wrap items-center gap-3">
+                <button type="button" 
+                        onclick="quickBuyFlashSale('<%= sale._id %>', '<%= sale.voucherCode %>', '<%= (sale.movie && sale.movie._id) ? sale.movie._id : '' %>')" 
+                        class="btn-editorial-primary text-xs !py-3 !px-6 font-bold !bg-[#BA2D27] text-white flex items-center gap-2 shadow-md hover:!bg-[#9B241F]">
+                  <span>⚡</span>
+                  <span>THÊM VÀO GIỎ & MUA VÉ NHANH →</span>
+                </button>
                 <button type="button" 
                         onclick="claimFlashVoucher('<%= sale._id %>', '<%= sale.voucherCode %>')" 
-                        class="btn-editorial-primary text-xs !py-3 !px-8 font-bold">
-                  NHẬN MÃ <%= sale.voucherCode %> (<%= (sale.salePrice / 1000) %>K) VÀO VÍ →
+                        class="btn-editorial-secondary text-xs !py-3 !px-5 font-['JetBrains_Mono'] font-bold">
+                  Lưu Mã (<%= (sale.salePrice / 1000) %>K) Vào Ví
                 </button>
-                <a href="/phim" class="btn-editorial-secondary text-xs !py-3 !px-5 font-['JetBrains_Mono']">
-                  Xem Lịch Chiếu
+                <a href="/phim" class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B] hover:text-[#121316] underline ml-2">
+                  Xem Lịch Chiếu Phim
                 </a>
               </div>
             </div>
@@ -150,6 +156,36 @@
 </main>
 
 <script>
+  async function quickBuyFlashSale(saleId, voucherCode, movieId) {
+    try {
+      // 1. Tự động lưu mã voucher vào ví người dùng
+      await fetch('/api/nhan-flash-voucher', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ saleId })
+      });
+      
+      if (window.cinegoToast) {
+        window.cinegoToast.success(`Đã thêm mã Flash Sale ${voucherCode} vào giỏ! Đang chuyển đến chọn ghế...`);
+      }
+      
+      // 2. Chuyển hướng trực tiếp tới trang đặt vé có pre-fill voucher
+      setTimeout(() => {
+        if (movieId) {
+          window.location.href = `/dat-ve/${movieId}?flashVoucher=${voucherCode}`;
+        } else {
+          window.location.href = `/phim?flashVoucher=${voucherCode}`;
+        }
+      }, 500);
+    } catch (e) {
+      if (movieId) {
+        window.location.href = `/dat-ve/${movieId}?flashVoucher=${voucherCode}`;
+      } else {
+        window.location.href = `/phim?flashVoucher=${voucherCode}`;
+      }
+    }
+  }
+
   function claimFlashVoucher(saleId, code) {
     fetch('/api/nhan-flash-voucher', {
       method: 'POST',

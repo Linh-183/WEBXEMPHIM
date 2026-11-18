@@ -135,40 +135,59 @@
             <% } %>
 
             <div class="text-[10px] text-[#7A7E8B] pt-2 border-t border-[#E5E0D5]">
-              Quy đổi: <strong>1.000đ</strong> chi tiêu = <strong>1 điểm</strong>. Đổi ngay voucher 50K hoặc 100K khi đủ điểm!
+              Quy đổi: <strong>1.000đ</strong> chi tiêu = <strong>1 điểm</strong>. Tích lũy đủ từ 500 điểm để đổi voucher ưu đãi!
             </div>
           </div>
 
-          <!-- Points Redemption Options -->
+          <!-- Points Redemption Options (Chỉ mở khi có tối thiểu 500 điểm thưởng) -->
+          <% const userPts = (user && typeof user.diemTichLuy === 'number') ? user.diemTichLuy : 0; %>
           <div class="pt-4 space-y-2">
             <span class="block text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider font-['JetBrains_Mono']">
               ĐỔI ĐIỂM NHẬN VOUCHER ƯU ĐÃI:
             </span>
-            <div class="grid grid-cols-1 gap-2.5">
-              <div class="p-3 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] flex items-center justify-between transition-all">
-                <div>
-                  <div class="font-bold text-xs text-[#121316]">🎟 Voucher Giảm 50.000đ</div>
-                  <div class="text-[10px] text-[#7A7E8B] font-['JetBrains_Mono'] mt-0.5">Chi phí: <strong class="text-[#BA2D27]">100 điểm thưởng</strong></div>
-                </div>
-                <button type="button" 
-                        onclick="redeemVoucher('50k', 100)" 
-                        class="btn-editorial-primary text-xs !py-1.5 !px-3 font-['JetBrains_Mono']">
-                  Đổi 50K
-                </button>
-              </div>
 
-              <div class="p-3 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] flex items-center justify-between transition-all">
-                <div>
-                  <div class="font-bold text-xs text-[#121316]">🎟 Voucher Giảm 100.000đ</div>
-                  <div class="text-[10px] text-[#7A7E8B] font-['JetBrains_Mono'] mt-0.5">Chi phí: <strong class="text-[#BA2D27]">200 điểm thưởng</strong></div>
+            <% if (userPts >= 500) { %>
+              <div class="grid grid-cols-1 gap-2.5">
+                <div class="p-3 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] flex items-center justify-between transition-all">
+                  <div>
+                    <div class="font-bold text-xs text-[#121316]">🎟 Voucher Giảm 50.000đ</div>
+                    <div class="text-[10px] text-[#7A7E8B] font-['JetBrains_Mono'] mt-0.5">Chi phí: <strong class="text-[#BA2D27]">500 điểm thưởng</strong></div>
+                  </div>
+                  <button type="button" 
+                          onclick="redeemVoucher('50k', 500)" 
+                          class="btn-editorial-primary text-xs !py-1.5 !px-3 font-['JetBrains_Mono'] font-bold">
+                    Đổi 50K
+                  </button>
                 </div>
-                <button type="button" 
-                        onclick="redeemVoucher('100k', 200)" 
-                        class="btn-editorial-secondary text-xs !py-1.5 !px-3 font-['JetBrains_Mono'] hover:!bg-[#BA2D27] hover:!text-white hover:!border-[#BA2D27]">
-                  Đổi 100K
-                </button>
+
+                <% if (userPts >= 1000) { %>
+                  <div class="p-3 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] flex items-center justify-between transition-all">
+                    <div>
+                      <div class="font-bold text-xs text-[#121316]">🎟 Voucher Giảm 100.000đ</div>
+                      <div class="text-[10px] text-[#7A7E8B] font-['JetBrains_Mono'] mt-0.5">Chi phí: <strong class="text-[#BA2D27]">1.000 điểm thưởng</strong></div>
+                    </div>
+                    <button type="button" 
+                            onclick="redeemVoucher('100k', 1000)" 
+                            class="btn-editorial-primary text-xs !py-1.5 !px-3 font-['JetBrains_Mono'] font-bold">
+                      Đổi 100K
+                    </button>
+                  </div>
+                <% } else { %>
+                  <div class="p-3 bg-[#FAF8F5] border border-[#E5E0D5] opacity-60 flex items-center justify-between">
+                    <div>
+                      <div class="font-bold text-xs text-[#121316]">🎟 Voucher Giảm 100.000đ</div>
+                      <div class="text-[10px] text-[#7A7E8B] font-['JetBrains_Mono'] mt-0.5">Chi phí: <strong>1.000 điểm thưởng</strong> (Cần thêm <%= 1000 - userPts %> điểm)</div>
+                    </div>
+                    <span class="text-[11px] font-['JetBrains_Mono'] text-[#A6AAB6] italic font-semibold">Chưa đủ điểm</span>
+                  </div>
+                <% } %>
               </div>
-            </div>
+            <% } else { %>
+              <div class="p-3.5 bg-[#FAF8F5] border border-[#E5E0D5] text-xs font-['JetBrains_Mono'] text-[#7A7E8B] space-y-1">
+                <p>Tích lũy tối thiểu <strong class="text-[#121316]">500 điểm thưởng</strong> để mở khóa đổi voucher giảm giá xem phim.</p>
+                <p class="text-[11px] text-[#A6AAB6]">Điểm hiện tại của bạn: <strong class="text-[#BA2D27]"><%= userPts %> điểm</strong>. (Tích điểm tự động mỗi khi mua vé & bắp nước tại CineGo).</p>
+              </div>
+            <% } %>
           </div>
         </div>
 

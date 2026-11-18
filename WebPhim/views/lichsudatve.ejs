@@ -118,7 +118,12 @@
               </div>
 
               <div class="flex items-center gap-2">
-                <% if (!isConcessionOnly) { %>
+                <% if (isConcessionOnly) { %>
+                  <a href="/ve/<%= ticket._id %>" class="btn-editorial-secondary text-xs !py-2.5 !px-3 font-semibold text-[#A6853B] hover:text-[#BA2D27] flex items-center gap-1" title="Xem thẻ nhận bắp nước">
+                    <span>🍿</span>
+                    <span>Thẻ Bắp Nước →</span>
+                  </a>
+                <% } else { %>
                   <a href="/ve/<%= ticket._id %>" class="btn-editorial-secondary text-xs !py-2.5 !px-3 font-semibold" title="Xem thẻ vé điện tử chuẩn">
                     Thẻ Vé →
                   </a>

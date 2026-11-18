@@ -713,53 +713,6 @@ router.post('/so-do-ghe', async (req, res) => {
 // 5. Quản lý Combo Bắp Nước F&B (CRUD MongoDB)
 router.get('/combo', async (req, res) => {
     try {
-        let count = await FoodCombo.countDocuments();
-        if (count === 0) {
-            // Tự động gieo dữ liệu ban đầu nếu collection trống
-            await FoodCombo.insertMany([
-                {
-                    name: 'Combo Cine Solo',
-                    category: 'combo',
-                    price: 75000,
-                    originalPrice: 90000,
-                    description: '1 Bắp ngọt 64oz thơm giòn + 1 Nước ngọt có ga lớn 32oz.',
-                    imageUrl: 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?auto=format&fit=crop&w=400&q=80',
-                    badge: 'BÁN CHẠY',
-                    flavors: ['Bơ truyền thống', 'Ngọt ngào', 'Phô mai (+10k)', 'Caramel (+10k)']
-                },
-                {
-                    name: 'Combo Cine Couple',
-                    category: 'combo',
-                    price: 115000,
-                    originalPrice: 150000,
-                    description: '1 Bắp lớn vị phô mai/caramel + 2 Nước ngọt mát lạnh.',
-                    imageUrl: 'https://images.unsplash.com/photo-1578849278619-e73505e9610f?auto=format&fit=crop&w=400&q=80',
-                    badge: 'TIẾT KIỆM 30%',
-                    flavors: ['Lắc Phô Mai', 'Phủ Caramel', 'Bơ Thơm']
-                },
-                {
-                    name: 'Combo Cine Party',
-                    category: 'combo',
-                    price: 195000,
-                    originalPrice: 240000,
-                    description: '2 Bắp vị tùy chọn + 4 Nước ngọt + 1 Khoai tây chiên lắc phô mai.',
-                    imageUrl: 'https://images.unsplash.com/photo-1505686994434-e3cc5abf1330?auto=format&fit=crop&w=400&q=80',
-                    badge: 'NHÓM BẠN',
-                    flavors: ['Tùy chọn đa vị']
-                },
-                {
-                    name: 'Snack Phô Mai Que',
-                    category: 'snack',
-                    price: 45000,
-                    originalPrice: 55000,
-                    description: '2 Xúc xích nướng tiêu đen phô mai que nóng giòn rụm.',
-                    imageUrl: 'https://images.unsplash.com/photo-1627042633706-01a5e040c837?auto=format&fit=crop&w=400&q=80',
-                    badge: 'ĂN NÓNG',
-                    flavors: ['Tiêu đen', 'Phô mai']
-                }
-            ]);
-        }
-
         const combos = await FoodCombo.find().sort({ createdAt: -1 }).lean();
         res.render('admin-quanlycombo', { user: req.session.user, combos });
     } catch (error) {

@@ -30,16 +30,19 @@
       </div>
 
       <!-- Film Title & Format -->
+      <% 
+        const currentTicket = (typeof ticket !== 'undefined' && ticket) ? ticket : null;
+        const isFoodTicket = (!currentTicket || !currentTicket.movie); 
+      %>
       <div class="space-y-1">
-        <span class="px-2 py-0.5 bg-[#BA2D27] text-white text-[10px] font-['JetBrains_Mono'] font-bold inline-block">
-          <%= (typeof ticket !== 'undefined' && ticket && ticket.movie && ticket.movie.ageRating) ? ticket.movie.ageRating : 'P' %>
+        <span class="px-2 py-0.5 <%= isFoodTicket ? 'bg-[#A6853B]' : 'bg-[#BA2D27]' %> text-white text-[10px] font-['JetBrains_Mono'] font-bold inline-block">
+          <%= isFoodTicket ? 'F&B GOURMET PASS' : ((currentTicket && currentTicket.movie && currentTicket.movie.ageRating) ? currentTicket.movie.ageRating : 'P') %>
         </span>
-        <% const currentTicket = (typeof ticket !== 'undefined' && ticket) ? ticket : null; %>
         <h2 class="font-serif text-3xl sm:text-4xl font-bold text-[#121316] leading-tight" id="ticketMovieTitle">
-          <%= (currentTicket && currentTicket.movie && currentTicket.movie.title) ? currentTicket.movie.title : (currentTicket && currentTicket.comboDetails ? 'CineGo Concessions Pass' : 'Vé Xem Phim CineGo') %>
+          <%= isFoodTicket ? (currentTicket && currentTicket.comboDetails ? currentTicket.comboDetails : 'Phiếu Bắp Nước Fast-Track') : (currentTicket && currentTicket.movie ? currentTicket.movie.title : 'Vé Xem Phim CineGo') %>
         </h2>
         <span class="font-['JetBrains_Mono'] text-xs text-[#7A7E8B] block mt-1">
-          Định dạng: 2D Laser Digital • Âm thanh vòm Dolby Surround
+          <%= isFoodTicket ? 'Dịch vụ ẩm thực Fast-Track • Nhận ngay tại quầy Concessions không cần xếp hàng' : 'Định dạng: 2D Laser Digital • Âm thanh vòm Dolby Surround' %>
         </span>
       </div>
 
@@ -52,19 +55,23 @@
           </span>
         </div>
         <div>
-          <span class="block text-[9px] text-[#7A7E8B] uppercase">Phòng chiếu</span>
-          <span class="text-xs font-bold text-[#121316] mt-0.5 block">Phòng Standard</span>
+          <span class="block text-[9px] text-[#7A7E8B] uppercase"><%= isFoodTicket ? 'Cổng nhận' : 'Phòng chiếu' %></span>
+          <span class="text-xs font-bold text-[#121316] mt-0.5 block"><%= isFoodTicket ? 'Quầy Fast-Track' : 'Phòng Standard' %></span>
         </div>
         <div>
-          <span class="block text-[9px] text-[#7A7E8B] uppercase">Suất chiếu</span>
+          <span class="block text-[9px] text-[#7A7E8B] uppercase"><%= isFoodTicket ? 'Ngày nhận' : 'Suất chiếu' %></span>
           <span class="text-xs font-bold text-[#121316] mt-0.5 block" id="ticketTimeDisplay">
-            <%= (typeof ticket !== 'undefined' && ticket && ticket.showTime) ? ticket.showTime : '--:--' %><% if (typeof ticket !== 'undefined' && ticket && ticket.showDate) { %><br><span class="text-[10px] text-[#7A7E8B] font-normal"><%= ticket.showDate %></span><% } %>
+            <% if (isFoodTicket) { %>
+              <%= (typeof ticket !== 'undefined' && ticket && ticket.showDate) ? ticket.showDate : 'Hôm nay' %>
+            <% } else { %>
+              <%= (typeof ticket !== 'undefined' && ticket && ticket.showTime) ? ticket.showTime : '--:--' %><% if (typeof ticket !== 'undefined' && ticket && ticket.showDate) { %><br><span class="text-[10px] text-[#7A7E8B] font-normal"><%= ticket.showDate %></span><% } %>
+            <% } %>
           </span>
         </div>
         <div>
-          <span class="block text-[9px] text-[#7A7E8B] uppercase">Ghế ngồi</span>
+          <span class="block text-[9px] text-[#7A7E8B] uppercase"><%= isFoodTicket ? 'Trạng thái' : 'Ghế ngồi' %></span>
           <span class="text-xs font-bold text-[#BA2D27] mt-0.5 block" id="ticketSeatsDisplay">
-            <%= (typeof ticket !== 'undefined' && ticket && ticket.seats) ? (Array.isArray(ticket.seats) ? ticket.seats.join(', ') : ticket.seats) : '--' %>
+            <%= isFoodTicket ? '✓ Sẵn sàng nhận' : ((typeof ticket !== 'undefined' && ticket && ticket.seats) ? (Array.isArray(ticket.seats) ? ticket.seats.join(', ') : ticket.seats) : '--') %>
           </span>
         </div>
       </div>

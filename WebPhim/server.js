@@ -1,4 +1,5 @@
 // File: server.js
+process.env.TZ = 'Asia/Ho_Chi_Minh'; // Cố định múi giờ Việt Nam (UTC+7) trên mọi nền tảng server/cloud
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
@@ -79,6 +80,8 @@ const connectDB = async () => {
         });
         isConnected = true;
         console.log('✅ KẾT NỐI MONGODB THÀNH CÔNG!');
+        // Tự động phân loại toàn bộ voucher đổi bằng điểm thưởng cá nhân (không xuất hiện trên thanh toán chung)
+        Voucher.updateMany({ code: { $regex: /^(CINEGO50K-|CINEGO100K-)/i } }, { $set: { isReward: true } }).catch(() => {});
     } catch (err) {
         console.error('❌ LỖI KẾT NỐI MONGODB! Đang tự động kết nối lại sau 5 giây...', err.message);
         setTimeout(connectDB, 5000);

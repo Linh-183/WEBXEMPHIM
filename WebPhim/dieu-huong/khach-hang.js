@@ -236,7 +236,7 @@ router.get('/thanh-toan', checkLogin, (req, res) => {
 
 router.post('/thanh-toan', checkLogin, async (req, res) => {
     try {
-        const { movieId, cinema, showDate, showTime, seats, total, comboDetails, comboTotal } = req.body;
+        const { movieId, cinema, showDate, showTime, seats, total, comboDetails, comboTotal, preVoucher } = req.body;
         const phim = await Movie.findById(movieId);
         const selectedCinema = cinema || 'CGV Kim Cúc Plaza';
         const seatList = seats ? seats.split(',').map(s => s.trim()).filter(Boolean) : [];
@@ -318,9 +318,14 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
                 savedVouchers = currentUserWithVouchers.vouchers.filter(v => v && v.code && !usedList.includes(v.code.toUpperCase()));
             }
         }
-        const vouchers = await Voucher.find({ $or: [{ expiryDate: { $gte: new Date() } }, { expiryDate: null }] });
+        // Chỉ hiển thị voucher công khai do rạp phát hành cho phim, TUYỆT ĐỐI KHÔNG hiển thị voucher đổi điểm thưởng cá nhân
+        const vouchers = await Voucher.find({ 
+            isReward: { $ne: true },
+            applicableTo: { $in: ['all', 'movie'] },
+            $or: [{ expiryDate: { $gte: new Date() } }, { expiryDate: null }] 
+        }).lean();
         const availableCombos = await FoodCombo.find({ isActive: true }).sort({ category: 1, price: 1 }).lean();
-        res.render('trangthanhtoan', { phim, cinema: selectedCinema, showDate, showTime, seats: seatList, total: Number(total), comboDetails, comboTotal: Number(comboTotal), vouchers, savedVouchers, availableCombos });
+        res.render('trangthanhtoan', { phim, cinema: selectedCinema, showDate, showTime, seats: seatList, total: Number(total), comboDetails, comboTotal: Number(comboTotal), vouchers, savedVouchers, availableCombos, preVoucher: preVoucher || '' });
     } catch(error) { 
         console.error("Lỗi thanh toán:", error);
         res.status(500).send("Lỗi thanh toán: " + error.message); 
@@ -949,26 +954,28 @@ router.post('/api/dat-bap-nuoc', async (req, res) => {
             }
         }
 
-        if (req.session.user && req.session.user._id) {
-            await new Ticket({
-                user: req.session.user._id,
-                movie: null,
-                cinema: currentCinema,
-                showDate: new Date().toISOString().split('T')[0],
-                showTime: 'Fast-Track',
-                seats: ['Quầy F&B'],
-                comboDetails: comboDetails || 'Combo Bắp Nước Online',
-                comboTotal: origPrice,
-                originalPrice: origPrice,
-                discountAmount: discount,
-                voucherCode: voucherCode || '',
-                totalPrice: total,
-                paymentMethod: 'vietqr'
-            }).save();
+        const userId = (req.session.user && req.session.user._id) ? req.session.user._id : null;
 
+        const savedTicket = await new Ticket({
+            user: userId,
+            movie: null,
+            cinema: currentCinema,
+            showDate: new Date().toISOString().split('T')[0],
+            showTime: 'Fast-Track',
+            seats: ['Quầy F&B'],
+            comboDetails: comboDetails || 'Combo Bắp Nước Online',
+            comboTotal: origPrice,
+            originalPrice: origPrice,
+            discountAmount: discount,
+            voucherCode: voucherCode || '',
+            totalPrice: total,
+            paymentMethod: 'vietqr'
+        }).save();
+
+        if (userId) {
             // Nếu có áp dụng mã voucher, ghi nhận voucher đã dùng để không dùng lại
             if (voucherCode) {
-                await User.findByIdAndUpdate(req.session.user._id, {
+                await User.findByIdAndUpdate(userId, {
                     $addToSet: { usedVouchers: voucherCode.trim().toUpperCase() }
                 });
             }
@@ -976,7 +983,7 @@ router.post('/api/dat-bap-nuoc', async (req, res) => {
             // Tích điểm cho đơn bắp nước
             const earnedPoints = Math.floor(total / 1000);
             if (earnedPoints > 0) {
-                const userInDb = await User.findById(req.session.user._id);
+                const userInDb = await User.findById(userId);
                 if (userInDb) {
                     userInDb.diemTichLuy = (userInDb.diemTichLuy || 0) + earnedPoints;
                     if (userInDb.diemTichLuy >= 1000) userInDb.hangHoiVien = 'KimCuong';
@@ -989,7 +996,11 @@ router.post('/api/dat-bap-nuoc', async (req, res) => {
             }
         }
 
-        res.json({ success: true, message: 'Đơn bắp nước đã được xác nhận thành công!' });
+        res.json({ 
+            success: true, 
+            ticketId: savedTicket._id, 
+            message: 'Đơn bắp nước đã được xác nhận thành công! Vé nhận đồ ăn đã được tạo.' 
+        });
     } catch (error) {
         console.error("Lỗi đặt bắp nước:", error);
         res.status(500).json({ success: false, error: error.message });
@@ -1197,13 +1208,13 @@ router.post('/api/doi-diem-voucher', checkLogin, async (req, res) => {
             return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản!' });
         }
 
-        let cost = 100;
+        let cost = 500; // Tăng lên 500 điểm cho voucher 50.000đ
         let discountVal = 50000;
         let voucherTitle = 'Voucher 50.000đ Đổi Bằng Điểm Thưởng';
         let baseCode = 'CINEGO50K';
 
         if (rewardType === '100k') {
-            cost = 200;
+            cost = 1000; // Tăng lên 1.000 điểm cho voucher 100.000đ
             discountVal = 100000;
             voucherTitle = 'Voucher 100.000đ Đổi Bằng Điểm Thưởng';
             baseCode = 'CINEGO100K';

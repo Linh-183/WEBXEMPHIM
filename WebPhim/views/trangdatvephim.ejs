@@ -97,7 +97,9 @@
           <h2 class="font-serif text-lg font-bold text-[#121316]">Chọn Thời Gian (Ngày Chiếu & Suất Chiếu)</h2>
         </div>
         <% 
-          const todayBooking = new Date();
+          // Chuẩn hóa thời gian Việt Nam (Asia/Ho_Chi_Minh - UTC+7)
+          const nowVN = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+          const todayBooking = nowVN;
           const yearNow = todayBooking.getFullYear();
           const monthNow = String(todayBooking.getMonth() + 1).padStart(2, '0');
           const dayNow = String(todayBooking.getDate()).padStart(2, '0');
@@ -126,7 +128,8 @@
           }
 
           const isShowtimePastServer = (tStr, dIso) => {
-            if (dIso !== initDateIso) return false;
+            if (dIso < initDateIso) return true;
+            if (dIso > initDateIso) return false;
             const [h, m] = (tStr || '').split(':').map(Number);
             if (isNaN(h) || isNaN(m)) return false;
             return (h < currentHNow || (h === currentHNow && m <= currentMNow));
@@ -449,6 +452,7 @@
     <input type="hidden" name="total" id="input_total" value="0" />
     <input type="hidden" name="comboDetails" id="input_comboDetails" value="" />
     <input type="hidden" name="comboTotal" id="input_comboTotal" value="0" />
+    <input type="hidden" name="preVoucher" id="input_preVoucher" value="" />
 
     <div class="max-w-[1440px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 font-['JetBrains_Mono']">
       
@@ -543,7 +547,7 @@
     return allTimes;
   }
 
-  // Kiểm tra suất chiếu đã qua giờ chiếu chưa (nếu ngày chọn là hôm nay)
+  // Kiểm tra suất chiếu đã qua giờ chiếu chưa
   function isPastShowtime(timeStr, dateIso) {
     if (!timeStr || !dateIso) return false;
     const now = new Date();
@@ -551,7 +555,9 @@
     const m = String(now.getMonth() + 1).padStart(2, '0');
     const d = String(now.getDate()).padStart(2, '0');
     const todayIso = `${y}-${m}-${d}`;
-    if (dateIso !== todayIso) return false;
+
+    if (dateIso < todayIso) return true; // Ngày hôm qua hoặc các ngày quá khứ luôn là ĐÃ QUA
+    if (dateIso > todayIso) return false; // Ngày mai hoặc tương lai chưa qua
 
     const parts = timeStr.split(':');
     if (parts.length < 2) return false;
@@ -878,6 +884,12 @@
     const preCinema = urlParams.get('cinema');
     const preDate = urlParams.get('date');
     const preTime = urlParams.get('time');
+    const preVoucher = urlParams.get('voucher') || urlParams.get('flashVoucher');
+    if (preVoucher) {
+      const pvEl = document.getElementById('input_preVoucher');
+      if (pvEl) pvEl.value = preVoucher;
+      if (window.cinegoToast) window.cinegoToast.success(`Mã ưu đãi ${preVoucher} đã được áp dụng vào đơn đặt vé!`);
+    }
 
     if (urlParams.get('release') === 'true') {
       if (window.cinegoToast) window.cinegoToast.info('Bạn có thể chọn lại suất chiếu và ghế mới.');
