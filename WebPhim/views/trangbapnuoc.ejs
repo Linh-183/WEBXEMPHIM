@@ -165,8 +165,10 @@
                   </div>
                   <button type="button" 
                           onclick="addToConcessionCart('<%= itemId %>', '<%= item.name %>', <%= item.price %>, document.getElementById('flavor_<%= itemId %>').value)"
-                          class="btn-editorial-primary text-xs !py-2 !px-4">
-                    + Thêm Vào Đơn
+                          class="btn-editorial-primary text-xs !py-2 !px-3.5 flex items-center gap-1.5 shadow-xs"
+                          title="Thêm món này vào giỏ hàng">
+                    <span class="material-symbols-outlined text-[15px]">shopping_cart</span>
+                    <span>Thêm Vào Giỏ</span>
                   </button>
                 </div>
               </div>
@@ -278,14 +280,25 @@
             </div>
           </div>
 
-          <!-- Submit CTA -->
-          <button type="button" 
-                  id="btnSubmitConcessionOrder" 
-                  onclick="processConcessionCheckout()" 
-                  disabled
-                  class="btn-editorial-primary w-full py-3.5 text-xs font-bold text-center block !bg-[#BA2D27] hover:!bg-[#8E1F1A] disabled:opacity-40 disabled:cursor-not-allowed">
-            THANH TOÁN ĐƠN BẮP NƯỚC →
-          </button>
+          <!-- Submit CTA & Save to Header Cart -->
+          <div class="space-y-2">
+            <button type="button" 
+                    id="btnSaveConcessionToCart" 
+                    onclick="openHeaderCartWithConcessions()" 
+                    disabled
+                    class="btn-editorial-secondary w-full py-2.5 text-xs font-bold text-center flex items-center justify-center gap-2 hover:border-[#121316] disabled:opacity-40 disabled:cursor-not-allowed">
+              <span class="material-symbols-outlined text-[17px]">shopping_cart</span>
+              <span>Lưu Vào Giỏ Hàng Chung 🛒</span>
+            </button>
+
+            <button type="button" 
+                    id="btnSubmitConcessionOrder" 
+                    onclick="processConcessionCheckout()" 
+                    disabled
+                    class="btn-editorial-primary w-full py-3.5 text-xs font-bold text-center block !bg-[#BA2D27] hover:!bg-[#8E1F1A] disabled:opacity-40 disabled:cursor-not-allowed">
+              THANH TOÁN ĐƠN BẮP NƯỚC →
+            </button>
+          </div>
 
           <p class="text-[10px] text-center font-['JetBrains_Mono'] text-[#7A7E8B]">
             Mã QR nhận bắp nước sẽ hiển thị tức thì sau khi bấm xác nhận.
@@ -443,8 +456,11 @@
       concessionCart.push({ id, name, price, flavor, qty: 1 });
     }
     renderCart();
+    if (typeof window.syncConcessionsToHeaderCart === 'function') {
+      window.syncConcessionsToHeaderCart(concessionCart);
+    }
     if (window.cinegoToast) {
-      window.cinegoToast.success('Đã thêm "' + name + '" vào giỏ bắp nước!');
+      window.cinegoToast.success('Đã thêm "' + name + '" vào giỏ hàng!');
     }
   }
 
@@ -454,6 +470,9 @@
       concessionCart.splice(index, 1);
     }
     renderCart();
+    if (typeof window.syncConcessionsToHeaderCart === 'function') {
+      window.syncConcessionsToHeaderCart(concessionCart);
+    }
   }
 
   async function applyConcessionVoucher() {
@@ -514,26 +533,45 @@
     if (window.cinegoToast) window.cinegoToast.info('Đã gỡ mã voucher khỏi đơn.');
   }
 
+  function openHeaderCartWithConcessions() {
+    if (concessionCart.length === 0) {
+      if (window.cinegoToast) window.cinegoToast.warning('Vui lòng thêm bắp nước vào giỏ trước!');
+      else alert('Vui lòng thêm bắp nước vào giỏ trước!');
+      return;
+    }
+    if (typeof window.syncConcessionsToHeaderCart === 'function') {
+      window.syncConcessionsToHeaderCart(concessionCart);
+    }
+    if (typeof window.openHeaderCartDrawer === 'function') {
+      window.openHeaderCartDrawer();
+    }
+    if (window.cinegoToast) {
+      window.cinegoToast.success('Đã lưu toàn bộ bắp nước vào Giỏ Hàng chung!');
+    }
+  }
+
   function renderCart() {
     const listEl = document.getElementById('cartItemsList');
     const countBadge = document.getElementById('cartCountBadge');
     const subtotalEl = document.getElementById('cartSubtotal');
     const grandTotalEl = document.getElementById('cartGrandTotal');
     const btnSubmit = document.getElementById('btnSubmitConcessionOrder');
+    const btnSave = document.getElementById('btnSaveConcessionToCart');
     const discountRow = document.getElementById('voucherDiscountRow');
     const discountValEl = document.getElementById('cartDiscountVal');
 
     if (concessionCart.length === 0) {
       listEl.innerHTML = `
         <div id="emptyCartMessage" class="py-10 text-center text-xs font-['JetBrains_Mono'] text-[#A6AAB6]">
-          Chưa có món nào được chọn.<br>Vui lòng bấm "+ Thêm Vào Đơn" từ thực đơn bên trái.
+          Chưa có món nào được chọn.<br>Vui lòng bấm "+ Thêm Vào Giỏ" từ thực đơn bên trái.
         </div>
       `;
       countBadge.innerText = '0';
       subtotalEl.innerText = '0 đ';
       grandTotalEl.innerText = '0 đ';
       if (discountRow) discountRow.classList.add('hidden');
-      btnSubmit.disabled = true;
+      if (btnSubmit) btnSubmit.disabled = true;
+      if (btnSave) btnSave.disabled = true;
       return;
     }
 
@@ -588,7 +626,8 @@
     countBadge.innerText = count;
     subtotalEl.innerText = subtotal.toLocaleString('vi-VN') + ' đ';
     grandTotalEl.innerText = grandTotal.toLocaleString('vi-VN') + ' đ';
-    btnSubmit.disabled = false;
+    if (btnSubmit) btnSubmit.disabled = false;
+    if (btnSave) btnSave.disabled = false;
 
     if (typeof window.syncConcessionsToHeaderCart === 'function') {
       window.syncConcessionsToHeaderCart(concessionCart);
@@ -721,7 +760,17 @@
     });
   });
 
-  document.addEventListener('DOMContentLoaded', updateConcessionPaymentCards);
+  document.addEventListener('DOMContentLoaded', () => {
+    // Khôi phục các món bắp nước từ giỏ hàng chung nếu có
+    if (typeof window.getCinegoCart === 'function') {
+      const existingCart = window.getCinegoCart();
+      if (existingCart && Array.isArray(existingCart.concessions) && existingCart.concessions.length > 0) {
+        concessionCart = existingCart.concessions;
+        renderCart();
+      }
+    }
+    updateConcessionPaymentCards();
+  });
   updateConcessionPaymentCards();
 </script>
 

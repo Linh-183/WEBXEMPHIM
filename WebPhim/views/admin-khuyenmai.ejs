@@ -1,7 +1,11 @@
 <%- include('partials/admin-header') %>
 
 <%
+  const currentTab = (typeof tab !== 'undefined' && tab) ? tab : 'voucher';
   const allVouchers = (typeof vouchers !== 'undefined' && Array.isArray(vouchers)) ? vouchers : [];
+  const allFlashSales = (typeof flashSales !== 'undefined' && Array.isArray(flashSales)) ? flashSales : [];
+  const allMovies = (typeof movies !== 'undefined' && Array.isArray(movies)) ? movies : [];
+  const now = new Date();
 %>
 
 <main class="p-6 sm:p-10 space-y-8 max-w-7xl">
@@ -10,142 +14,515 @@
   <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E5E0D5]">
     <div>
       <span class="archival-index">MARKETING & VOUCHER</span>
-      <h1 class="editorial-headline text-3xl font-bold mt-1">Quản Lý Voucher & Mã Khuyến Mãi</h1>
-      <p class="text-xs text-[#7A7E8B] mt-0.5 font-light">Tạo mã ưu đãi, kiểm soát tỷ lệ giảm giá và quản lý danh mục voucher của hệ thống.</p>
+      <h1 class="editorial-headline text-3xl font-bold mt-1">Quản Lý Khuyến Mãi & Flash Sale</h1>
+      <p class="text-xs text-[#7A7E8B] mt-0.5 font-light">Tạo mã ưu đãi, thiết lập voucher theo khung giờ flash sale và quản lý các đợt săn vé đồng giá của hệ thống.</p>
     </div>
 
-    <div class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B]">
-      TỔNG SỐ: <strong class="text-[#BA2D27]"><%= allVouchers.length %> MÃ VOUCHER</strong>
+    <div class="flex items-center gap-3 text-xs font-['JetBrains_Mono']">
+      <span class="px-2.5 py-1 bg-white border border-[#E5E0D5] text-[#121316]">
+        VOUCHER: <strong class="text-[#BA2D27]"><%= allVouchers.length %></strong>
+      </span>
+      <span class="px-2.5 py-1 bg-white border border-[#E5E0D5] text-[#121316]">
+        FLASH SALE: <strong class="text-[#A6853B]"><%= allFlashSales.length %></strong>
+      </span>
+      <a href="/flash-sale" target="_blank" class="px-3 py-1 bg-[#121316] text-white hover:bg-[#BA2D27] font-bold text-[11px] transition-colors flex items-center gap-1">
+        <span>Xem Trang Flash Sale</span>
+        <span class="material-symbols-outlined text-[13px]">open_in_new</span>
+      </a>
     </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 text-xs font-['Plus_Jakarta_Sans']">
-    
-    <!-- LEFT 5 COLS: FORM TẠO VOUCHER MỚI -->
-    <div class="lg:col-span-5 bg-white border border-[#E5E0D5] p-6 space-y-4 shadow-sm">
-      <h2 class="font-bold text-xs text-[#121316] uppercase tracking-wider pb-3 border-b border-[#E5E0D5]">
-        Phát Hành Voucher Mới
-      </h2>
+  <!-- Notification Banner if URL has success / error -->
+  <div id="adminAlertBox" class="hidden text-xs font-['JetBrains_Mono'] p-3.5 border transition-all"></div>
 
-      <form action="/admin/vouchers/add" method="POST" class="space-y-4">
-        <div>
-          <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
-            Mã Voucher (Code) <span class="text-[#BA2D27]">*</span>
-          </label>
-          <input name="code" required placeholder="Nhập mã voucher (Ví dụ: CINEGO50)..." class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] uppercase font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
+  <!-- TAB SWITCHER -->
+  <div class="flex items-center gap-2 border-b border-[#E5E0D5] pb-px">
+    <a href="/admin/khuyen-mai?tab=voucher" class="px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 flex items-center gap-2 <%= currentTab === 'voucher' ? 'border-[#BA2D27] text-[#BA2D27] bg-[#FAF8F5]' : 'border-transparent text-[#7A7E8B] hover:text-[#121316]' %>">
+      <span>🎟️ 1. Quản Lý Voucher (<%= allVouchers.length %>)</span>
+    </a>
+    <a href="/admin/khuyen-mai?tab=flashsale" class="px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 flex items-center gap-2 <%= currentTab === 'flashsale' ? 'border-[#BA2D27] text-[#BA2D27] bg-[#FAF8F5]' : 'border-transparent text-[#7A7E8B] hover:text-[#121316]' %>">
+      <span>⚡ 2. Sự Kiện Săn Vé Flash Sale (<%= allFlashSales.length %>)</span>
+    </a>
+  </div>
+
+  <% if (currentTab === 'voucher') { %>
+    <!-- TAB 1: QUẢN LÝ VOUCHER & VOUCHER KHUNG GIỜ FLASH SALE -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 text-xs font-['Plus_Jakarta_Sans']">
+      
+      <!-- LEFT 5 COLS: FORM TẠO VOUCHER MỚI -->
+      <div class="lg:col-span-5 bg-white border border-[#E5E0D5] p-6 space-y-4 shadow-sm">
+        <div class="flex items-center justify-between pb-3 border-b border-[#E5E0D5]">
+          <h2 class="font-bold text-xs text-[#121316] uppercase tracking-wider">
+            Phát Hành Voucher Mới
+          </h2>
+          <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">TỰ ĐỘNG LƯU</span>
         </div>
 
-        <div>
-          <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
-            Tiêu đề ưu đãi <span class="text-[#BA2D27]">*</span>
-          </label>
-          <input name="title" required placeholder="Nhập tiêu đề ưu đãi..." class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-bold focus:outline-none focus:border-[#121316]" />
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
+        <form action="/admin/vouchers/add" method="POST" class="space-y-4">
           <div>
-            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Loại giảm</label>
-            <select name="discountType" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] font-semibold focus:outline-none focus:border-[#121316]">
-              <option value="percentage">Giảm theo %</option>
-              <option value="fixed">Giảm tiền mặt (K)</option>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
+              Mã Voucher (Code) <span class="text-[#BA2D27]">*</span>
+            </label>
+            <input name="code" required placeholder="Nhập mã voucher (Ví dụ: CINEGO50, FLASH30K)..." class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] uppercase font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
+          </div>
+
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
+              Tiêu đề ưu đãi <span class="text-[#BA2D27]">*</span>
+            </label>
+            <input name="title" required placeholder="Ví dụ: Giảm 50K cho đơn vé từ 150K..." class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-bold focus:outline-none focus:border-[#121316]" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Loại giảm</label>
+              <select name="discountType" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] font-semibold focus:outline-none focus:border-[#121316]">
+                <option value="percentage">Giảm theo %</option>
+                <option value="fixed">Giảm tiền mặt (K)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Mức giảm</label>
+              <input name="discountValue" required placeholder="Ví dụ: 20 hoặc 50" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
+              Phạm vi áp dụng <span class="text-[#BA2D27]">*</span>
+            </label>
+            <select name="applicableTo" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-semibold focus:outline-none focus:border-[#121316]">
+              <option value="all">Tất cả (Cả Vé Phim & Bắp Nước)</option>
+              <option value="movie">🎬 Chỉ áp dụng cho Vé Xem Phim</option>
+              <option value="concession">🍿 Chỉ áp dụng cho Bắp Nước & Combo</option>
             </select>
           </div>
-          <div>
-            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Mức giảm</label>
-            <input name="discountValue" required placeholder="Ví dụ: 20 hoặc 50" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Đơn tối thiểu (K)</label>
+              <input name="minOrderValue" placeholder="Ví dụ: 100" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
+            </div>
+            <div>
+              <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Giảm tối đa (K)</label>
+              <input name="maxDiscountValue" placeholder="Ví dụ: 50" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
+            </div>
           </div>
-        </div>
 
-        <div>
-          <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
-            Phạm vi áp dụng <span class="text-[#BA2D27]">*</span>
-          </label>
-          <select name="applicableTo" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-semibold focus:outline-none focus:border-[#121316]">
-            <option value="all">Tất cả (Cả Vé Phim & Bắp Nước)</option>
-            <option value="movie">🎬 Chỉ áp dụng cho Vé Xem Phim</option>
-            <option value="concession">🍿 Chỉ áp dụng cho Bắp Nước & Combo</option>
-          </select>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Đơn tối thiểu (K)</label>
-            <input name="minOrderValue" placeholder="Ví dụ: 100" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Ngày hết hạn chung</label>
+            <input name="expiryDate" type="date" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] focus:outline-none focus:border-[#121316]" />
           </div>
-          <div>
-            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Giảm tối đa (K)</label>
-            <input name="maxDiscountValue" placeholder="Ví dụ: 50" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
-          </div>
-        </div>
 
-        <div>
-          <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Ngày hết hạn</label>
-          <input name="expiryDate" type="date" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] focus:outline-none focus:border-[#121316]" />
-        </div>
+          <!-- PHẦN CÀI ĐẶT VOUCHER KHUNG GIỜ FLASH SALE -->
+          <div class="p-3.5 bg-[#FAF8F5] border border-[#BA2D27]/30 space-y-3">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" name="isFlashSale" value="true" id="checkFlashSale" onchange="toggleFlashSaleFields()" class="w-4 h-4 text-[#BA2D27] rounded focus:ring-0 cursor-pointer" />
+              <span class="font-['JetBrains_Mono'] text-xs font-bold text-[#BA2D27] uppercase tracking-wider flex items-center gap-1">
+                <span>⚡ Đặt làm Voucher Khung Giờ Flash Sale</span>
+              </span>
+            </label>
+            <p class="text-[10.5px] text-[#7A7E8B] leading-relaxed">
+              Voucher sẽ chỉ mở cho khách hàng lưu trong khung giờ chỉ định và có giới hạn số lượt người được lưu. Trong khung giờ, hệ thống sẽ hiện dòng thông báo Flash Sale trên đầu màn hình website.
+            </p>
 
-        <div>
-          <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Mô tả chi tiết</label>
-          <textarea name="description" rows="2" placeholder="Ghi chú điều kiện áp dụng..." class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2 text-xs text-[#121316] focus:outline-none focus:border-[#121316]"></textarea>
-        </div>
-
-        <button type="submit" class="btn-editorial-primary w-full py-3 text-xs font-bold uppercase tracking-wider block text-center !bg-[#BA2D27]">
-          TẠO MÃ VOUCHER MỚI →
-        </button>
-      </form>
-    </div>
-
-    <!-- RIGHT 7 COLS: DANH SÁCH VOUCHER ĐANG CHẠY -->
-    <div class="lg:col-span-7 bg-white border border-[#E5E0D5] p-6 space-y-4 shadow-sm">
-      <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-3">
-        <h2 class="font-bold text-xs text-[#121316] uppercase tracking-wider">
-          Danh Mục Voucher Đang Hoạt Động
-        </h2>
-        <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">
-          <%= allVouchers.length %> CHIẾN DỊCH
-        </span>
-      </div>
-
-      <div class="space-y-3">
-        <% if (allVouchers.length > 0) { %>
-          <% allVouchers.forEach(v => { %>
-            <div class="p-4 bg-[#FAF8F5] border border-[#E5E0D5] flex items-center justify-between gap-4">
-              <div class="space-y-1">
-                <div class="flex items-center gap-2">
-                  <span class="font-mono font-black text-sm text-[#121316]"><%= v.code %></span>
-                  <span class="px-1.5 py-0.5 bg-[#121316] text-white text-[9px] font-['JetBrains_Mono'] font-bold">
-                    <%= v.discountType === 'percentage' ? (v.discountValue + '%') : ((v.discountValue/1000) + 'K') %>
-                  </span>
-                  <span class="px-1.5 py-0.5 text-[9px] font-['JetBrains_Mono'] font-bold <%= v.applicableTo === 'movie' ? 'bg-[#BA2D27] text-white' : (v.applicableTo === 'concession' ? 'bg-[#A6853B] text-white' : 'bg-gray-200 text-gray-800') %>">
-                    <%= v.applicableTo === 'movie' ? '🎬 Vé Phim' : (v.applicableTo === 'concession' ? '🍿 Bắp Nước' : 'Tất Cả') %>
-                  </span>
+            <div id="flashSaleFields" class="hidden space-y-3 pt-3 border-t border-[#E5E0D5]">
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-['JetBrains_Mono'] text-[9.5px] font-bold text-[#121316] uppercase tracking-wider mb-1">
+                    Bắt đầu (Giờ & Ngày)
+                  </label>
+                  <input type="datetime-local" id="fStartInput" name="flashStartTime" class="w-full bg-white border border-[#E5E0D5] px-2.5 py-1.5 text-[11px] font-['JetBrains_Mono'] focus:outline-none focus:border-[#121316]" />
                 </div>
-                <p class="text-xs text-[#474A54]"><%= v.title %></p>
-                <div class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">
-                  Hạn: <%= v.expiryDate ? new Date(v.expiryDate).toLocaleDateString('vi-VN') : 'Vô thời hạn' %>
-                  • Đơn từ: <%= (v.minOrderValue || 0).toLocaleString('vi-VN') %>đ
-                  <% if (v.maxDiscountValue) { %>
-                    • Giảm tối đa: <%= (v.maxDiscountValue || 0).toLocaleString('vi-VN') %>đ
-                  <% } %>
+                <div>
+                  <label class="block font-['JetBrains_Mono'] text-[9.5px] font-bold text-[#121316] uppercase tracking-wider mb-1">
+                    Kết thúc (Giờ & Ngày)
+                  </label>
+                  <input type="datetime-local" id="fEndInput" name="flashEndTime" class="w-full bg-white border border-[#E5E0D5] px-2.5 py-1.5 text-[11px] font-['JetBrains_Mono'] focus:outline-none focus:border-[#121316]" />
                 </div>
               </div>
 
-              <form action="/admin/vouchers/delete/<%= v._id %>" method="POST" onsubmit="return confirm('Bạn muốn xóa voucher này?')">
-                <button type="submit" class="text-xs font-['JetBrains_Mono'] font-bold text-[#BA2D27] hover:underline px-2 py-1">
-                  Xóa
-                </button>
-              </form>
+              <div>
+                <label class="block font-['JetBrains_Mono'] text-[9.5px] font-bold text-[#121316] uppercase tracking-wider mb-1">
+                  Số lượng voucher tối đa được lưu (Giới hạn lượt săn)
+                </label>
+                <input type="number" name="maxQuantity" value="50" min="1" placeholder="Ví dụ: 50" class="w-full bg-white border border-[#E5E0D5] px-3 py-1.5 text-[11px] font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
+                <span class="text-[9.5px] text-[#7A7E8B] block mt-1">Khi đạt tối đa lượt lưu, nút "Lưu Mã" sẽ tự động báo hết lượt trong khung giờ.</span>
+              </div>
             </div>
-          <% }); %>
-        <% } else { %>
-          <div class="p-8 bg-[#FAF8F5] border border-[#E5E0D5] text-center text-[#7A7E8B] font-['JetBrains_Mono'] text-xs">
-            Chưa có voucher nào trong hệ thống. Hãy tạo mã mới ở biểu mẫu bên trái.
           </div>
-        <% } %>
+
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Mô tả chi tiết</label>
+            <textarea name="description" rows="2" placeholder="Ghi chú điều kiện áp dụng..." class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2 text-xs text-[#121316] focus:outline-none focus:border-[#121316]"></textarea>
+          </div>
+
+          <button type="submit" class="btn-editorial-primary w-full py-3 text-xs font-bold uppercase tracking-wider block text-center !bg-[#BA2D27] hover:!bg-[#8E1F1A] transition-colors">
+            TẠO MÃ VOUCHER MỚI →
+          </button>
+        </form>
       </div>
+
+      <!-- RIGHT 7 COLS: DANH SÁCH VOUCHER ĐANG CHẠY -->
+      <div class="lg:col-span-7 bg-white border border-[#E5E0D5] p-6 space-y-4 shadow-sm">
+        <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-3">
+          <h2 class="font-bold text-xs text-[#121316] uppercase tracking-wider">
+            Danh Mục Voucher Đang Hoạt Động
+          </h2>
+          <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">
+            <%= allVouchers.length %> CHIẾN DỊCH
+          </span>
+        </div>
+
+        <div class="space-y-3">
+          <% if (allVouchers.length > 0) { %>
+            <% allVouchers.forEach(v => { 
+                 const isFs = v.isFlashSale;
+                 let fsStatus = '';
+                 let fsBadgeClass = '';
+                 if (isFs) {
+                   const fStart = v.flashStartTime ? new Date(v.flashStartTime) : null;
+                   const fEnd = v.flashEndTime ? new Date(v.flashEndTime) : null;
+                   const claimed = v.claimedQuantity || 0;
+                   const maxL = v.maxQuantity || 50;
+                   if (claimed >= maxL) {
+                     fsStatus = 'ĐÃ HẾT LƯỢT';
+                     fsBadgeClass = 'bg-gray-800 text-white';
+                   } else if (fStart && now < fStart) {
+                     fsStatus = 'SẮP DIỄN RA';
+                     fsBadgeClass = 'bg-[#A6853B] text-white';
+                   } else if (fEnd && now > fEnd) {
+                     fsStatus = 'ĐÃ KẾT THÚC';
+                     fsBadgeClass = 'bg-gray-300 text-gray-700';
+                   } else {
+                     fsStatus = '⚡ ĐANG FLASH SALE';
+                     fsBadgeClass = 'bg-[#BA2D27] text-white animate-pulse';
+                   }
+                 }
+            %>
+              <div class="p-4 bg-[#FAF8F5] border border-[#E5E0D5] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="space-y-1.5 flex-1 min-w-0">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="font-mono font-black text-sm text-[#121316]"><%= v.code %></span>
+                    <span class="px-1.5 py-0.5 bg-[#121316] text-white text-[9px] font-['JetBrains_Mono'] font-bold">
+                      <%= v.discountType === 'percentage' ? (v.discountValue + '%') : ((v.discountValue/1000) + 'K') %>
+                    </span>
+                    <span class="px-1.5 py-0.5 text-[9px] font-['JetBrains_Mono'] font-bold <%= v.applicableTo === 'movie' ? 'bg-[#BA2D27] text-white' : (v.applicableTo === 'concession' ? 'bg-[#A6853B] text-white' : 'bg-gray-200 text-gray-800') %>">
+                      <%= v.applicableTo === 'movie' ? '🎬 Vé Phim' : (v.applicableTo === 'concession' ? '🍿 Bắp Nước' : 'Tất Cả') %>
+                    </span>
+
+                    <% if (isFs) { %>
+                      <span class="px-1.5 py-0.5 text-[9px] font-['JetBrains_Mono'] font-bold <%= fsBadgeClass %>">
+                        <%= fsStatus %>
+                      </span>
+                    <% } %>
+                  </div>
+
+                  <p class="text-xs font-semibold text-[#121316]"><%= v.title %></p>
+
+                  <% if (isFs) { 
+                       const claimed = v.claimedQuantity || 0;
+                       const maxL = v.maxQuantity || 50;
+                       const pct = Math.min(100, Math.round((claimed / maxL) * 100));
+                  %>
+                    <!-- FLASH SALE INFO BOX -->
+                    <div class="p-2.5 bg-amber-50/60 border border-amber-200/80 text-[11px] font-['JetBrains_Mono'] text-[#121316] space-y-1">
+                      <div class="flex items-center justify-between">
+                        <span class="text-[#BA2D27] font-bold">⚡ KHUNG GIỜ:</span>
+                        <span class="font-bold">
+                          <%= v.flashStartTime ? new Date(v.flashStartTime).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}) : 'Chưa đặt' %> 
+                          → 
+                          <%= v.flashEndTime ? new Date(v.flashEndTime).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}) : 'Chưa đặt' %>
+                        </span>
+                      </div>
+                      <div class="flex items-center justify-between text-[10px] text-[#7A7E8B]">
+                        <span>Đã lưu vào ví:</span>
+                        <strong class="text-[#BA2D27]"><%= claimed %> / <%= maxL %> (<%= pct %>%)</strong>
+                      </div>
+                      <div class="w-full bg-gray-200 h-1.5 overflow-hidden">
+                        <div class="bg-[#BA2D27] h-full transition-all" style="width: <%= pct %>%;"></div>
+                      </div>
+                    </div>
+                  <% } %>
+
+                  <div class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B] flex flex-wrap gap-x-3">
+                    <span>Hạn: <%= v.expiryDate ? new Date(v.expiryDate).toLocaleDateString('vi-VN') : 'Vô thời hạn' %></span>
+                    <span>Đơn từ: <%= (v.minOrderValue || 0).toLocaleString('vi-VN') %>đ</span>
+                    <% if (v.maxDiscountValue) { %>
+                      <span>Giảm tối đa: <%= (v.maxDiscountValue || 0).toLocaleString('vi-VN') %>đ</span>
+                    <% } %>
+                  </div>
+                </div>
+
+                <div class="shrink-0 flex items-center gap-2">
+                  <form action="/admin/vouchers/delete/<%= v._id %>" method="POST" onsubmit="return confirm('Bạn chắc chắn muốn xóa voucher <%= v.code %>?')">
+                    <button type="submit" class="text-xs font-['JetBrains_Mono'] font-bold text-[#BA2D27] hover:bg-[#BA2D27] hover:text-white px-2.5 py-1.5 border border-[#BA2D27]/30 transition-colors">
+                      Xóa
+                    </button>
+                  </form>
+                </div>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <div class="p-8 bg-[#FAF8F5] border border-[#E5E0D5] text-center text-[#7A7E8B] font-['JetBrains_Mono'] text-xs">
+              Chưa có voucher nào trong hệ thống. Hãy tạo mã mới ở biểu mẫu bên trái.
+            </div>
+          <% } %>
+        </div>
+      </div>
+
     </div>
 
-  </div>
+  <% } else { %>
+    <!-- TAB 2: QUẢN LÝ SỰ KIỆN SĂN VÉ FLASH SALE (ĐỒNG GIÁ / GIỜ VÀNG) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 text-xs font-['Plus_Jakarta_Sans']">
+      
+      <!-- LEFT 5 COLS: TẠO CHIẾN DỊCH FLASH SALE -->
+      <div class="lg:col-span-5 bg-white border border-[#E5E0D5] p-6 space-y-4 shadow-sm">
+        <div class="flex items-center justify-between pb-3 border-b border-[#E5E0D5]">
+          <h2 class="font-bold text-xs text-[#121316] uppercase tracking-wider">
+            Tạo Chiến Dịch Flash Sale Mới
+          </h2>
+          <span class="text-[10px] font-['JetBrains_Mono'] text-[#A6853B] font-bold">GIỜ VÀNG SĂN VÉ</span>
+        </div>
+
+        <form action="/admin/flash-sale/add" method="POST" class="space-y-4">
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
+              Tiêu Đề Chiến Dịch <span class="text-[#BA2D27]">*</span>
+            </label>
+            <input name="title" required value="Săn Vé Đồng Giá 19K — Giờ Vàng" placeholder="Ví dụ: Săn Vé Đồng Giá 19K..." class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-bold focus:outline-none focus:border-[#121316]" />
+          </div>
+
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
+              Phim Áp Dụng
+            </label>
+            <select name="movieId" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-semibold focus:outline-none focus:border-[#121316]">
+              <option value="">-- Tất cả phim đang chiếu (Toàn hệ thống) --</option>
+              <% allMovies.forEach(m => { %>
+                <option value="<%= m._id %>"><%= m.title %></option>
+              <% }); %>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">
+              Cụm Rạp Áp Dụng
+            </label>
+            <select name="cinema" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2.5 text-xs text-[#121316] font-semibold focus:outline-none focus:border-[#121316]">
+              <option value="Tất cả các rạp">Tất cả các rạp tại Quy Nhơn</option>
+              <option value="CGV Kim Cúc Plaza">CGV Kim Cúc Plaza</option>
+              <option value="Starlight Nguyễn Kim">Starlight Nguyễn Kim</option>
+              <option value="DCine Quy Nhơn">DCine Quy Nhơn</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Giá Flash Sale (VNĐ)</label>
+              <input type="number" name="salePrice" value="19000" required placeholder="19000" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs text-[#BA2D27] font-['JetBrains_Mono'] font-black focus:outline-none focus:border-[#121316]" />
+            </div>
+            <div>
+              <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Giá Vé Gốc (VNĐ)</label>
+              <input type="number" name="originalPrice" value="95000" required placeholder="95000" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Bắt Đầu (Giờ & Ngày) <span class="text-[#BA2D27]">*</span></label>
+              <input type="datetime-local" id="fsStartCamp" name="startTime" required class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-2.5 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] focus:outline-none focus:border-[#121316]" />
+            </div>
+            <div>
+              <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Kết Thúc (Giờ & Ngày) <span class="text-[#BA2D27]">*</span></label>
+              <input type="datetime-local" id="fsEndCamp" name="endTime" required class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-2.5 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] focus:outline-none focus:border-[#121316]" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Số Vé Giới Hạn <span class="text-[#BA2D27]">*</span></label>
+              <input type="number" name="totalQuantity" value="50" min="1" required class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
+            </div>
+            <div>
+              <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Mã Voucher Săn Vé</label>
+              <input name="voucherCode" value="FLASH19K" placeholder="FLASH19K" class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs text-[#121316] uppercase font-['JetBrains_Mono'] font-bold focus:outline-none focus:border-[#121316]" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-['JetBrains_Mono'] text-[10px] font-bold text-[#7A7E8B] uppercase tracking-wider mb-1">Mô tả chương trình</label>
+            <textarea name="description" rows="2" placeholder="Ghi chú điều kiện săn vé..." class="w-full bg-[#FAF8F5] border border-[#E5E0D5] px-3.5 py-2 text-xs text-[#121316] focus:outline-none focus:border-[#121316]">Vé đồng giá 19K áp dụng duy nhất trong khung giờ vàng. Mỗi khách hàng được áp dụng 1 vé.</textarea>
+          </div>
+
+          <button type="submit" class="btn-editorial-primary w-full py-3 text-xs font-bold uppercase tracking-wider block text-center !bg-[#BA2D27] hover:!bg-[#8E1F1A] transition-colors">
+            KÍCH HOẠT FLASH SALE MỚI →
+          </button>
+        </form>
+      </div>
+
+      <!-- RIGHT 7 COLS: DANH SÁCH FLASH SALE HIỆN CÓ -->
+      <div class="lg:col-span-7 bg-white border border-[#E5E0D5] p-6 space-y-4 shadow-sm">
+        <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-3">
+          <h2 class="font-bold text-xs text-[#121316] uppercase tracking-wider">
+            Các Chiến Dịch Flash Sale (<%= allFlashSales.length %>)
+          </h2>
+          <a href="/flash-sale" target="_blank" class="text-xs text-[#BA2D27] font-['JetBrains_Mono'] font-bold hover:underline flex items-center gap-1">
+            <span>Mở trang săn vé</span>
+            <span>→</span>
+          </a>
+        </div>
+
+        <div class="space-y-3">
+          <% if (allFlashSales.length > 0) { %>
+            <% allFlashSales.forEach(fs => { 
+                 const isOngoing = fs.isActive && now >= new Date(fs.startTime) && now <= new Date(fs.endTime);
+                 const isUpcoming = fs.isActive && now < new Date(fs.startTime);
+                 const isEnded = !fs.isActive || now > new Date(fs.endTime);
+                 const claimed = fs.claimedQuantity || 0;
+                 const total = fs.totalQuantity || 50;
+                 const pct = Math.min(100, Math.round((claimed / total) * 100));
+            %>
+              <div class="p-4 bg-[#FAF8F5] border border-[#E5E0D5] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="space-y-2 flex-1 min-w-0">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="font-bold text-sm text-[#121316]"><%= fs.title %></span>
+                    <% if (isOngoing) { %>
+                      <span class="px-2 py-0.5 bg-[#BA2D27] text-white text-[9px] font-['JetBrains_Mono'] font-bold uppercase animate-pulse">
+                        ⚡ Đang Diễn Ra
+                      </span>
+                    <% } else if (isUpcoming) { %>
+                      <span class="px-2 py-0.5 bg-[#A6853B] text-white text-[9px] font-['JetBrains_Mono'] font-bold uppercase">
+                        Sắp Diễn Ra
+                      </span>
+                    <% } else { %>
+                      <span class="px-2 py-0.5 bg-gray-300 text-gray-700 text-[9px] font-['JetBrains_Mono'] font-bold uppercase">
+                        Đã Kết Thúc
+                      </span>
+                    <% } %>
+
+                    <% if (!fs.isActive) { %>
+                      <span class="px-2 py-0.5 bg-red-100 text-red-700 text-[9px] font-['JetBrains_Mono'] font-bold">
+                        TẮT HOẠT ĐỘNG
+                      </span>
+                    <% } %>
+                  </div>
+
+                  <div class="text-xs text-[#474A54] flex flex-wrap items-center gap-x-3">
+                    <span>🎬 <%= fs.movie ? fs.movie.title : 'Tất cả phim' %></span>
+                    <span>🏛️ <%= fs.cinema || 'Tất cả các rạp' %></span>
+                  </div>
+
+                  <div class="flex items-center gap-3 text-xs font-['JetBrains_Mono']">
+                    <span class="text-[#BA2D27] font-black text-sm"><%= (fs.salePrice || 0).toLocaleString('vi-VN') %>đ</span>
+                    <span class="line-through text-[#7A7E8B]"><%= (fs.originalPrice || 0).toLocaleString('vi-VN') %>đ</span>
+                    <span class="px-1.5 py-0.5 bg-black text-white text-[9px] font-bold">MÃ: <%= fs.voucherCode || 'FLASH19K' %></span>
+                  </div>
+
+                  <!-- TIME & PROGRESS -->
+                  <div class="p-2.5 bg-white border border-[#E5E0D5] text-[10.5px] font-['JetBrains_Mono'] space-y-1">
+                    <div class="flex items-center justify-between text-[#7A7E8B]">
+                      <span>Khung giờ:</span>
+                      <strong class="text-[#121316]">
+                        <%= new Date(fs.startTime).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}) %>
+                        —
+                        <%= new Date(fs.endTime).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}) %>
+                      </strong>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="text-[#7A7E8B]">Đã săn:</span>
+                      <strong class="text-[#BA2D27]"><%= claimed %> / <%= total %> vé (<%= pct %>%)</strong>
+                    </div>
+                    <div class="w-full bg-gray-200 h-1.5 overflow-hidden">
+                      <div class="bg-[#BA2D27] h-full transition-all" style="width: <%= pct %>%;"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="shrink-0 flex sm:flex-col gap-2">
+                  <form action="/admin/flash-sale/toggle/<%= fs._id %>" method="POST">
+                    <button type="submit" class="w-full text-center text-xs font-['JetBrains_Mono'] font-bold px-3 py-1.5 border border-[#121316] <%= fs.isActive ? 'bg-[#121316] text-white hover:bg-black' : 'bg-white text-[#121316] hover:bg-gray-100' %> transition-colors">
+                      <%= fs.isActive ? 'Tạm Dừng' : 'Bật Lại' %>
+                    </button>
+                  </form>
+                  <form action="/admin/flash-sale/delete/<%= fs._id %>" method="POST" onsubmit="return confirm('Bạn chắc chắn muốn xóa chiến dịch Flash Sale này?')">
+                    <button type="submit" class="w-full text-center text-xs font-['JetBrains_Mono'] font-bold text-[#BA2D27] border border-[#BA2D27]/30 hover:bg-[#BA2D27] hover:text-white px-3 py-1.5 transition-colors">
+                      Xóa
+                    </button>
+                  </form>
+                </div>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <div class="p-8 bg-[#FAF8F5] border border-[#E5E0D5] text-center text-[#7A7E8B] font-['JetBrains_Mono'] text-xs">
+              Chưa có chiến dịch Flash Sale nào. Hãy thiết lập chiến dịch đầu tiên ở biểu mẫu bên trái!
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+    </div>
+  <% } %>
 
 </main>
+
+<script>
+  function toggleFlashSaleFields() {
+    var chk = document.getElementById('checkFlashSale');
+    var fields = document.getElementById('flashSaleFields');
+    if (!fields) return;
+    if (chk && chk.checked) {
+      fields.classList.remove('hidden');
+      // Set default start = now, end = now + 2 hours if empty
+      var startIn = document.getElementById('fStartInput');
+      var endIn = document.getElementById('fEndInput');
+      if (startIn && !startIn.value) {
+        var n = new Date();
+        startIn.value = formatDateTimeLocal(n);
+      }
+      if (endIn && !endIn.value) {
+        var e = new Date(Date.now() + 2 * 3600 * 1000);
+        endIn.value = formatDateTimeLocal(e);
+      }
+    } else {
+      fields.classList.add('hidden');
+    }
+  }
+
+  function formatDateTimeLocal(d) {
+    var year = d.getFullYear();
+    var month = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    var hours = String(d.getHours()).padStart(2, '0');
+    var minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
+  // Pre-fill campaign start / end time for Tab 2
+  window.addEventListener('DOMContentLoaded', function() {
+    var cStart = document.getElementById('fsStartCamp');
+    var cEnd = document.getElementById('fsEndCamp');
+    if (cStart && !cStart.value) {
+      cStart.value = formatDateTimeLocal(new Date());
+    }
+    if (cEnd && !cEnd.value) {
+      cEnd.value = formatDateTimeLocal(new Date(Date.now() + 3 * 3600 * 1000));
+    }
+
+    // Display URL query alerts if present
+    var params = new URLSearchParams(window.location.search);
+    var alertBox = document.getElementById('adminAlertBox');
+    if (alertBox) {
+      if (params.get('success')) {
+        alertBox.textContent = '✓ ' + params.get('success');
+        alertBox.className = 'text-xs font-[\'JetBrains_Mono\'] p-3.5 border border-emerald-500 bg-emerald-50 text-emerald-800 font-bold block';
+      } else if (params.get('error')) {
+        alertBox.textContent = '✕ ' + params.get('error');
+        alertBox.className = 'text-xs font-[\'JetBrains_Mono\'] p-3.5 border border-[#BA2D27] bg-red-50 text-[#BA2D27] font-bold block';
+      }
+    }
+  });
+</script>
 
 <%- include('partials/admin-footer') %>

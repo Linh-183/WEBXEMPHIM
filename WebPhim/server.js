@@ -9,6 +9,7 @@ const cron = require('node-cron');
 // Khai báo các Model cần thiết cho Cron Job
 const Movie = require('./models/Movie');
 const Voucher = require('./models/Voucher');
+const FlashSale = require('./models/FlashSale');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -46,13 +47,82 @@ app.use(session({
 
 // Middleware chuyển dữ liệu người dùng và thông báo toàn cục sang biến cục bộ của Views
 // Giúp mọi file .ejs đều có thể tự động kích hoạt hệ thống CineGo Toast góc phải màn hình
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
     res.locals.user = req.session.user || null;
     res.locals.currentPath = req.path || '/';
     res.locals.flashError = req.query.error || null;
     res.locals.flashSuccess = req.query.success || null;
     res.locals.flashWarning = req.query.warning || null;
     res.locals.flashInfo = req.query.info || null;
+    res.locals.activeFlashSale = null;
+    res.locals.upcomingFlashSale = null;
+
+    if (isConnected) {
+        try {
+            const now = new Date();
+            // 1. Tìm đợt Flash Sale đang diễn ra trong khung giờ hiện tại
+            let active = await FlashSale.findOne({
+                isActive: true,
+                startTime: { $lte: now },
+                endTime: { $gte: now }
+            }).sort({ startTime: -1 }).lean();
+
+            // Nếu không có trong bảng FlashSale, kiểm tra xem có Voucher Flash Sale nào đang trong khung giờ
+            if (!active) {
+                const activeVoucher = await Voucher.findOne({
+                    isFlashSale: true,
+                    flashStartTime: { $lte: now },
+                    flashEndTime: { $gte: now }
+                }).sort({ flashStartTime: -1 }).lean();
+
+                if (activeVoucher) {
+                    active = {
+                        title: activeVoucher.title,
+                        startTime: activeVoucher.flashStartTime,
+                        endTime: activeVoucher.flashEndTime,
+                        salePrice: (activeVoucher.discountType === 'fixed' ? activeVoucher.discountValue : 19000),
+                        totalQuantity: activeVoucher.maxQuantity || 50,
+                        claimedQuantity: activeVoucher.claimedQuantity || 0,
+                        voucherCode: activeVoucher.code
+                    };
+                }
+            }
+
+            if (active) {
+                res.locals.activeFlashSale = active;
+            } else {
+                // 2. Tìm đợt Flash Sale sắp diễn ra trong ngày hôm nay
+                let upcoming = await FlashSale.findOne({
+                    isActive: true,
+                    startTime: { $gt: now }
+                }).sort({ startTime: 1 }).lean();
+
+                if (!upcoming) {
+                    const upVoucher = await Voucher.findOne({
+                        isFlashSale: true,
+                        flashStartTime: { $gt: now }
+                    }).sort({ flashStartTime: 1 }).lean();
+
+                    if (upVoucher) {
+                        upcoming = {
+                            title: upVoucher.title,
+                            startTime: upVoucher.flashStartTime,
+                            endTime: upVoucher.flashEndTime,
+                            salePrice: (upVoucher.discountType === 'fixed' ? upVoucher.discountValue : 19000),
+                            totalQuantity: upVoucher.maxQuantity || 50,
+                            claimedQuantity: upVoucher.claimedQuantity || 0,
+                            voucherCode: upVoucher.code
+                        };
+                    }
+                }
+                if (upcoming) {
+                    res.locals.upcomingFlashSale = upcoming;
+                }
+            }
+        } catch (e) {
+            // Không bao giờ để lỗi flash sale chặn luồng tải trang
+        }
+    }
     next();
 });
 

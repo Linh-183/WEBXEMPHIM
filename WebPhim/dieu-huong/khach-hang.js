@@ -585,12 +585,58 @@ router.get('/flash-sale', async (req, res) => {
             isActive: true,
             startTime: { $lte: now },
             endTime: { $gte: now }
-        }).populate('movie');
+        }).populate('movie').lean();
 
         const upcomingSales = await FlashSale.find({
             isActive: true,
             startTime: { $gt: now }
-        }).populate('movie').sort({ startTime: 1 });
+        }).populate('movie').sort({ startTime: 1 }).lean();
+
+        // Lấy thêm các Voucher Flash Sale được thiết lập theo khung giờ
+        const activeVouchers = await Voucher.find({
+            isFlashSale: true,
+            flashStartTime: { $lte: now },
+            flashEndTime: { $gte: now }
+        }).lean();
+
+        const upcomingVouchers = await Voucher.find({
+            isFlashSale: true,
+            flashStartTime: { $gt: now }
+        }).sort({ flashStartTime: 1 }).lean();
+
+        activeVouchers.forEach(v => {
+            activeSales.push({
+                _id: v._id,
+                title: v.title,
+                startTime: v.flashStartTime,
+                endTime: v.flashEndTime,
+                salePrice: v.discountType === 'fixed' ? v.discountValue : 19000,
+                originalPrice: 95000,
+                totalQuantity: v.maxQuantity || 50,
+                claimedQuantity: v.claimedQuantity || 0,
+                voucherCode: v.code,
+                cinema: 'Tất cả các rạp Quy Nhơn',
+                description: v.description || 'Voucher Flash Sale theo khung giờ giới hạn.',
+                isVoucher: true
+            });
+        });
+
+        upcomingVouchers.forEach(v => {
+            upcomingSales.push({
+                _id: v._id,
+                title: v.title,
+                startTime: v.flashStartTime,
+                endTime: v.flashEndTime,
+                salePrice: v.discountType === 'fixed' ? v.discountValue : 19000,
+                originalPrice: 95000,
+                totalQuantity: v.maxQuantity || 50,
+                claimedQuantity: v.claimedQuantity || 0,
+                voucherCode: v.code,
+                cinema: 'Tất cả các rạp Quy Nhơn',
+                description: v.description || 'Voucher Flash Sale theo khung giờ giới hạn.',
+                isVoucher: true
+            });
+        });
 
         res.render('trangflashsale', {
             user: req.session.user || null,
@@ -613,37 +659,75 @@ router.post('/api/nhan-flash-voucher', checkLogin, async (req, res) => {
     try {
         const { saleId } = req.body;
         if (!isValidObjectId(saleId)) return res.json({ success: false, message: 'Đợt Flash Sale không hợp lệ.' });
-        const sale = await FlashSale.findById(saleId);
-        if (!sale || !sale.isActive) return res.json({ success: false, message: 'Đợt Flash Sale này không khả dụng.' });
+        
+        let sale = await FlashSale.findById(saleId);
+        let targetVoucher = null;
 
         const now = new Date();
-        if (now < sale.startTime || now > sale.endTime) {
-            return res.json({ success: false, message: 'Khung giờ Flash Sale chưa bắt đầu hoặc đã kết thúc.' });
-        }
-        if (sale.claimedQuantity >= sale.totalQuantity) {
-            return res.json({ success: false, message: 'Đợt Flash Sale này đã hết số lượng vé mở bán.' });
+
+        if (sale) {
+            if (!sale.isActive) return res.json({ success: false, message: 'Đợt Flash Sale này không khả dụng.' });
+            if (now < sale.startTime || now > sale.endTime) {
+                return res.json({ success: false, message: 'Khung giờ Flash Sale chưa bắt đầu hoặc đã kết thúc.' });
+            }
+            if (sale.claimedQuantity >= sale.totalQuantity) {
+                return res.json({ success: false, message: 'Đợt Flash Sale này đã hết số lượng vé mở bán.' });
+            }
+
+            // Tự động tạo voucher trong bảng Voucher nếu chưa có
+            targetVoucher = await Voucher.findOne({ code: sale.voucherCode });
+            if (!targetVoucher) {
+                targetVoucher = await Voucher.create({
+                    code: sale.voucherCode,
+                    title: sale.title,
+                    discountType: 'fixed',
+                    discountValue: sale.originalPrice - sale.salePrice,
+                    minOrderValue: sale.originalPrice,
+                    maxDiscountValue: sale.originalPrice - sale.salePrice,
+                    expiryDate: sale.endTime,
+                    applicableTo: 'all'
+                });
+            }
+
+            sale.claimedQuantity += 1;
+            await sale.save();
+        } else {
+            // Kiểm tra xem có phải là Voucher Flash Sale không
+            targetVoucher = await Voucher.findById(saleId);
+            if (!targetVoucher || !targetVoucher.isFlashSale) {
+                return res.json({ success: false, message: 'Không tìm thấy chiến dịch Flash Sale tương ứng.' });
+            }
+
+            if (targetVoucher.flashStartTime && now < targetVoucher.flashStartTime) {
+                return res.json({ success: false, message: 'Khung giờ Flash Sale của voucher này chưa bắt đầu.' });
+            }
+            if (targetVoucher.flashEndTime && now > targetVoucher.flashEndTime) {
+                return res.json({ success: false, message: 'Khung giờ Flash Sale của voucher này đã kết thúc.' });
+            }
+            const maxL = targetVoucher.maxQuantity || 50;
+            if ((targetVoucher.claimedQuantity || 0) >= maxL) {
+                return res.json({ success: false, message: 'Số lượng voucher Flash Sale trong khung giờ đã được lưu hết.' });
+            }
+
+            targetVoucher.claimedQuantity = (targetVoucher.claimedQuantity || 0) + 1;
+            await targetVoucher.save();
         }
 
-        // Tự động tạo voucher trong bảng Voucher nếu chưa có
-        let v = await Voucher.findOne({ code: sale.voucherCode });
-        if (!v) {
-            v = await Voucher.create({
-                code: sale.voucherCode,
-                title: sale.title,
-                discountType: 'fixed',
-                discountValue: sale.originalPrice - sale.salePrice,
-                minOrderValue: sale.originalPrice,
-                maxDiscountValue: sale.originalPrice - sale.salePrice,
-                expiryDate: sale.endTime
-            });
+        // Lưu voucher vào tài khoản của khách hàng
+        const user = await User.findById(req.session.user._id);
+        if (user && targetVoucher) {
+            if (!user.vouchers) user.vouchers = [];
+            const alreadyHas = user.vouchers.some(vId => vId.toString() === targetVoucher._id.toString());
+            if (!alreadyHas) {
+                user.vouchers.push(targetVoucher._id);
+                await user.save();
+            }
+            req.session.user.vouchers = user.vouchers;
         }
-
-        sale.claimedQuantity += 1;
-        await sale.save();
 
         res.json({ 
             success: true, 
-            message: `Bạn đã nhận mã ${sale.voucherCode} thành công! Hãy kiểm tra ví voucher để áp dụng khi đặt vé.` 
+            message: `Bạn đã nhận mã ${targetVoucher.code} vào ví thành công! Hãy kiểm tra giỏ hàng hoặc thanh toán để áp dụng.` 
         });
     } catch (err) {
         res.status(500).json({ success: false, message: 'Lỗi hệ thống: ' + err.message });
@@ -774,6 +858,23 @@ router.post('/api/luu-voucher', async (req, res) => {
             return res.status(400).json({ success: false, message: "Mã ưu đãi này chỉ dành cho đổi điểm thưởng thành viên, không thể lưu trực tiếp!" });
         }
 
+        // Kiểm tra ràng buộc khung giờ & số lượng giới hạn nếu là Voucher Flash Sale
+        if (voucher.isFlashSale) {
+            const now = new Date();
+            if (voucher.flashStartTime && now < voucher.flashStartTime) {
+                const sStr = voucher.flashStartTime.toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
+                return res.json({ success: false, message: `Voucher Flash Sale này chưa bắt đầu mở lưu (Mở lúc ${sStr})!` });
+            }
+            if (voucher.flashEndTime && now > voucher.flashEndTime) {
+                return res.json({ success: false, message: "Khung giờ Flash Sale của voucher này đã kết thúc!" });
+            }
+            const maxL = voucher.maxQuantity || 50;
+            const claimed = voucher.claimedQuantity || 0;
+            if (claimed >= maxL) {
+                return res.json({ success: false, message: `Rất tiếc! Số lượng voucher Flash Sale trong khung giờ này đã được lưu hết (${maxL}/${maxL})!` });
+            }
+        }
+
         if (voucher.expiryDate && new Date(voucher.expiryDate) < new Date()) {
             return res.json({ success: false, message: "Mã khuyến mãi này đã hết hạn sử dụng!" });
         }
@@ -794,6 +895,11 @@ router.post('/api/luu-voucher', async (req, res) => {
         user.vouchers.push(voucher._id);
         await user.save();
         req.session.user.vouchers = user.vouchers;
+
+        if (voucher.isFlashSale) {
+            voucher.claimedQuantity = (voucher.claimedQuantity || 0) + 1;
+            await voucher.save();
+        }
 
         res.json({ 
             success: true, 

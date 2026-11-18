@@ -27,6 +27,34 @@
     </div>
 
     <!-- =========================================================================
+         1.5 BANNER KHÁM PHÁ CHIẾN DỊCH FLASH SALE SĂN VÉ 19K
+         ========================================================================= -->
+    <div class="bg-gradient-to-r from-[#121316] via-[#1E222B] to-[#121316] border-2 border-[#BA2D27] p-6 sm:p-8 mb-10 text-white shadow-lg relative overflow-hidden">
+      <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div class="space-y-2">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 bg-[#BA2D27] text-white font-['JetBrains_Mono'] text-[10px] font-bold uppercase tracking-wider animate-pulse">
+              ⚡ SỰ KIỆN ĐẶC BIỆT
+            </span>
+            <span class="text-[#A6853B] font-['JetBrains_Mono'] text-xs font-semibold">CINEGO FLASH SALE</span>
+          </div>
+          <h2 class="font-serif text-2xl sm:text-3xl font-bold text-white tracking-wide">
+            Săn Vé Đồng Giá 19K & Khung Giờ Vàng
+          </h2>
+          <p class="text-xs text-white/80 max-w-xl font-light leading-relaxed">
+            Chương trình săn vé xem phim và voucher bắp nước cực sốc diễn ra theo từng khung giờ giới hạn trong ngày. Số lượng voucher và vé có hạn, ưu tiên thành viên nhanh tay nhất!
+          </p>
+        </div>
+        <div class="shrink-0 flex items-center gap-3">
+          <a href="/flash-sale" class="inline-flex items-center gap-2 px-6 py-3.5 bg-[#BA2D27] hover:bg-[#8E1F1A] text-white font-bold text-xs uppercase tracking-wider font-['JetBrains_Mono'] transition-all shadow-md">
+            <span>⚡ VÀO SĂN VÉ FLASH SALE</span>
+            <span>→</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
          2. QUICK SAVE VOUCHER STRIP (NHẬP MÃ ĐỂ LƯU TRỰC TIẾP VÀO VÍ)
          ========================================================================= -->
     <div class="bg-white border border-[#E5E0D5] p-6 sm:p-8 mb-10 shadow-sm">
@@ -74,13 +102,41 @@
 
       <% if (promoVouchers.length > 0) { %>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <% promoVouchers.forEach(v => { %>
-            <div class="ticket-pass ticket-pass-horizontal p-6 bg-white border border-[#E5E0D5] flex flex-col justify-between space-y-4 hover:border-[#121316] transition-all shadow-sm">
+          <% promoVouchers.forEach(v => { 
+               const isFs = v.isFlashSale;
+               const now = new Date();
+               let fsOpen = true;
+               let fsMsg = '';
+               if (isFs) {
+                 const fStart = v.flashStartTime ? new Date(v.flashStartTime) : null;
+                 const fEnd = v.flashEndTime ? new Date(v.flashEndTime) : null;
+                 const claimed = v.claimedQuantity || 0;
+                 const maxL = v.maxQuantity || 50;
+                 if (claimed >= maxL) {
+                   fsOpen = false;
+                   fsMsg = 'Hết Lượt Lưu';
+                 } else if (fStart && now < fStart) {
+                   fsOpen = false;
+                   fsMsg = 'Chưa Mở Lưu';
+                 } else if (fEnd && now > fEnd) {
+                   fsOpen = false;
+                   fsMsg = 'Hết Giờ';
+                 }
+               }
+          %>
+            <div class="ticket-pass ticket-pass-horizontal p-6 bg-white border border-[#E5E0D5] flex flex-col justify-between space-y-4 hover:border-[#121316] transition-all shadow-sm <%= isFs ? 'border-amber-300 ring-1 ring-amber-400/30' : '' %>">
               <div class="space-y-2">
                 <div class="flex items-center justify-between">
-                  <span class="px-2 py-0.5 bg-[#BA2D27] text-white text-[10px] font-['JetBrains_Mono'] font-bold uppercase">
-                    <%= v.discountType === 'percentage' ? ('GIẢM ' + v.discountValue + '%') : ('GIẢM ' + (v.discountValue / 1000) + 'K') %>
-                  </span>
+                  <div class="flex items-center gap-1.5">
+                    <span class="px-2 py-0.5 bg-[#BA2D27] text-white text-[10px] font-['JetBrains_Mono'] font-bold uppercase">
+                      <%= v.discountType === 'percentage' ? ('GIẢM ' + v.discountValue + '%') : ('GIẢM ' + (v.discountValue / 1000) + 'K') %>
+                    </span>
+                    <% if (isFs) { %>
+                      <span class="px-1.5 py-0.5 bg-amber-500 text-white text-[9px] font-['JetBrains_Mono'] font-bold uppercase animate-pulse">
+                        ⚡ FLASH SALE
+                      </span>
+                    <% } %>
+                  </div>
                   <% if (v.minOrderValue) { %>
                     <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">ĐƠN TỪ <%= (v.minOrderValue / 1000) %>K</span>
                   <% } %>
@@ -92,18 +148,47 @@
                 <% if (v.description) { %>
                   <p class="text-[11px] text-[#7A7E8B]"><%= v.description %></p>
                 <% } %>
+
+                <% if (isFs) { 
+                     const claimed = v.claimedQuantity || 0;
+                     const maxL = v.maxQuantity || 50;
+                     const remaining = Math.max(0, maxL - claimed);
+                %>
+                  <div class="p-2 bg-[#FAF8F5] border border-[#E5E0D5] text-[10.5px] font-['JetBrains_Mono'] space-y-1 mt-2">
+                    <div class="flex items-center justify-between text-[#121316]">
+                      <span class="text-[#BA2D27] font-bold">⚡ Khung giờ:</span>
+                      <span>
+                        <%= v.flashStartTime ? new Date(v.flashStartTime).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}) : '00:00' %> - 
+                        <%= v.flashEndTime ? new Date(v.flashEndTime).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}) : '23:59' %>
+                      </span>
+                    </div>
+                    <div class="flex items-center justify-between text-[#7A7E8B]">
+                      <span>Lượt còn lại:</span>
+                      <strong class="text-[#BA2D27]"><%= remaining %> / <%= maxL %> lượt</strong>
+                    </div>
+                  </div>
+                <% } %>
               </div>
 
               <div class="pt-4 border-t border-[#E5E0D5] flex items-center justify-between font-['JetBrains_Mono'] text-xs">
                 <span class="text-[#7A7E8B] text-[10px]">
                   Hạn: <%= v.expiryDate ? new Date(v.expiryDate).toLocaleDateString('vi-VN') : 'Vô thời hạn' %>
                 </span>
-                <button type="button" 
-                        onclick="saveVoucherToWallet(this, '<%= v.code %>')" 
-                        class="btn-editorial-primary text-xs !py-1.5 !px-4 font-bold flex items-center gap-1.5">
-                  <span class="material-symbols-outlined text-sm">bookmark_add</span>
-                  <span>Lưu Mã Vào Ví</span>
-                </button>
+                <% if (isFs && !fsOpen) { %>
+                  <button type="button" 
+                          disabled 
+                          class="bg-gray-200 text-gray-500 cursor-not-allowed text-xs !py-1.5 !px-4 font-bold flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm">schedule</span>
+                    <span><%= fsMsg %></span>
+                  </button>
+                <% } else { %>
+                  <button type="button" 
+                          onclick="saveVoucherToWallet(this, '<%= v.code %>')" 
+                          class="btn-editorial-primary text-xs !py-1.5 !px-4 font-bold flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm">bookmark_add</span>
+                    <span>Lưu Mã Vào Ví</span>
+                  </button>
+                <% } %>
               </div>
             </div>
           <% }); %>
