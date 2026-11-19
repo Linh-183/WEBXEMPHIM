@@ -8,6 +8,7 @@ const seatLockSchema = new mongoose.Schema({
     showTime: { type: String, required: true },
     seat: { type: String, required: true },
     userId: { type: String, required: false },
+    version: { type: Number, default: 1 }, // [OPTIMISTIC LOCKING - CAS] Trường phiên bản phục vụ Compare-And-Swap
     createdAt: { 
         type: Date, 
         default: Date.now, 

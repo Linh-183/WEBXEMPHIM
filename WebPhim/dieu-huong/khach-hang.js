@@ -332,7 +332,10 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
                             { createdAt: { $lt: lockThreshold } }
                         ]
                     },
-                    { $set: { userId: currentUserId, createdAt: new Date() } },
+                    { 
+                        $set: { userId: currentUserId, createdAt: new Date() },
+                        $inc: { version: 1 } // Tăng version theo chuẩn CAS (Compare-And-Swap)
+                    },
                     { new: true }
                 );
 
