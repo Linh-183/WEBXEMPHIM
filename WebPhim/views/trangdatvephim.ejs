@@ -976,6 +976,29 @@
 
     renderShowtimes();
 
+    // Tự động khôi phục các ghế đã lưu từ Giỏ Hàng nếu người dùng bấm tiếp tục từ Giỏ Hàng
+    const preSeats = urlParams.get('seats');
+    if (preSeats) {
+      setTimeout(() => {
+        const seatCodes = preSeats.split(',').map(s => s.trim()).filter(Boolean);
+        seatCodes.forEach(code => {
+          const el = document.querySelector(`.seat-unit[data-seat="${code}"]`);
+          if (el && !el.classList.contains('seat-sold') && !el.classList.contains('seat-held')) {
+            el.classList.add('seat-selected');
+            const price = parseInt(el.getAttribute('data-price') || '75000', 10);
+            if (!selectedSeats.find(s => s.code === code)) {
+              selectedSeats.push({ code, price });
+              seatTotal += price;
+            }
+          }
+        });
+        updateBottomSummary();
+        if (seatCodes.length > 0 && window.cinegoToast) {
+          window.cinegoToast.info(`Đã khôi phục các ghế bạn chọn trong Giỏ Hàng (${seatCodes.join(', ')})`);
+        }
+      }, 400);
+    }
+
     function parseSeatInfo(code) {
       if (!code) return null;
       const parts = code.split('-');
