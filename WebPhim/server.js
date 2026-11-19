@@ -29,6 +29,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 // Đọc dữ liệu định dạng JSON (dùng khi fetch/axios API)
 app.use(express.json());
+// Hỗ trợ đọc dữ liệu text/plain và beacon payload khi người dùng thoát trang/đóng tab
+app.use(express.text({ type: ['text/*', 'application/json'] }));
 
 // ==========================================
 // 3. CẤU HÌNH SESSION ĐỂ QUẢN LÝ ĐĂNG NHẬP

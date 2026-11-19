@@ -560,26 +560,31 @@
     seats: <%- JSON.stringify(typeof seats !== 'undefined' ? seats : []) %>
   };
 
-  async function releaseSeatsImmediately() {
+  function sendBeaconRelease() {
+    if (isPaymentSubmitted) return;
     try {
-      await fetch('/api/huy-giu-ghe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(bookingMeta),
-        keepalive: true
-      });
-    } catch(e) {
-      console.warn('Lỗi giải phóng giữ ghế:', e);
-    }
+      const blob = new Blob([JSON.stringify(bookingMeta)], { type: 'application/json' });
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/api/huy-giu-ghe', blob);
+      } else {
+        fetch('/api/huy-giu-ghe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bookingMeta),
+          keepalive: true
+        });
+      }
+    } catch(e) {}
+  }
+
+  async function releaseSeatsImmediately() {
+    sendBeaconRelease();
   }
 
   function cancelAndReturnToSeats() {
     const seatsStr = Array.isArray(bookingMeta.seats) ? bookingMeta.seats.join(',') : (bookingMeta.seats || '');
     const returnUrl = `/dat-ve/${bookingMeta.movieId}?release=true&cinema=${encodeURIComponent(bookingMeta.cinema)}&date=${encodeURIComponent(bookingMeta.showDate)}&time=${encodeURIComponent(bookingMeta.showTime)}&seats=${encodeURIComponent(seatsStr)}`;
-    
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon('/api/huy-giu-ghe', JSON.stringify(bookingMeta));
-    }
+    sendBeaconRelease();
     window.location.href = returnUrl;
   }
 
@@ -591,15 +596,40 @@
     });
   }
 
-  // Tự động nhả ghế nếu người dùng đóng tab, back trang hoặc out khỏi thanh toán
-  window.addEventListener('pagehide', () => {
-    if (!isPaymentSubmitted && bookingMeta.seats && bookingMeta.seats.length > 0) {
-      const payload = JSON.stringify(bookingMeta);
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon('/api/huy-giu-ghe', payload);
-      }
-    }
+  // 1. Tự động nhả ghế tức thì khi người dùng đóng tab, back trang hoặc tắt trình duyệt
+  window.addEventListener('pagehide', sendBeaconRelease);
+  window.addEventListener('beforeunload', sendBeaconRelease);
+
+  // 2. Tự động nhả ghế khi người dùng click vào bất kỳ liên kết nào (Logo CINEGO, menu Header, breadcrumb...)
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', (e) => {
+        const href = link.getAttribute('href');
+        if (href && !href.startsWith('#') && !href.startsWith('javascript:')) {
+          sendBeaconRelease();
+        }
+      });
+    });
   });
+
+  // 3. Cơ chế NHỊP TIM (HEARTBEAT) - Giải quyết dứt điểm khi khách mất mạng, tắt máy hoặc kill app
+  // Cứ 15s gửi ping một lần để gia hạn thêm 45s. Nếu khách mất mạng/kill app -> sau 45s ghế tự động nhả cho máy khác!
+  let heartbeatTimer = null;
+  if (bookingMeta.seats && bookingMeta.seats.length > 0) {
+    heartbeatTimer = setInterval(() => {
+      if (isPaymentSubmitted) {
+        clearInterval(heartbeatTimer);
+        return;
+      }
+      fetch('/api/heartbeat-giu-ghe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingMeta)
+      }).catch(err => {
+        // Mất mạng tạm thời -> server sẽ chờ 45s
+      });
+    }, 15000);
+  }
 
   // ==========================================
   // 5-MINUTE COUNTDOWN TIMER & AUTO-CANCEL LOGIC
@@ -615,6 +645,7 @@
 
     if (remainingSeconds <= 0) {
       clearInterval(countdownInterval);
+      if (heartbeatTimer) clearInterval(heartbeatTimer);
       if (timerDisplay) timerDisplay.innerText = '00:00';
       if (progressBar) progressBar.style.width = '0%';
       // Giải phóng ghế giữ chỗ tức thì trong MongoDB

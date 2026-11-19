@@ -196,13 +196,17 @@ router.post('/tai-khoan/ve-cua-toi/xoa/:id', checkLogin, async (req, res) => {
     }
 });
 
+// Thời gian giữ ghế ngắn hạn theo nhịp tim (Heartbeat lease): 45 giây
+// Nếu khách mất mạng, kill app hoặc tắt máy mà không bấm nút thì sau 45s ghế tự động nhả cho máy khác
+const SEAT_HOLD_LEASE_MS = 45 * 1000;
+
 router.get('/dat-ve/:id', checkLogin, async (req, res, next) => {
     try { 
         if (!isValidObjectId(req.params.id)) {
             return res.status(404).render('404', { title: '404 — Không Tìm Thấy Suất Chiếu' });
         }
-        // 1. Dọn dẹp ghế giữ quá hạn 5 phút trong toàn hệ thống
-        const lockThreshold = new Date(Date.now() - 5 * 60 * 1000);
+        // 1. Dọn dẹp ghế giữ quá hạn nhịp tim trong toàn hệ thống
+        const lockThreshold = new Date(Date.now() - SEAT_HOLD_LEASE_MS);
         await SeatLock.deleteMany({ createdAt: { $lt: lockThreshold } });
 
         // 2. Tự động giải phóng ghế của chính tài khoản này khi họ quay về trang chọn ghế
@@ -279,8 +283,8 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
                 return res.redirect(`/dat-ve/${movieId}?error=${encodeURIComponent('Vui lòng chỉ chọn các ghế trong cùng một hàng!')}`);
             }
 
-            // 0.1 Tự động giải phóng toàn bộ các ghế giữ đã quá hạn 5 phút (300s) trong DB
-            const lockThreshold = new Date(Date.now() - 5 * 60 * 1000);
+            // 0.1 Tự động giải phóng toàn bộ các ghế giữ đã quá hạn nhịp tim (45s) trong DB
+            const lockThreshold = new Date(Date.now() - SEAT_HOLD_LEASE_MS);
             await SeatLock.deleteMany({ createdAt: { $lt: lockThreshold } });
 
             // 1. Kiểm tra xem các ghế này đã được xuất vé trong DB chưa
@@ -1014,8 +1018,8 @@ router.get('/api/ghe-da-dat', async (req, res) => {
         });
         bookedSeats = [...new Set(bookedSeats)];
 
-        // Tự động giải phóng toàn bộ các ghế giữ đã quá hạn 5 phút (300 giây) trong MongoDB
-        const lockThreshold = new Date(Date.now() - 5 * 60 * 1000);
+        // Tự động giải phóng toàn bộ các ghế giữ đã quá hạn nhịp tim (45 giây) trong MongoDB
+        const lockThreshold = new Date(Date.now() - SEAT_HOLD_LEASE_MS);
         await SeatLock.deleteMany({ createdAt: { $lt: lockThreshold } });
 
         // Lấy ID người dùng từ session hiện tại
@@ -1045,22 +1049,53 @@ router.get('/api/ghe-da-dat', async (req, res) => {
     }
 });
 
-// [MỚI] API GIẢI PHÓNG GHẾ GIỮ CHỖ TỨC THÌ (Khi hết 5 phút hoặc khi khách rời khỏi trang thanh toán)
+// [MỚI] API NHỊP TIM (HEARTBEAT) DUY TRÌ GIỮ GHẾ KHI KHÁCH ĐANG Ở TRANG THANH TOÁN
+// Cứ 15s gửi ping một lần để gia hạn thêm 45s. Nếu khách mất mạng, tắt máy hoặc kill app -> sau 45s ghế tự nhả ngay!
+router.post('/api/heartbeat-giu-ghe', async (req, res) => {
+    try {
+        let body = req.body;
+        if (typeof body === 'string') {
+            try { body = JSON.parse(body); } catch(e) { body = {}; }
+        }
+        let { movieId, cinema, showDate, showTime, seats } = body || {};
+        const currentUserId = req.session.user && req.session.user._id ? req.session.user._id.toString() : 'guest';
+        const seatList = Array.isArray(seats)
+            ? seats
+            : (typeof seats === 'string' ? seats.split(',').map(s => s.trim()).filter(Boolean) : []);
+
+        if (movieId && showDate && showTime && seatList.length > 0) {
+            const filter = {
+                movieId,
+                showDate,
+                showTime,
+                seat: { $in: seatList }
+            };
+            if (cinema) {
+                const escaped = escapeRegex(cinema);
+                filter.cinema = { $regex: new RegExp(`^${escaped}$`, 'i') };
+            }
+            if (currentUserId && currentUserId !== 'guest') {
+                filter.userId = currentUserId;
+            }
+
+            // Gia hạn thời hạn giữ ghế thêm 45s
+            await SeatLock.updateMany(filter, { $set: { createdAt: new Date() } });
+            return res.json({ success: true, refreshed: true });
+        }
+        res.json({ success: false, message: 'Dữ liệu không hợp lệ' });
+    } catch(err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// [MỚI] API GIẢI PHÓNG GHẾ GIỮ CHỖ TỨC THÌ (Khi khách rời khỏi trang thanh toán, đóng tab hoặc click link khác)
 router.post('/api/huy-giu-ghe', async (req, res) => {
     try {
-        let { movieId, cinema, showDate, showTime, seats } = req.body;
-        
-        // Hỗ trợ cả navigator.sendBeacon dạng chuỗi JSON hoặc text/plain
-        if (typeof req.body === 'string') {
-            try { 
-                const parsed = JSON.parse(req.body);
-                movieId = parsed.movieId;
-                cinema = parsed.cinema;
-                showDate = parsed.showDate;
-                showTime = parsed.showTime;
-                seats = parsed.seats;
-            } catch(e) {}
+        let body = req.body;
+        if (typeof body === 'string') {
+            try { body = JSON.parse(body); } catch(e) { body = {}; }
         }
+        let { movieId, cinema, showDate, showTime, seats } = body || {};
 
         const seatList = Array.isArray(seats)
             ? seats
