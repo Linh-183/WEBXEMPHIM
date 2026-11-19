@@ -40,145 +40,159 @@
     </div>
 
     <!-- =========================================================================
-         BƯỚC 1 & 2: BẢNG CHỌN CỤM RẠP & THỜI GIAN DẠNG TABS TINH GỌN (COMPACT CONTROL)
+         BẢNG ĐIỀU KHIỂN CHỌN RẠP & LỊCH CHIẾU DẠNG TABS THẢ XUỐNG (1 DÒNG DUY NHẤT)
+         Nhấn vào tab để xổ ra danh sách lựa chọn, cực kỳ gọn gàng, không tràn nút bấm
          ========================================================================= -->
-    <div class="bg-white border border-[#E5E0D5] p-4 sm:p-5 mb-5 shadow-sm rounded-sm">
-      
-      <!-- HÀNG 1: TABS CHỌN CỤM RẠP -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3.5 border-b border-[#E5E0D5]">
-        <div class="flex items-center gap-2">
-          <span class="w-5 h-5 bg-[#BA2D27] text-white text-[11px] font-bold flex items-center justify-center rounded-xs">1</span>
-          <h2 class="font-bold text-sm text-[#111827]">Chọn Cụm Rạp:</h2>
-          <span class="text-xs text-[#BA2D27] font-bold ml-1" id="activeCinemaLabel">CGV Kim Cúc Plaza</span>
-        </div>
+    <% 
+      // Chuẩn hóa thời gian Việt Nam (Asia/Ho_Chi_Minh - UTC+7)
+      const nowVN = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+      const todayBooking = nowVN;
+      const yearNow = todayBooking.getFullYear();
+      const monthNow = String(todayBooking.getMonth() + 1).padStart(2, '0');
+      const dayNow = String(todayBooking.getDate()).padStart(2, '0');
+      const initDateIso = `${yearNow}-${monthNow}-${dayNow}`;
+      const currentHNow = todayBooking.getHours();
+      const currentMNow = todayBooking.getMinutes();
+      const daysOfWeekVi = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+      let initDateLabel = 'Hôm nay (' + todayBooking.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) + ')';
 
-        <!-- Cinema Segmented Tabs -->
-        <div class="inline-flex p-1 bg-[#F3EFE6] border border-[#E5E0D5] rounded-md gap-1 w-full md:w-auto" id="cinemaTabsContainer">
-          <button type="button" 
-                  onclick="setBookingCinema('CGV Kim Cúc Plaza', this)" 
-                  class="booking-cinema-btn flex-1 md:flex-initial px-3.5 py-1.5 text-xs font-bold rounded-sm transition-all bg-[#111827] text-white shadow-xs">
-            CGV Kim Cúc Plaza
-          </button>
-          <button type="button" 
-                  onclick="setBookingCinema('Starlight Nguyễn Kim', this)" 
-                  class="booking-cinema-btn flex-1 md:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-sm transition-all text-[#4B5563] hover:text-[#111827] hover:bg-black/5">
-            Starlight Nguyễn Kim
-          </button>
-          <button type="button" 
-                  onclick="setBookingCinema('DCine Quy Nhơn', this)" 
-                  class="booking-cinema-btn flex-1 md:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-sm transition-all text-[#4B5563] hover:text-[#111827] hover:bg-black/5">
-            DCine Quy Nhơn
-          </button>
-        </div>
-      </div>
-
-      <!-- HÀNG 2: CHỌN NGÀY & SUẤT CHIẾU TINH GỌN -->
-      <% 
-        // Chuẩn hóa thời gian Việt Nam (Asia/Ho_Chi_Minh - UTC+7)
-        const nowVN = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
-        const todayBooking = nowVN;
-        const yearNow = todayBooking.getFullYear();
-        const monthNow = String(todayBooking.getMonth() + 1).padStart(2, '0');
-        const dayNow = String(todayBooking.getDate()).padStart(2, '0');
-        const initDateIso = `${yearNow}-${monthNow}-${dayNow}`;
-        const currentHNow = todayBooking.getHours();
-        const currentMNow = todayBooking.getMinutes();
-        const daysOfWeekVi = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-        let initDateLabel = 'Hôm nay (' + todayBooking.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) + ')';
-
-        const normCinEjs = (s) => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
-        const targetCinEjs = normCinEjs('CGV Kim Cúc Plaza');
-        let initShowtimesList = [];
-        if (typeof phim !== 'undefined' && phim && Array.isArray(phim.showtimes)) {
-          const foundSt = phim.showtimes.find(s => {
-            const cin = normCinEjs(s.cinema);
-            const isCin = cin === targetCinEjs || cin.includes(targetCinEjs) || targetCinEjs.includes(cin);
-            let sDate = s.date;
-            if (sDate && sDate.includes('T')) sDate = sDate.split('T')[0];
-            const isDate = (sDate === initDateIso);
-            return isCin && isDate && s.times && s.times.length > 0;
-          });
-          if (foundSt) {
-            const arr = Array.isArray(foundSt.times) ? foundSt.times : [foundSt.times];
-            initShowtimesList = arr.map(t => (t || '').trim()).filter(Boolean);
-          }
+      const normCinEjs = (s) => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+      const targetCinEjs = normCinEjs('CGV Kim Cúc Plaza');
+      let initShowtimesList = [];
+      if (typeof phim !== 'undefined' && phim && Array.isArray(phim.showtimes)) {
+        const foundSt = phim.showtimes.find(s => {
+          const cin = normCinEjs(s.cinema);
+          const isCin = cin === targetCinEjs || cin.includes(targetCinEjs) || targetCinEjs.includes(cin);
+          let sDate = s.date;
+          if (sDate && sDate.includes('T')) sDate = sDate.split('T')[0];
+          const isDate = (sDate === initDateIso);
+          return isCin && isDate && s.times && s.times.length > 0;
+        });
+        if (foundSt) {
+          const arr = Array.isArray(foundSt.times) ? foundSt.times : [foundSt.times];
+          initShowtimesList = arr.map(t => (t || '').trim()).filter(Boolean);
         }
+      }
 
-        const isShowtimePastServer = (tStr, dIso) => {
-          if (dIso < initDateIso) return true;
-          if (dIso > initDateIso) return false;
-          const [h, m] = (tStr || '').split(':').map(Number);
-          if (isNaN(h) || isNaN(m)) return false;
-          return (h < currentHNow || (h === currentHNow && m <= currentMNow));
-        };
-        const validFutureTimes = initShowtimesList.filter(t => !isShowtimePastServer(t, initDateIso));
-        let initDefaultTime = validFutureTimes.length > 0 ? validFutureTimes[0] : '';
-      %>
-      <div class="pt-3.5 space-y-3">
-        <!-- Date Tabs (7 ngày liên tiếp từ hôm nay) -->
-        <div class="flex items-center gap-2 overflow-x-auto pb-1" id="datePickerContainer">
-          <% 
-            for (let i = 0; i < 7; i++) {
-              const d = new Date(todayBooking);
-              d.setDate(todayBooking.getDate() + i);
-              const isToday = (i === 0);
-              const isTomorrow = (i === 1);
-              const dayLabel = isToday ? 'Hôm nay' : (isTomorrow ? 'Ngày mai' : daysOfWeekVi[d.getDay()]);
-              const dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-              const fullIso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-          %>
-            <button type="button" 
-                    data-iso="<%= fullIso %>"
-                    data-label="<%= dayLabel %> (<%= dateStr %>)"
-                    onclick="setBookingDate('<%= fullIso %>', '<%= dayLabel %> (<%= dateStr %>)', this)" 
-                    class="date-btn px-3 py-1.5 rounded-sm border text-xs transition-all whitespace-nowrap <%= isToday ? 'bg-[#111827] text-white font-bold border-[#111827] shadow-xs' : 'bg-white border-[#E5E0D5] text-[#374151] hover:border-[#111827]' %>">
-              <span class="font-bold"><%= dayLabel %></span>
-              <span class="text-[11px] opacity-80 ml-0.5">(<%= dateStr %>)</span>
-              <span class="date-status-indicator hidden"></span>
+      const isShowtimePastServer = (tStr, dIso) => {
+        if (dIso < initDateIso) return true;
+        if (dIso > initDateIso) return false;
+        const [h, m] = (tStr || '').split(':').map(Number);
+        if (isNaN(h) || isNaN(m)) return false;
+        return (h < currentHNow || (h === currentHNow && m <= currentMNow));
+      };
+      const validFutureTimes = initShowtimesList.filter(t => !isShowtimePastServer(t, initDateIso));
+      let initDefaultTime = validFutureTimes.length > 0 ? validFutureTimes[0] : '';
+    %>
+
+    <div class="bg-white border border-[#E5E0D5] p-2 sm:p-2.5 mb-5 rounded-md shadow-xs relative z-20" id="bookingBarContainer">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        
+        <!-- TAB 1: CHỌN RẠP (Nhấn vào xổ ra các lựa chọn rạp) -->
+        <div class="relative" id="tabCinemaWrapper">
+          <button type="button" 
+                  id="tabCinemaTrigger"
+                  onclick="toggleBookingTab('menuCinema', event)" 
+                  class="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#E5E0D5] hover:border-[#111827] rounded text-left transition-all cursor-pointer select-none">
+            <div class="flex items-center gap-2.5 truncate">
+              <span class="w-7 h-7 rounded bg-[#BA2D27]/10 text-[#BA2D27] flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-[17px]">theater_comedy</span>
+              </span>
+              <div class="truncate">
+                <span class="block text-[10px] uppercase font-bold text-[#6B7280] leading-none">1. Cụm Rạp Chiếu</span>
+                <span class="font-bold text-xs sm:text-[13px] text-[#111827] truncate block mt-0.5" id="labelSelectedCinema">CGV Kim Cúc Plaza</span>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-[18px] text-[#6B7280] transition-transform duration-200" id="arrowCinema">expand_more</span>
+          </button>
+
+          <!-- Dropdown Options Menu for Cinema -->
+          <div id="menuCinema" class="booking-tab-menu hidden absolute top-full left-0 right-0 mt-1 bg-white border border-[#E5E0D5] shadow-2xl rounded-md z-30 py-1 max-h-60 overflow-y-auto">
+            <button type="button" onclick="selectCinema('CGV Kim Cúc Plaza')" class="cinema-option w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-left hover:bg-[#FAF8F5] transition-colors border-b border-[#F3EFE6] text-[#BA2D27] font-bold">
+              <span>CGV Kim Cúc Plaza</span>
+              <span class="text-[10px] text-[#6B7280]">P. Ghềnh Ráng</span>
             </button>
-          <% } %>
+            <button type="button" onclick="selectCinema('Starlight Nguyễn Kim')" class="cinema-option w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-left hover:bg-[#FAF8F5] transition-colors border-b border-[#F3EFE6] text-[#374151]">
+              <span>Starlight Nguyễn Kim</span>
+              <span class="text-[10px] text-[#6B7280]">TTTM Nguyễn Kim</span>
+            </button>
+            <button type="button" onclick="selectCinema('DCine Quy Nhơn')" class="cinema-option w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-left hover:bg-[#FAF8F5] transition-colors text-[#374151]">
+              <span>DCine Quy Nhơn</span>
+              <span class="text-[10px] text-[#6B7280]">Ngã ba Đống Đa</span>
+            </button>
+          </div>
         </div>
 
-        <!-- Showtime Pills -->
-        <div class="pt-2.5 border-t border-[#F3EFE6] flex flex-col sm:flex-row sm:items-center gap-2.5">
-          <div class="flex items-center gap-2 shrink-0">
-            <span class="w-5 h-5 bg-[#111827] text-white text-[11px] font-bold flex items-center justify-center rounded-xs">2</span>
-            <span class="text-xs font-bold text-[#111827]">Suất chiếu:</span>
-            <span class="text-xs text-[#6B7280]" id="activeScreeningLabel"><%= initDateLabel %> • <%= initDefaultTime ? initDefaultTime : (initShowtimesList.length > 0 ? 'Đã hết suất chiếu hôm nay' : 'Chưa có lịch chiếu') %></span>
-          </div>
-
-          <div class="flex flex-wrap items-center gap-2 mt-1 sm:mt-0" id="timePickerContainer">
-            <% if (initShowtimesList.length > 0) { %>
-              <% if (validFutureTimes.length === 0) { %>
-                <div class="text-xs text-[#BA2D27] font-semibold py-1">
-                  Đã hết suất chiếu hôm nay tại rạp này. Vui lòng chọn ngày khác bên trên.
-                </div>
-              <% } else { %>
-                <% initShowtimesList.forEach((t) => { 
-                  const isPast = isShowtimePastServer(t, initDateIso);
-                  const isSelected = (t === initDefaultTime);
-                %>
-                  <% if (isPast) { %>
-                    <button type="button" disabled title="Suất <%= t %> đã qua giờ chiếu" class="time-btn px-3 py-1.5 rounded-sm border text-xs font-medium bg-[#FAF8F5] border-[#E5E0D5] text-[#9CA3AF] opacity-50 cursor-not-allowed">
-                      <%= t %> <span class="text-[9px] block">Đã chiếu</span>
-                    </button>
-                  <% } else { %>
-                    <button type="button" onclick="setBookingTime('<%= t %>', this)" class="time-btn px-3.5 py-1.5 rounded-sm border text-xs font-semibold transition-all <%= isSelected ? 'bg-[#BA2D27] text-white border-[#BA2D27] shadow-xs' : 'bg-white border-[#E5E0D5] text-[#111827] hover:border-[#111827]' %>">
-                      <%= t %> <span class="text-[9.5px] <%= isSelected ? 'text-white/80' : 'text-[#6B7280]' %> block font-normal">2D Phụ Đề</span>
-                    </button>
-                  <% } %>
-                <% }); %>
-              <% } %>
-            <% } else { %>
-              <div class="text-xs text-[#6B7280] py-1">
-                Chưa có lịch chiếu vào ngày này. Vui lòng chọn ngày khác hoặc cụm rạp khác.
+        <!-- TAB 2: CHỌN NGÀY CHIẾU (Nhấn vào xổ ra các ngày lựa chọn) -->
+        <div class="relative" id="tabDateWrapper">
+          <button type="button" 
+                  id="tabDateTrigger"
+                  onclick="toggleBookingTab('menuDate', event)" 
+                  class="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#E5E0D5] hover:border-[#111827] rounded text-left transition-all cursor-pointer select-none">
+            <div class="flex items-center gap-2.5 truncate">
+              <span class="w-7 h-7 rounded bg-[#111827]/10 text-[#111827] flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-[17px]">calendar_today</span>
+              </span>
+              <div class="truncate">
+                <span class="block text-[10px] uppercase font-bold text-[#6B7280] leading-none">2. Ngày Chiếu</span>
+                <span class="font-bold text-xs sm:text-[13px] text-[#111827] truncate block mt-0.5" id="labelSelectedDate"><%= initDateLabel %></span>
               </div>
+            </div>
+            <span class="material-symbols-outlined text-[18px] text-[#6B7280] transition-transform duration-200" id="arrowDate">expand_more</span>
+          </button>
+
+          <!-- Dropdown Options Menu for Date -->
+          <div id="menuDate" class="booking-tab-menu hidden absolute top-full left-0 right-0 mt-1 bg-white border border-[#E5E0D5] shadow-2xl rounded-md z-30 py-1 max-h-64 overflow-y-auto">
+            <% 
+              for (let i = 0; i < 7; i++) {
+                const d = new Date(todayBooking);
+                d.setDate(todayBooking.getDate() + i);
+                const isToday = (i === 0);
+                const isTomorrow = (i === 1);
+                const dayLabel = isToday ? 'Hôm nay' : (isTomorrow ? 'Ngày mai' : daysOfWeekVi[d.getDay()]);
+                const dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+                const fullIso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            %>
+              <button type="button" 
+                      onclick="selectDate('<%= fullIso %>', '<%= dayLabel %> (<%= dateStr %>)')" 
+                      class="date-option w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-left hover:bg-[#FAF8F5] transition-colors border-b border-[#F3EFE6] last:border-b-0 <%= isToday ? 'text-[#BA2D27] font-bold bg-[#FAF8F5]' : 'text-[#374151]' %>"
+                      data-iso="<%= fullIso %>">
+                <span class="font-semibold"><%= dayLabel %></span>
+                <span class="text-[11px] text-[#6B7280]"><%= dateStr %></span>
+              </button>
             <% } %>
           </div>
         </div>
 
-      </div>
+        <!-- TAB 3: CHỌN SUẤT CHIẾU (Nhấn vào xổ ra danh sách giờ chiếu) -->
+        <div class="relative" id="tabTimeWrapper">
+          <button type="button" 
+                  id="tabTimeTrigger"
+                  onclick="toggleBookingTab('menuTime', event)" 
+                  class="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#E5E0D5] hover:border-[#111827] rounded text-left transition-all cursor-pointer select-none">
+            <div class="flex items-center gap-2.5 truncate">
+              <span class="w-7 h-7 rounded bg-[#BA2D27]/10 text-[#BA2D27] flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-[17px]">schedule</span>
+              </span>
+              <div class="truncate">
+                <span class="block text-[10px] uppercase font-bold text-[#6B7280] leading-none">3. Suất Chiếu</span>
+                <span class="font-bold text-xs sm:text-[13px] text-[#BA2D27] truncate block mt-0.5" id="labelSelectedTime">
+                  <%= initDefaultTime ? initDefaultTime + ' (2D Phụ Đề)' : (initShowtimesList.length > 0 ? 'Đã hết suất chiếu hôm nay' : 'Chưa có lịch chiếu') %>
+                </span>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-[18px] text-[#6B7280] transition-transform duration-200" id="arrowTime">expand_more</span>
+          </button>
 
+          <!-- Dropdown Options Menu for Showtimes -->
+          <div id="menuTime" class="booking-tab-menu hidden absolute top-full left-0 right-0 mt-1 bg-white border border-[#E5E0D5] shadow-2xl rounded-md z-30 py-1 max-h-64 overflow-y-auto">
+            <div id="timeOptionsList">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
 
     <!-- =========================================================================
@@ -459,9 +473,6 @@
     </div>
   </form>
 
-    </div>
-  </form>
-
 </main>
 
 <script>
@@ -568,10 +579,8 @@
   }
 
   function renderShowtimes() {
-    const container = document.getElementById('timePickerContainer');
-    if (!container) return;
-
-    updateDatePillsStatus();
+    const listContainer = document.getElementById('timeOptionsList') || document.getElementById('timePickerContainer');
+    const labelTime = document.getElementById('labelSelectedTime');
 
     let displayDate = currentDate;
     try {
@@ -583,28 +592,20 @@
     const validFutureTimes = availableTimes.filter(t => !isPastShowtime(t, currentDate));
 
     if (availableTimes.length === 0) {
-      // Trường hợp rạp này chưa có lịch chiếu cho ngày này: Báo thông tin rõ ràng
       currentTime = '';
       const inputTime = document.getElementById('input_showTime');
       if (inputTime) inputTime.value = '';
+      if (labelTime) labelTime.innerHTML = '<span class="text-[#6B7280] font-medium">Chưa có lịch chiếu</span>';
 
-      container.innerHTML = `
-        <div class="w-full p-4 sm:p-5 bg-[#FAF8F5] border border-[#E5E0D5] flex items-start gap-3.5">
-          <div class="w-8 h-8 rounded-full bg-[#BA2D27]/10 text-[#BA2D27] flex items-center justify-center flex-shrink-0 mt-0.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
+      if (listContainer) {
+        listContainer.innerHTML = `
+          <div class="p-4 text-center text-xs text-[#6B7280]">
+            <p class="font-bold text-[#111827]">Chưa có lịch chiếu</p>
+            <p class="text-[11px] text-[#6B7280] mt-1">Rạp ${currentCinema} chưa mở suất vào ${displayDate}.</p>
+            <p class="text-[11px] text-[#BA2D27] mt-1 font-semibold">Vui lòng bấm chọn ngày khác hoặc cụm rạp khác.</p>
           </div>
-          <div class="flex-1 font-['JetBrains_Mono']">
-            <div class="text-xs font-bold text-[#121316]">
-              Chưa có lịch chiếu tại ${currentCinema} vào ngày ${displayDate}
-            </div>
-            <p class="text-[11px] text-[#7A7E8B] mt-1 leading-relaxed">
-              Cụm rạp này hiện chưa mở bán suất chiếu cho ngày bạn chọn. Vui lòng bấm chọn ngày khác trong tuần hoặc đổi sang cụm rạp khác để xem các suất chiếu có sẵn.
-            </p>
-          </div>
-        </div>
-      `;
+        `;
+      }
 
       updateSummaryScreening();
       loadOccupiedSeats(true);
@@ -612,28 +613,20 @@
     }
 
     if (validFutureTimes.length === 0) {
-      // Trường hợp có lịch chiếu nhưng toàn bộ các suất trong ngày đã qua giờ chiếu
       currentTime = '';
       const inputTime = document.getElementById('input_showTime');
       if (inputTime) inputTime.value = '';
+      if (labelTime) labelTime.innerHTML = '<span class="text-[#BA2D27] font-bold">Đã hết suất hôm nay</span>';
 
-      container.innerHTML = `
-        <div class="w-full p-4 sm:p-5 bg-[#FAF8F5] border border-[#BA2D27]/30 flex items-start gap-3.5">
-          <div class="w-8 h-8 rounded-full bg-[#BA2D27]/10 text-[#BA2D27] flex items-center justify-center flex-shrink-0 mt-0.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
+      if (listContainer) {
+        listContainer.innerHTML = `
+          <div class="p-4 text-center text-xs text-[#BA2D27]">
+            <p class="font-bold">Đã hết suất chiếu hôm nay</p>
+            <p class="text-[11px] text-[#6B7280] mt-1">Tất cả suất ngày ${displayDate} tại ${currentCinema} đã qua giờ.</p>
+            <p class="text-[11px] text-[#111827] mt-1 font-semibold">Vui lòng bấm chọn ngày mai để tiếp tục.</p>
           </div>
-          <div class="flex-1 font-['JetBrains_Mono']">
-            <div class="text-xs font-bold text-[#121316]">
-              Tất cả các suất chiếu ngày ${displayDate} tại ${currentCinema} đã kết thúc hoặc qua giờ chiếu
-            </div>
-            <p class="text-[11px] text-[#7A7E8B] mt-1 leading-relaxed">
-              Hiện tại không còn suất chiếu nào có thể đặt vé trong ngày này. Vui lòng bấm chọn ngày mai hoặc các ngày tiếp theo trong danh sách trên để tiếp tục đặt vé.
-            </p>
-          </div>
-        </div>
-      `;
+        `;
+      }
 
       updateSummaryScreening();
       loadOccupiedSeats(true);
@@ -646,27 +639,42 @@
       if (inputTime) inputTime.value = currentTime;
     }
 
-    container.innerHTML = '';
-    availableTimes.forEach(t => {
-      const isPast = isPastShowtime(t, currentDate);
-      const isSelected = (t === currentTime);
-      const btn = document.createElement('button');
-      btn.type = 'button';
+    if (labelTime) {
+      labelTime.innerText = currentTime ? `${currentTime} (2D Phụ Đề)` : 'Chọn suất chiếu';
+    }
 
-      if (isPast) {
-        btn.disabled = true;
-        btn.className = 'time-btn px-3 py-1.5 rounded-sm border text-xs font-medium bg-[#FAF8F5] border-[#E5E0D5] text-[#9CA3AF] opacity-50 cursor-not-allowed';
-        btn.innerHTML = `${t} <span class="text-[9px] text-[#9CA3AF] block font-normal">Đã chiếu</span>`;
-        btn.title = `Suất ${t} đã qua giờ chiếu (không thể đặt vé)`;
-      } else {
-        btn.onclick = function() { setBookingTime(t, this); };
-        btn.className = `time-btn px-3.5 py-1.5 rounded-sm border text-xs font-semibold transition-all ${
-          isSelected ? 'bg-[#BA2D27] text-white border-[#BA2D27] shadow-xs' : 'bg-white border-[#E5E0D5] text-[#111827] hover:border-[#111827]'
-        }`;
-        btn.innerHTML = `${t} <span class="text-[9.5px] ${isSelected ? 'text-white/80' : 'text-[#6B7280]'} block font-normal">2D Phụ Đề</span>`;
-      }
-      container.appendChild(btn);
-    });
+    if (listContainer) {
+      listContainer.innerHTML = '';
+      availableTimes.forEach(t => {
+        const isPast = isPastShowtime(t, currentDate);
+        const isSelected = (t === currentTime);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+
+        if (isPast) {
+          btn.disabled = true;
+          btn.className = 'w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-left text-[#9CA3AF] bg-[#FAF8F5] opacity-50 cursor-not-allowed border-b border-[#F3EFE6] last:border-b-0';
+          btn.innerHTML = `
+            <span class="line-through">${t} - 2D Phụ Đề</span>
+            <span class="text-[10px] bg-[#E5E0D5] text-[#6B7280] px-1.5 py-0.5 rounded-xs">Đã qua giờ</span>
+          `;
+          btn.title = `Suất ${t} đã qua giờ chiếu`;
+        } else {
+          btn.onclick = function() { selectTime(t); };
+          btn.className = `time-option w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-left transition-colors border-b border-[#F3EFE6] last:border-b-0 cursor-pointer ${
+            isSelected ? 'bg-[#FAF8F5] text-[#BA2D27] font-bold' : 'text-[#374151] hover:bg-[#FAF8F5]'
+          }`;
+          btn.innerHTML = `
+            <span class="flex items-center gap-2">
+              <span class="font-bold text-xs">${t}</span>
+              <span class="text-[11px] text-[#6B7280] font-normal">• 2D Phụ Đề</span>
+            </span>
+            ${isSelected ? '<span class="material-symbols-outlined text-[16px] text-[#BA2D27]">check</span>' : ''}
+          `;
+        }
+        listContainer.appendChild(btn);
+      });
+    }
 
     updateSummaryScreening();
     loadOccupiedSeats(true);
@@ -774,62 +782,100 @@
     }
   }
 
-  function setBookingCinema(name, btnEl) {
+  // ==========================================
+  // XỬ LÝ DROPDOWN TABS ĐẶT VÉ TINH GỌN (1 DÒNG DUY NHẤT)
+  // ==========================================
+  function toggleBookingTab(menuId, event) {
+    if (event) event.stopPropagation();
+    const targetMenu = document.getElementById(menuId);
+    if (!targetMenu) return;
+    const isClosed = targetMenu.classList.contains('hidden');
+    closeAllBookingTabs();
+    if (isClosed) {
+      targetMenu.classList.remove('hidden');
+      const arrowId = menuId === 'menuCinema' ? 'arrowCinema' : (menuId === 'menuDate' ? 'arrowDate' : 'arrowTime');
+      const arrow = document.getElementById(arrowId);
+      if (arrow) arrow.style.transform = 'rotate(180deg)';
+    }
+  }
+
+  function closeAllBookingTabs() {
+    document.querySelectorAll('.booking-tab-menu').forEach(m => m.classList.add('hidden'));
+    ['arrowCinema', 'arrowDate', 'arrowTime'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.transform = 'rotate(0deg)';
+    });
+  }
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('#bookingBarContainer')) {
+      closeAllBookingTabs();
+    }
+  });
+
+  function selectCinema(name) {
     currentCinema = name;
-    document.getElementById('input_cinema').value = name;
-    const activeLbl = document.getElementById('activeCinemaLabel');
-    if (activeLbl) activeLbl.innerText = name;
+    const inp = document.getElementById('input_cinema');
+    if (inp) inp.value = name;
+    const lbl = document.getElementById('labelSelectedCinema');
+    if (lbl) lbl.innerText = name;
 
-    document.querySelectorAll('.booking-cinema-btn').forEach(btn => {
-      btn.className = 'booking-cinema-btn flex-1 md:flex-initial px-3.5 py-1.5 text-xs font-semibold rounded-sm transition-all text-[#4B5563] hover:text-[#111827] hover:bg-black/5';
+    document.querySelectorAll('.cinema-option').forEach(btn => {
+      if (btn.innerText.includes(name)) {
+        btn.classList.add('text-[#BA2D27]', 'font-bold', 'bg-[#FAF8F5]');
+        btn.classList.remove('text-[#374151]');
+      } else {
+        btn.classList.remove('text-[#BA2D27]', 'font-bold', 'bg-[#FAF8F5]');
+        btn.classList.add('text-[#374151]');
+      }
     });
 
-    if (btnEl) {
-      btnEl.className = 'booking-cinema-btn flex-1 md:flex-initial px-3.5 py-1.5 text-xs font-bold rounded-sm transition-all bg-[#111827] text-white shadow-xs';
-    }
-
+    closeAllBookingTabs();
     renderShowtimes();
   }
 
-  function setBookingDate(dateVal, dateLabel, btnEl) {
+  function selectDate(dateVal, dateLabel) {
     currentDate = dateVal;
-    document.getElementById('input_showDate').value = dateVal;
+    const inp = document.getElementById('input_showDate');
+    if (inp) inp.value = dateVal;
+    const lbl = document.getElementById('labelSelectedDate');
+    if (lbl) lbl.innerText = dateLabel;
 
-    document.querySelectorAll('.date-btn').forEach(btn => {
-      btn.className = 'date-btn px-3 py-1.5 rounded-sm border text-xs transition-all whitespace-nowrap bg-white border-[#E5E0D5] text-[#374151] hover:border-[#111827]';
+    document.querySelectorAll('.date-option').forEach(btn => {
+      if (btn.getAttribute('data-iso') === dateVal) {
+        btn.classList.add('text-[#BA2D27]', 'font-bold', 'bg-[#FAF8F5]');
+        btn.classList.remove('text-[#374151]');
+      } else {
+        btn.classList.remove('text-[#BA2D27]', 'font-bold', 'bg-[#FAF8F5]');
+        btn.classList.add('text-[#374151]');
+      }
     });
-    if (btnEl) {
-      btnEl.className = 'date-btn px-3 py-1.5 rounded-sm border text-xs transition-all whitespace-nowrap bg-[#111827] text-white font-bold border-[#111827] shadow-xs';
-    }
 
+    closeAllBookingTabs();
     renderShowtimes();
   }
 
-  function setBookingTime(timeVal, btnEl) {
+  function selectTime(timeVal) {
     if (isPastShowtime(timeVal, currentDate)) {
       if (window.cinegoToast) window.cinegoToast.warning(`Suất chiếu lúc ${timeVal} đã qua giờ bắt đầu, không thể đặt vé!`);
       return;
     }
 
     currentTime = timeVal;
-    document.getElementById('input_showTime').value = timeVal;
+    const inp = document.getElementById('input_showTime');
+    if (inp) inp.value = timeVal;
+    const lbl = document.getElementById('labelSelectedTime');
+    if (lbl) lbl.innerText = `${timeVal} (2D Phụ Đề)`;
 
-    document.querySelectorAll('.time-btn').forEach(btn => {
-      if (btn.disabled) return;
-      btn.className = 'time-btn px-3.5 py-1.5 rounded-sm border text-xs font-semibold transition-all bg-white border-[#E5E0D5] text-[#111827] hover:border-[#111827]';
-      const sub = btn.querySelector('span');
-      if (sub) sub.className = 'text-[9.5px] text-[#6B7280] block font-normal';
-    });
-
-    if (btnEl && !btnEl.disabled) {
-      btnEl.className = 'time-btn px-3.5 py-1.5 rounded-sm border text-xs font-semibold transition-all bg-[#BA2D27] text-white border-[#BA2D27] shadow-xs';
-      const sub = btnEl.querySelector('span');
-      if (sub) sub.className = 'text-[9.5px] text-white/80 block font-normal';
-    }
-
+    closeAllBookingTabs();
     updateSummaryScreening();
     loadOccupiedSeats(true);
   }
+
+  // Tương thích ngược các hàm cũ
+  function setBookingCinema(name, btnEl) { selectCinema(name); }
+  function setBookingDate(dateVal, dateLabel, btnEl) { selectDate(dateVal, dateLabel); }
+  function setBookingTime(timeVal, btnEl) { selectTime(timeVal); }
 
   function updateSummaryScreening() {
     const scrLabel = document.getElementById('activeScreeningLabel');
@@ -861,34 +907,35 @@
     }
 
     if (preCinema) {
-      const targetBtn = Array.from(document.querySelectorAll('.booking-cinema-btn')).find(b => b.innerText.includes(preCinema));
-      if (targetBtn) {
-        currentCinema = preCinema;
-        document.getElementById('input_cinema').value = preCinema;
-        document.getElementById('activeCinemaLabel').innerText = preCinema;
-        document.querySelectorAll('.booking-cinema-btn').forEach(btn => {
-          btn.className = 'booking-cinema-btn p-4 border border-[#E5E0D5] bg-white hover:border-[#121316] text-left transition-all';
-        });
-        targetBtn.className = 'booking-cinema-btn p-4 border-2 border-[#121316] bg-[#F3EFE6] text-left transition-all';
-      }
+      currentCinema = preCinema;
+      const inp = document.getElementById('input_cinema');
+      if (inp) inp.value = preCinema;
+      const lbl = document.getElementById('labelSelectedCinema');
+      if (lbl) lbl.innerText = preCinema;
     }
 
     if (preDate) {
-      const targetDateBtn = Array.from(document.querySelectorAll('.date-btn')).find(b => b.getAttribute('data-iso') === preDate);
+      currentDate = preDate;
+      const inp = document.getElementById('input_showDate');
+      if (inp) inp.value = preDate;
+      const targetDateBtn = Array.from(document.querySelectorAll('.date-option')).find(b => b.getAttribute('data-iso') === preDate);
       if (targetDateBtn) {
-        currentDate = preDate;
-        document.getElementById('input_showDate').value = preDate;
-        document.querySelectorAll('.date-btn').forEach(btn => {
-          btn.className = 'date-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-[\'JetBrains_Mono\'] text-xs transition-all';
-        });
-        targetDateBtn.className = 'date-btn px-4 py-2 bg-[#121316] text-white font-[\'JetBrains_Mono\'] text-xs font-bold transition-all';
+        const lbl = document.getElementById('labelSelectedDate');
+        if (lbl) {
+          const dayText = targetDateBtn.querySelector('.font-semibold')?.innerText || '';
+          const dateText = targetDateBtn.querySelector('.text-\\[11px\\]')?.innerText || '';
+          lbl.innerText = dayText ? `${dayText} (${dateText})` : preDate;
+        }
       }
     }
 
     if (preTime) {
       if (!isPastShowtime(preTime, currentDate)) {
         currentTime = preTime;
-        document.getElementById('input_showTime').value = preTime;
+        const inp = document.getElementById('input_showTime');
+        if (inp) inp.value = preTime;
+        const lbl = document.getElementById('labelSelectedTime');
+        if (lbl) lbl.innerText = `${preTime} (2D Phụ Đề)`;
       } else {
         if (window.cinegoToast) {
           window.cinegoToast.warning(`Suất chiếu lúc ${preTime} hôm nay đã qua giờ bắt đầu. Hệ thống sẽ chuyển sang suất chiếu tiếp theo.`);
@@ -899,21 +946,24 @@
     // Nếu hôm nay đã qua hết các suất chiếu hoặc chưa có suất:
     // Tự động tìm ngày gần nhất tiếp theo có suất chiếu để chọn giúp khách hàng
     if (!currentTime || isPastShowtime(currentTime, currentDate)) {
-      const dateButtons = Array.from(document.querySelectorAll('.date-btn'));
+      const dateButtons = Array.from(document.querySelectorAll('.date-option'));
       for (const btn of dateButtons) {
         const iso = btn.getAttribute('data-iso');
-        const label = btn.getAttribute('data-label') || '';
         const allTimes = getAvailableShowtimes(currentCinema, iso);
         const futureTimes = allTimes.filter(t => !isPastShowtime(t, iso));
         if (futureTimes.length > 0) {
           currentDate = iso;
-          document.getElementById('input_showDate').value = iso;
-          document.querySelectorAll('.date-btn').forEach(b => {
-            b.className = 'date-btn px-4 py-2 bg-white border border-[#E5E0D5] text-[#121316] hover:border-[#121316] font-[\'JetBrains_Mono\'] text-xs transition-all';
-          });
-          btn.className = 'date-btn px-4 py-2 bg-[#121316] text-white font-[\'JetBrains_Mono\'] text-xs font-bold transition-all';
+          const inp = document.getElementById('input_showDate');
+          if (inp) inp.value = iso;
+          const lblDate = document.getElementById('labelSelectedDate');
+          if (lblDate) {
+            const dayText = btn.querySelector('.font-semibold')?.innerText || '';
+            const dateText = btn.querySelector('.text-\\[11px\\]')?.innerText || '';
+            lblDate.innerText = dayText ? `${dayText} (${dateText})` : iso;
+          }
           currentTime = futureTimes[0];
-          document.getElementById('input_showTime').value = currentTime;
+          const inpTime = document.getElementById('input_showTime');
+          if (inpTime) inpTime.value = currentTime;
           break;
         }
       }
