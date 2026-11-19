@@ -314,13 +314,66 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
                 return res.redirect(`/dat-ve/${movieId}?error=${encodeURIComponent(`Ghế (${names}) đang có người chọn. Vui lòng chọn ghế khác!`)}`);
             }
 
-            // 3. Khóa ghế an toàn trong MongoDB SeatLock (5 phút TTL tự động xóa)
+            // 3. Khóa ghế nguyên tử chống Race Condition từng mili-giây (Atomic Conditional Lock & Rollback)
+            const acquiredLocks = [];
+            let conflictSeat = null;
+
             for (const s of seatList) {
-                await SeatLock.findOneAndUpdate(
-                    { movieId, cinema: selectedCinema, showDate, showTime, seat: s },
-                    { userId: currentUserId, createdAt: new Date() },
-                    { upsert: true }
+                // 3.1 Thử cập nhật nếu ghế đã thuộc về chính mình hoặc khóa cũ đã quá hạn nhịp tim (45s)
+                const updated = await SeatLock.findOneAndUpdate(
+                    {
+                        movieId,
+                        cinema: selectedCinema,
+                        showDate,
+                        showTime,
+                        seat: s,
+                        $or: [
+                            { userId: currentUserId },
+                            { createdAt: { $lt: lockThreshold } }
+                        ]
+                    },
+                    { $set: { userId: currentUserId, createdAt: new Date() } },
+                    { new: true }
                 );
+
+                if (updated) {
+                    acquiredLocks.push(s);
+                    continue;
+                }
+
+                // 3.2 Nếu chưa có trong DB, thử chèn mới (Insert)
+                try {
+                    await SeatLock.create({
+                        movieId,
+                        cinema: selectedCinema,
+                        showDate,
+                        showTime,
+                        seat: s,
+                        userId: currentUserId,
+                        createdAt: new Date()
+                    });
+                    acquiredLocks.push(s);
+                } catch (insertErr) {
+                    // Mã lỗi E11000: Có khách khác vừa chiếm ghế này trước đúng vài mili-giây
+                    conflictSeat = s;
+                    break;
+                }
+            }
+
+            // Nếu có ghế bị tranh chấp mili-giây hoặc không khóa đủ toàn bộ ghế yêu cầu:
+            if (conflictSeat || acquiredLocks.length !== seatList.length) {
+                // Rollback: Giải phóng ngay các ghế vừa giữ dở dang để trả lại kho cho khách khác
+                if (acquiredLocks.length > 0) {
+                    await SeatLock.deleteMany({
+                        movieId,
+                        cinema: selectedCinema,
+                        showDate,
+                        showTime,
+                        seat: { $in: acquiredLocks },
+                        userId: currentUserId
+                    });
+                }
+                return res.redirect(`/dat-ve/${movieId}?error=${encodeURIComponent(`Rất tiếc! Ghế (${conflictSeat || 'đã chọn'}) vừa có khách hàng khác nhanh tay chọn trước trong tích tắc. Vui lòng chọn ghế khác!`)}`);
             }
         }
 
@@ -394,6 +447,23 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
 
         if (duplicateBooking) {
             return res.redirect(`/dat-ve/${phimId}?error=${encodeURIComponent('Rất tiếc! Một trong các ghế bạn chọn vừa được khách hàng khác thanh toán trước. Vui lòng chọn ghế khác.')}`);
+        }
+
+        // 1.1 Kiểm tra quyền sở hữu phiên giữ ghế (Chống thanh toán chéo hoặc phiên bị quá hạn nhịp tim)
+        const currentUserId = req.session.user._id.toString();
+        const checkoutGraceThreshold = new Date(Date.now() - (SEAT_HOLD_LEASE_MS + 30 * 1000)); // Cho phép gia hạn 75s phòng trễ mạng
+        const myValidLocks = await SeatLock.find({
+            movieId: phimId,
+            cinema: selectedCinema,
+            showDate: showDate,
+            showTime: showTime,
+            seat: { $in: seatList },
+            userId: currentUserId,
+            createdAt: { $gte: checkoutGraceThreshold }
+        });
+
+        if (myValidLocks.length !== seatList.length) {
+            return res.redirect(`/dat-ve/${phimId}?error=${encodeURIComponent('Phiên giữ ghế của bạn đã hết hạn do không phát hiện tín hiệu hoạt động, hoặc ghế đã được giải phóng. Vui lòng chọn lại ghế!')}`);
         }
 
         // 2. Tính toán lại giá vé ở Backend theo cấu hình giá của Admin (Chống gian lận Client sửa giá POST request)
