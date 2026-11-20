@@ -313,7 +313,6 @@
               <div class="bg-[#FAF8F5] border border-[#E5E0D5] rounded-xl p-3">
                 <div class="flex items-center justify-between text-[10.5px] font-bold text-[#6B7280] uppercase mb-1">
                   <span>GIỜ CHIẾU</span>
-                  <span class="px-1.5 py-0.2 bg-[#111827] text-white text-[9.5px] rounded font-semibold">IMAX 2D</span>
                 </div>
                 <div class="flex items-center gap-1.5 flex-wrap overflow-y-auto max-h-[56px]" id="timeOptionsList">
                   <!-- Rendered via JS -->
@@ -535,7 +534,7 @@
               <div class="overflow-hidden flex flex-col justify-center">
                 <div class="flex items-center gap-1.5 mb-1">
                   <span class="px-1.5 py-0.2 bg-[#BA2D27] text-white text-[9.5px] font-bold rounded"><%= phim.ageRating || 'P' %></span>
-                  <span class="px-1.5 py-0.2 bg-[#E5E7EB] text-[#374151] text-[9.5px] font-semibold rounded"><%= (phim && phim.format === 'IMAX Laser') ? 'IMAX 2D' : '2D Standard' %></span>
+                  <span class="px-1.5 py-0.2 bg-[#E5E7EB] text-[#374151] text-[9.5px] font-semibold rounded"><%= (phim && phim.format && !phim.format.toLowerCase().includes('imax')) ? phim.format : '2D' %></span>
                 </div>
                 <h3 class="font-extrabold text-sm sm:text-base text-[#111827] line-clamp-2 leading-snug"><%= phim.title %></h3>
                 <span class="text-xs text-[#6B7280] mt-1 block">⏱ <%= phim.duration || 120 %> phút</span>
@@ -995,16 +994,6 @@
           if (selectedSeats.length >= 8) {
             if (window.cinegoToast) window.cinegoToast.warning('Bạn chỉ được chọn tối đa 8 ghế cho 1 lần đặt!');
             return;
-          }
-
-          if (selectedSeats.length > 0) {
-            const firstRow = selectedSeats[0].code.match(/^([A-Za-z]+)/)?.[1]?.toUpperCase();
-            if (firstRow && rowChar && firstRow !== rowChar) {
-              if (window.cinegoToast) {
-                window.cinegoToast.warning(`Vui lòng chọn các ghế trong cùng hàng ${firstRow}!`);
-              }
-              return;
-            }
           }
 
           el.classList.remove('seat-free');
