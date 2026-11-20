@@ -1359,6 +1359,23 @@
     updateBottomSummary();
     syncVoucherListUI();
 
+    // Ràng buộc bảo vệ: Bắt buộc đăng nhập khi bấm xác nhận thanh toán vé & bắp nước
+    const isUserLoggedIn = <%= (typeof user !== 'undefined' && user && user._id) ? 'true' : 'false' %>;
+    const bookingFormEl = document.getElementById('bookingForm');
+    if (bookingFormEl) {
+      bookingFormEl.addEventListener('submit', (e) => {
+        if (!isUserLoggedIn) {
+          e.preventDefault();
+          if (window.cinegoToast) {
+            window.cinegoToast.warning('Vui lòng đăng nhập tài khoản CineGo để hoàn tất đặt vé & bắp nước!');
+          }
+          setTimeout(() => {
+            window.location.href = '/dang-nhap?returnTo=' + encodeURIComponent(window.location.pathname + window.location.search);
+          }, 700);
+        }
+      });
+    }
+
     const vInput = document.getElementById('voucherCodeInput');
     if (vInput) {
       vInput.addEventListener('keydown', (e) => {

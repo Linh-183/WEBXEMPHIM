@@ -291,16 +291,6 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
         }
 
         if (seatList.length > 0) {
-            // Kiểm tra ràng buộc bảo vệ: toàn bộ ghế phải nằm trong cùng 1 hàng
-            const rows = seatList.map(s => {
-                const m = s.match(/^([A-Za-z]+)(\d+)/);
-                return m ? m[1].toUpperCase() : null;
-            }).filter(Boolean);
-            const uniqueRows = [...new Set(rows)];
-            if (uniqueRows.length > 1) {
-                return res.redirect(`/dat-ve/${movieId}?error=${encodeURIComponent('Vui lòng chỉ chọn các ghế trong cùng một hàng!')}`);
-            }
-
             // 0.1 Tự động giải phóng toàn bộ các ghế giữ đã quá hạn 5 phút trong DB
             const lockThreshold = new Date(Date.now() - SEAT_HOLD_TIMEOUT_MS);
             await SeatLock.deleteMany({ createdAt: { $lt: lockThreshold } });
@@ -1243,6 +1233,13 @@ router.post('/api/huy-giu-ghe', async (req, res) => {
 // [MỚI] API ĐẶT BẮP NƯỚC RIÊNG LẺ (CONCESSIONS FAST-TRACK CÓ ÁP DỤNG VOUCHER)
 router.post('/api/dat-bap-nuoc', async (req, res) => {
     try {
+        if (!req.session || !req.session.user) {
+            return res.status(401).json({ 
+                success: false, 
+                requireLogin: true, 
+                error: 'Vui lòng đăng nhập tài khoản CineGo để thanh toán đơn bắp nước!' 
+            });
+        }
         const { cinema, custName, custPhone, comboDetails, totalAmount, voucherCode, discountAmount, originalPrice } = req.body;
         const total = Number(totalAmount) || 0;
         const discount = Number(discountAmount) || 0;
@@ -1256,7 +1253,7 @@ router.post('/api/dat-bap-nuoc', async (req, res) => {
             }
         }
 
-        const userId = (req.session.user && req.session.user._id) ? req.session.user._id : null;
+        const userId = req.session.user._id;
 
         const savedTicket = await new Ticket({
             user: userId,

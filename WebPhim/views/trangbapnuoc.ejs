@@ -636,8 +636,21 @@
 
   function processConcessionCheckout() {
     if (concessionCart.length === 0) return;
-    const name = document.getElementById('custName').value.trim() || 'Khách Hàng';
-    const phone = document.getElementById('custPhone').value.trim() || '0912345678';
+
+    // BẮT BUỘC ĐĂNG NHẬP TRƯỚC KHI ĐẶT & THANH TOÁN BẮP NƯỚC
+    const isUserLoggedIn = <%= (typeof user !== 'undefined' && user && user._id) ? 'true' : 'false' %>;
+    if (!isUserLoggedIn) {
+      if (window.cinegoToast) {
+        window.cinegoToast.warning('Vui lòng đăng nhập tài khoản CineGo để thanh toán đơn bắp nước!');
+      }
+      setTimeout(() => {
+        window.location.href = '/dang-nhap?returnTo=' + encodeURIComponent('/bap-nuoc') + '&warning=' + encodeURIComponent('Vui lòng đăng nhập tài khoản để thanh toán bắp nước và tích điểm thưởng!');
+      }, 700);
+      return;
+    }
+
+    const name = document.getElementById('custName').value.trim() || '<%= (typeof user !== 'undefined' && user && user.hoTen) ? user.hoTen : 'Khách Hàng' %>';
+    const phone = document.getElementById('custPhone').value.trim() || '<%= (typeof user !== 'undefined' && user && user.soDienThoai) ? user.soDienThoai : '' %>';
     
     let subtotal = 0;
     const comboSummaries = [];
@@ -662,27 +675,6 @@
     }
 
     const finalTotal = Math.max(0, subtotal - discount);
-    const code = 'CG-CORN-' + Math.floor(1000 + Math.random() * 9000);
-
-    document.getElementById('modalOrderCode').innerText = code;
-    document.getElementById('modalCinemaName').innerText = currentCinema;
-    document.getElementById('modalCustName').innerText = name;
-    document.getElementById('modalCustPhone').innerText = phone;
-    document.getElementById('modalTotalPaid').innerText = finalTotal.toLocaleString('vi-VN') + ' đ';
-
-    // Hiển thị thông báo Toast xác nhận đặt đơn
-    if (window.cinegoToast) {
-      window.cinegoToast.success(`Đặt bắp nước thành công! Mã nhận đơn: ${code}`);
-    }
-
-    // Tự động làm sạch giỏ hàng bắp nước sau khi đặt hàng thành công
-    try {
-      if (typeof window.syncConcessionsToHeaderCart === 'function') {
-        window.syncConcessionsToHeaderCart([]);
-      } else if (typeof window.clearHeaderCart === 'function') {
-        window.clearHeaderCart();
-      }
-    } catch(e) {}
 
     // Đồng bộ đơn hàng bắp nước lên MongoDB Backend
     fetch('/api/dat-bap-nuoc', {
@@ -699,23 +691,55 @@
         totalAmount: finalTotal
       })
     }).then(res => res.json()).then(data => {
+      if (data.requireLogin) {
+        if (window.cinegoToast) {
+          window.cinegoToast.warning(data.error || 'Vui lòng đăng nhập tài khoản để tiếp tục!');
+        }
+        setTimeout(() => {
+          window.location.href = '/dang-nhap?returnTo=' + encodeURIComponent('/bap-nuoc');
+        }, 700);
+        return;
+      }
+
       if (data.success) {
+        const code = data.ticketId ? ('CNE-' + data.ticketId.slice(-6).toUpperCase()) : ('CG-CORN-' + Math.floor(1000 + Math.random() * 9000));
+        document.getElementById('modalOrderCode').innerText = code;
+        document.getElementById('modalCinemaName').innerText = currentCinema;
+        document.getElementById('modalCustName').innerText = name;
+        document.getElementById('modalCustPhone').innerText = phone;
+        document.getElementById('modalTotalPaid').innerText = finalTotal.toLocaleString('vi-VN') + ' đ';
+
         if (data.ticketId) {
-          const code = 'CNE-' + data.ticketId.slice(-6).toUpperCase();
-          const codeEl = document.getElementById('modalOrderCode');
-          if (codeEl) codeEl.innerText = code;
           const btn = document.getElementById('modalViewTicketBtn');
           if (btn) btn.href = '/ve/' + data.ticketId;
           const qrImg = document.querySelector('#concessionModal img');
           if (qrImg) qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent('CINEGO-CONCESSION-' + data.ticketId)}`;
         }
+
+        // Tự động làm sạch giỏ hàng bắp nước sau khi đặt hàng thành công
+        try {
+          if (typeof window.syncConcessionsToHeaderCart === 'function') {
+            window.syncConcessionsToHeaderCart([]);
+          } else if (typeof window.clearHeaderCart === 'function') {
+            window.clearHeaderCart();
+          }
+        } catch(e) {}
+
         if (window.cinegoToast) {
-          window.cinegoToast.success('Đặt bắp nước thành công! Thẻ nhận đồ ăn đã lưu vào Vé Của Tôi.');
+          window.cinegoToast.success(`Đặt bắp nước thành công! Mã nhận đơn: ${code}`);
+        }
+        document.getElementById('concessionModal').classList.remove('hidden');
+      } else {
+        if (window.cinegoToast) {
+          window.cinegoToast.error(data.error || 'Không thể đặt bắp nước. Vui lòng thử lại!');
         }
       }
-    }).catch(err => console.log('Concession notice:', err));
-
-    document.getElementById('concessionModal').classList.remove('hidden');
+    }).catch(err => {
+      console.log('Concession error:', err);
+      if (window.cinegoToast) {
+        window.cinegoToast.error('Lỗi kết nối khi đặt bắp nước!');
+      }
+    });
   }
 
   function closeConcessionModal() {
