@@ -196,17 +196,18 @@ router.post('/tai-khoan/ve-cua-toi/xoa/:id', checkLogin, async (req, res) => {
     }
 });
 
-// Thời gian giữ ghế ngắn hạn theo nhịp tim (Heartbeat lease): 45 giây
-// Nếu khách mất mạng, kill app hoặc tắt máy mà không bấm nút thì sau 45s ghế tự động nhả cho máy khác
-const SEAT_HOLD_LEASE_MS = 45 * 1000;
+// Thời gian giữ ghế chuẩn rạp chiếu phim: Đúng 5 phút (300 giây) khớp trọn vẹn với đồng hồ đếm ngược UI và TTL Index MongoDB
+const SEAT_HOLD_TIMEOUT_MS = 5 * 60 * 1000; // 300,000 ms (5 phút)
+const SEAT_HOLD_LEASE_MS = SEAT_HOLD_TIMEOUT_MS; // Bí danh tương thích
+const SEAT_CHECKOUT_GRACE_MS = 5 * 60 * 1000 + 60 * 1000; // 360,000 ms (6 phút: 5 phút giữ chỗ + 1 phút bù trễ mạng/chuyển app ngân hàng)
 
 router.get('/dat-ve/:id', checkLogin, async (req, res, next) => {
     try { 
         if (!isValidObjectId(req.params.id)) {
             return res.status(404).render('404', { title: '404 — Không Tìm Thấy Suất Chiếu' });
         }
-        // 1. Dọn dẹp ghế giữ quá hạn nhịp tim trong toàn hệ thống
-        const lockThreshold = new Date(Date.now() - SEAT_HOLD_LEASE_MS);
+        // 1. Dọn dẹp ghế giữ quá hạn 5 phút trong toàn hệ thống
+        const lockThreshold = new Date(Date.now() - SEAT_HOLD_TIMEOUT_MS);
         await SeatLock.deleteMany({ createdAt: { $lt: lockThreshold } });
 
         // 2. Tự động giải phóng ghế của chính tài khoản này khi họ quay về trang chọn ghế
@@ -283,8 +284,8 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
                 return res.redirect(`/dat-ve/${movieId}?error=${encodeURIComponent('Vui lòng chỉ chọn các ghế trong cùng một hàng!')}`);
             }
 
-            // 0.1 Tự động giải phóng toàn bộ các ghế giữ đã quá hạn nhịp tim (45s) trong DB
-            const lockThreshold = new Date(Date.now() - SEAT_HOLD_LEASE_MS);
+            // 0.1 Tự động giải phóng toàn bộ các ghế giữ đã quá hạn 5 phút trong DB
+            const lockThreshold = new Date(Date.now() - SEAT_HOLD_TIMEOUT_MS);
             await SeatLock.deleteMany({ createdAt: { $lt: lockThreshold } });
 
             // 1. Kiểm tra xem các ghế này đã được xuất vé trong DB chưa
@@ -452,9 +453,9 @@ router.post('/xac-nhan-thanh-toan', checkLogin, async (req, res, next) => {
             return res.redirect(`/dat-ve/${phimId}?error=${encodeURIComponent('Rất tiếc! Một trong các ghế bạn chọn vừa được khách hàng khác thanh toán trước. Vui lòng chọn ghế khác.')}`);
         }
 
-        // 1.1 Kiểm tra quyền sở hữu phiên giữ ghế (Chống thanh toán chéo hoặc phiên bị quá hạn nhịp tim)
+        // 1.1 Kiểm tra quyền sở hữu phiên giữ ghế (Chống thanh toán chéo, đảm bảo trọn vẹn 5 phút cho khách)
         const currentUserId = req.session.user._id.toString();
-        const checkoutGraceThreshold = new Date(Date.now() - (SEAT_HOLD_LEASE_MS + 30 * 1000)); // Cho phép gia hạn 75s phòng trễ mạng
+        const checkoutGraceThreshold = new Date(Date.now() - SEAT_CHECKOUT_GRACE_MS); // Bảo đảm thời hạn đủ 5 phút (+ 1 phút bù trễ mạng)
         const myValidLocks = await SeatLock.find({
             movieId: phimId,
             cinema: selectedCinema,
@@ -1091,8 +1092,8 @@ router.get('/api/ghe-da-dat', async (req, res) => {
         });
         bookedSeats = [...new Set(bookedSeats)];
 
-        // Tự động giải phóng toàn bộ các ghế giữ đã quá hạn nhịp tim (45 giây) trong MongoDB
-        const lockThreshold = new Date(Date.now() - SEAT_HOLD_LEASE_MS);
+        // Tự động giải phóng toàn bộ các ghế giữ đã quá hạn 5 phút trong MongoDB
+        const lockThreshold = new Date(Date.now() - SEAT_HOLD_TIMEOUT_MS);
         await SeatLock.deleteMany({ createdAt: { $lt: lockThreshold } });
 
         // Lấy ID người dùng từ session hiện tại

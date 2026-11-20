@@ -504,7 +504,7 @@
             </div>
 
             <!-- Submit CTA -->
-            <button type="submit" id="btnSubmitPayment" class="btn-editorial-primary w-full py-4 text-xs font-bold text-center block !bg-[#BA2D27] hover:!bg-[#8E1F1A]">
+            <button type="submit" id="btnSubmitPayment" onclick="isPaymentSubmitted = true;" class="btn-editorial-primary w-full py-4 text-xs font-bold text-center block !bg-[#BA2D27] hover:!bg-[#8E1F1A]">
               XÁC NHẬN THANH TOÁN & NHẬN VÉ →
             </button>
 
@@ -593,18 +593,25 @@
   if (mainPaymentForm) {
     mainPaymentForm.addEventListener('submit', () => {
       isPaymentSubmitted = true;
+      if (heartbeatTimer) clearInterval(heartbeatTimer);
+      window.removeEventListener('pagehide', sendBeaconRelease);
+      window.removeEventListener('beforeunload', sendBeaconRelease);
     });
   }
 
-  // 1. Tự động nhả ghế tức thì khi người dùng đóng tab, back trang hoặc tắt trình duyệt
+  // 1. Tự động nhả ghế tức thì khi người dùng đóng tab, back trang hoặc tắt trình duyệt (chỉ khi CHƯA bấm thanh toán)
   window.addEventListener('pagehide', sendBeaconRelease);
   window.addEventListener('beforeunload', sendBeaconRelease);
 
-  // 2. Tự động nhả ghế khi người dùng click vào bất kỳ liên kết nào (Logo CINEGO, menu Header, breadcrumb...)
+  // 2. Tự động nhả ghế khi người dùng click vào bất kỳ liên kết nội bộ nào để chuyển trang
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('a').forEach(link => {
       link.addEventListener('click', (e) => {
+        if (isPaymentSubmitted) return;
         const href = link.getAttribute('href');
+        const target = link.getAttribute('target');
+        // Không giải phóng nếu mở tab mới hoặc là anchor # / script
+        if (target === '_blank') return;
         if (href && !href.startsWith('#') && !href.startsWith('javascript:')) {
           sendBeaconRelease();
         }
