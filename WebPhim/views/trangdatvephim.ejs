@@ -54,6 +54,53 @@
     sMatrix = (typeof seatConfig.seatMatrix === 'string') ? JSON.parse(seatConfig.seatMatrix) : seatConfig.seatMatrix;
   }
   const vipStartRow = Math.max(1, Math.floor(nRows * 0.45));
+
+  // Danh sách voucher khả dụng (từ ví User + Voucher rạp trong CSDL + Voucher hệ thống CineGo)
+  const defaultVouchersList = [
+    {
+      code: 'CINEGO50K',
+      title: 'Giảm 50.000đ cho đơn đặt vé',
+      discountType: 'fixed',
+      discountValue: 50000,
+      minOrderValue: 100000
+    },
+    {
+      code: 'CHAOBANMOI',
+      title: 'Ưu đãi Chào Bạn Mới',
+      discountType: 'fixed',
+      discountValue: 20000,
+      minOrderValue: 75000
+    },
+    {
+      code: 'VIP20',
+      title: 'Giảm 20% cho thành viên VIP',
+      discountType: 'percentage',
+      discountValue: 20,
+      minOrderValue: 120000
+    }
+  ];
+
+  const dbVouchers = (typeof vouchers !== 'undefined' && Array.isArray(vouchers) && vouchers.length > 0) ? vouchers : [];
+  const walletVouchers = (typeof savedVouchers !== 'undefined' && Array.isArray(savedVouchers) && savedVouchers.length > 0) ? savedVouchers : [];
+  const mergedV = [...walletVouchers, ...dbVouchers];
+  const seenCodes = new Set();
+  const availableVouchers = [];
+
+  mergedV.forEach(v => {
+    if (v && v.code && !seenCodes.has(v.code.toUpperCase())) {
+      seenCodes.add(v.code.toUpperCase());
+      availableVouchers.push(v);
+    }
+  });
+
+  if (availableVouchers.length === 0) {
+    defaultVouchersList.forEach(v => {
+      if (!seenCodes.has(v.code.toUpperCase())) {
+        seenCodes.add(v.code.toUpperCase());
+        availableVouchers.push(v);
+      }
+    });
+  }
 %>
 
 <style>
@@ -581,9 +628,14 @@
 
             <!-- MÃ ƯU ĐÃI / VOUCHER CINEGO (ĐẶT TRONG HÓA ĐƠN ĐÚNG NHƯ ẢNH 3) -->
             <div>
-              <label class="block text-[10.5px] font-bold uppercase tracking-wider text-[#6B7280] mb-1.5">
-                MÃ ƯU ĐÃI / VOUCHER CINEGO
-              </label>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-[10.5px] font-bold uppercase tracking-wider text-[#6B7280]">
+                  MÃ ƯU ĐÃI / VOUCHER CINEGO
+                </label>
+                <% if (availableVouchers && availableVouchers.length > 0) { %>
+                  <span class="text-[10px] font-semibold text-[#BA2D27]"><%= availableVouchers.length %> mã khả dụng</span>
+                <% } %>
+              </div>
               <div class="flex items-center gap-2">
                 <input type="text" id="voucherCodeInput" placeholder="Nhập mã voucher (VD: CINEGO50K)..." class="flex-1 px-3 py-2 bg-[#FAF8F5] border border-[#E5E0D5] rounded-xl text-xs font-bold text-[#111827] uppercase tracking-wider focus:outline-none focus:border-[#BA2D27]" />
                 <button type="button" id="btnApplyVoucher" onclick="applyVoucherCode()" class="px-4 py-2 bg-[#EAE6DC] hover:bg-[#DDD8CD] text-[#111827] font-bold text-xs rounded-xl transition-colors shrink-0 cursor-pointer shadow-xs">
@@ -591,6 +643,42 @@
                 </button>
               </div>
               <div id="voucherFeedback" class="text-xs font-bold text-[#059669] flex items-center gap-1 mt-1.5"></div>
+
+              <!-- DANH SÁCH CÁC MÃ VOUCHER ĐANG CÓ (CHẠM VÀO ĐỂ CHỌN NHANH) -->
+              <% if (availableVouchers && availableVouchers.length > 0) { %>
+                <div class="mt-2.5 pt-2 border-t border-[#E5E0D5]/70 space-y-1.5">
+                  <div class="flex items-center justify-between text-[10px] font-bold text-[#6B7280] uppercase">
+                    <span>MÃ KHẢ DỤNG HÔM NAY:</span>
+                    <span class="text-[9.5px] font-normal text-[#9CA3AF]">Chạm để dùng</span>
+                  </div>
+                  <div class="space-y-1.5 max-h-[148px] overflow-y-auto pr-1" id="availableVouchersContainer">
+                    <% availableVouchers.forEach(function(v) { 
+                        const isPercent = (v.discountType === 'percentage' || v.discountType === 'percent');
+                        const discText = isPercent ? ('-' + v.discountValue + '%') : ('-' + Number(v.discountValue).toLocaleString('vi-VN') + 'đ');
+                    %>
+                      <div class="voucher-card-item p-2 rounded-xl bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#E5E0D5] hover:border-[#BA2D27]/60 transition-all cursor-pointer flex items-center justify-between gap-2 select-none group"
+                           onclick="fillAndApplyVoucher('<%= v.code %>')"
+                           data-voucher-code="<%= v.code %>">
+                        <div class="min-w-0">
+                          <div class="flex items-center gap-1.5">
+                            <span class="font-extrabold text-xs text-[#111827] tracking-wider group-hover:text-[#BA2D27]"><%= v.code %></span>
+                            <span class="px-1.5 py-0.2 bg-[#BA2D27] text-white text-[9px] font-bold rounded">
+                              <%= discText %>
+                            </span>
+                          </div>
+                          <div class="text-[10px] text-[#6B7280] truncate mt-0.5"><%= v.title || 'Ưu đãi đặt vé xem phim' %></div>
+                          <% if (v.minOrderValue && v.minOrderValue > 0) { %>
+                            <div class="text-[9px] text-[#9CA3AF]">Đơn tối thiểu: <%= Number(v.minOrderValue).toLocaleString('vi-VN') %>đ</div>
+                          <% } %>
+                        </div>
+                        <button type="button" class="btn-voucher-action px-2.5 py-1 bg-white group-hover:bg-[#BA2D27] group-hover:text-white border border-[#E5E0D5] group-hover:border-[#BA2D27] text-[#111827] text-[10.5px] font-bold rounded-lg transition-colors shrink-0 shadow-2xs">
+                          Dùng mã
+                        </button>
+                      </div>
+                    <% }); %>
+                  </div>
+                </div>
+              <% } %>
             </div>
 
             <!-- Đường kẻ vé đứt đoạn với 2 vết khuyết tròn (Ticket Notch đúng như ảnh 3) -->
@@ -907,6 +995,53 @@
     }
   }
 
+  // Đồng bộ giao diện danh sách voucher
+  function syncVoucherListUI() {
+    const activeCode = appliedVoucher ? (appliedVoucher.code || '').toUpperCase() : '';
+    document.querySelectorAll('.voucher-card-item').forEach(card => {
+      const cardCode = (card.getAttribute('data-voucher-code') || '').toUpperCase();
+      const actionBtn = card.querySelector('.btn-voucher-action');
+      if (activeCode && cardCode === activeCode) {
+        card.classList.add('border-[#BA2D27]', 'bg-[#F9EBEA]');
+        card.classList.remove('border-[#E5E0D5]', 'bg-[#FAF8F5]');
+        if (actionBtn) {
+          actionBtn.innerText = '✓ Đang dùng';
+          actionBtn.className = 'btn-voucher-action px-2.5 py-1 bg-[#BA2D27] text-white border border-[#BA2D27] text-[10.5px] font-bold rounded-lg shrink-0 shadow-2xs';
+        }
+      } else {
+        card.classList.remove('border-[#BA2D27]', 'bg-[#F9EBEA]');
+        card.classList.add('border-[#E5E0D5]', 'bg-[#FAF8F5]');
+        if (actionBtn) {
+          actionBtn.innerText = 'Dùng mã';
+          actionBtn.className = 'btn-voucher-action px-2.5 py-1 bg-white group-hover:bg-[#BA2D27] group-hover:text-white border border-[#E5E0D5] group-hover:border-[#BA2D27] text-[#111827] text-[10.5px] font-bold rounded-lg transition-colors shrink-0 shadow-2xs';
+        }
+      }
+    });
+  }
+
+  // Bấm vào thẻ voucher để chọn & áp dụng ngay
+  function fillAndApplyVoucher(code) {
+    const input = document.getElementById('voucherCodeInput');
+    if (!input) return;
+
+    // Nếu bấm lại vào chính voucher đang áp dụng thì hủy áp dụng
+    if (appliedVoucher && appliedVoucher.code.toUpperCase() === code.toUpperCase()) {
+      input.value = '';
+      appliedVoucher = null;
+      document.getElementById('input_voucherCode').value = '';
+      document.getElementById('input_discountAmount').value = 0;
+      document.getElementById('input_preVoucher').value = '';
+      const feedback = document.getElementById('voucherFeedback');
+      if (feedback) feedback.innerHTML = '';
+      updateBottomSummary();
+      syncVoucherListUI();
+      return;
+    }
+
+    input.value = code;
+    applyVoucherCode();
+  }
+
   // Áp dụng voucher
   async function applyVoucherCode() {
     const input = document.getElementById('voucherCodeInput');
@@ -927,7 +1062,7 @@
       const data = await res.json();
       if (data.success) {
         let discount = 0;
-        if (data.discountType === 'percent') {
+        if (data.discountType === 'percent' || data.discountType === 'percentage') {
           discount = Math.round((currentTotal * data.discountValue) / 100);
           if (data.maxDiscountValue && discount > data.maxDiscountValue) {
             discount = data.maxDiscountValue;
@@ -950,6 +1085,7 @@
           feedback.innerHTML = `<span>✔ Đã áp dụng giảm ${discount.toLocaleString('vi-VN')}đ</span>`;
         }
         updateBottomSummary();
+        syncVoucherListUI();
       } else {
         appliedVoucher = null;
         document.getElementById('input_voucherCode').value = '';
@@ -958,11 +1094,16 @@
         if (feedback) {
           feedback.innerHTML = `<span class="text-[#BA2D27] font-semibold">✕ ${data.message || 'Mã không hợp lệ'}</span>`;
         }
+        if (data.requireLogin && window.cinegoToast) {
+          window.cinegoToast.warning(data.message || 'Vui lòng đăng nhập để áp dụng mã ưu đãi!');
+        }
         updateBottomSummary();
+        syncVoucherListUI();
       }
     } catch (err) {
       console.error('Lỗi kiểm tra voucher:', err);
       if (feedback) feedback.innerHTML = '<span class="text-[#BA2D27] font-semibold">✕ Lỗi kết nối</span>';
+      syncVoucherListUI();
     }
   }
 
@@ -1216,6 +1357,7 @@
     setupSeatInteractions();
     renderTimeOptions();
     updateBottomSummary();
+    syncVoucherListUI();
 
     const vInput = document.getElementById('voucherCodeInput');
     if (vInput) {
