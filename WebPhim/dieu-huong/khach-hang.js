@@ -241,7 +241,7 @@ router.get('/thanh-toan', checkLogin, (req, res) => {
 
 router.post('/thanh-toan', checkLogin, async (req, res) => {
     try {
-        const { movieId, cinema, showDate, showTime, seats, total, comboDetails, comboTotal, preVoucher } = req.body;
+        const { movieId, cinema, showDate, showTime, seats, total, comboDetails, comboTotal, preVoucher, payment_method, voucherCode, discountAmount, finalAmount } = req.body;
         const phim = await Movie.findById(movieId);
         const selectedCinema = cinema || 'CGV Kim Cúc Plaza';
         const seatList = seats ? seats.split(',').map(s => s.trim()).filter(Boolean) : [];
@@ -396,7 +396,27 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
             $or: [{ expiryDate: { $gte: new Date() } }, { expiryDate: null }] 
         }).lean();
         const availableCombos = await FoodCombo.find({ isActive: true }).sort({ category: 1, price: 1 }).lean();
-        res.render('trangthanhtoan', { phim, cinema: selectedCinema, showDate, showTime, seats: seatList, total: Number(total), comboDetails, comboTotal: Number(comboTotal), vouchers, savedVouchers, availableCombos, preVoucher: preVoucher || '' });
+        const safeDiscount = Number(discountAmount) || 0;
+        const safeTotal = Number(total) || 0;
+        const calcFinal = Number(finalAmount) > 0 ? Number(finalAmount) : Math.max(0, safeTotal - safeDiscount);
+        res.render('trangthanhtoan', { 
+            phim, 
+            cinema: selectedCinema, 
+            showDate, 
+            showTime, 
+            seats: seatList, 
+            total: safeTotal, 
+            comboDetails, 
+            comboTotal: Number(comboTotal) || 0, 
+            vouchers, 
+            savedVouchers, 
+            availableCombos, 
+            preVoucher: preVoucher || voucherCode || '',
+            selectedPaymentMethod: payment_method || 'momo',
+            appliedVoucherCode: voucherCode || '',
+            voucherDiscount: safeDiscount,
+            finalAmount: calcFinal
+        });
     } catch(error) { 
         console.error("Lỗi thanh toán:", error);
         res.status(500).send("Lỗi thanh toán: " + error.message); 

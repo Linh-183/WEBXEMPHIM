@@ -4,1204 +4,1028 @@
   <div data-toast-error="<%= error %>"></div>
 <% } %>
 
-<main class="min-h-screen py-6 pb-36 bg-[#FAF8F5]">
-  <div class="max-w-[1440px] mx-auto px-4 sm:px-8">
-    
+<% 
+  // Chuẩn hóa thời gian Việt Nam (Asia/Ho_Chi_Minh - UTC+7)
+  const nowVN = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+  const todayBooking = nowVN;
+  const yearNow = todayBooking.getFullYear();
+  const monthNow = String(todayBooking.getMonth() + 1).padStart(2, '0');
+  const dayNow = String(todayBooking.getDate()).padStart(2, '0');
+  const initDateIso = `${yearNow}-${monthNow}-${dayNow}`;
+  const currentHNow = todayBooking.getHours();
+  const currentMNow = todayBooking.getMinutes();
+  const daysOfWeekVi = ['CN', 'T.HAI', 'T.BA', 'T.TƯ', 'T.NĂM', 'T.SÁU', 'T.BẢY'];
+
+  const normCinEjs = (s) => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+  const targetCinEjs = normCinEjs('CGV Kim Cúc Plaza');
+  let initShowtimesList = [];
+  if (typeof phim !== 'undefined' && phim && Array.isArray(phim.showtimes)) {
+    const foundSt = phim.showtimes.find(s => {
+      const cin = normCinEjs(s.cinema);
+      const isCin = cin === targetCinEjs || cin.includes(targetCinEjs) || targetCinEjs.includes(cin);
+      let sDate = s.date;
+      if (sDate && sDate.includes('T')) sDate = sDate.split('T')[0];
+      const isDate = (sDate === initDateIso);
+      return isCin && isDate && s.times && s.times.length > 0;
+    });
+    if (foundSt) {
+      const arr = Array.isArray(foundSt.times) ? foundSt.times : [foundSt.times];
+      initShowtimesList = arr.map(t => (t || '').trim()).filter(Boolean);
+    }
+  }
+
+  const isShowtimePastServer = (tStr, dIso) => {
+    if (dIso < initDateIso) return true;
+    if (dIso > initDateIso) return false;
+    const [h, m] = (tStr || '').split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return false;
+    return (h < currentHNow || (h === currentHNow && m <= currentMNow));
+  };
+  const validFutureTimes = initShowtimesList.filter(t => !isShowtimePastServer(t, initDateIso));
+  let initDefaultTime = validFutureTimes.length > 0 ? validFutureTimes[0] : '';
+
+  const nRows = (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.rows) ? seatConfig.rows : 6;
+  const nCols = (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.cols) ? seatConfig.cols : 10;
+  const pStd = (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.priceStandard) ? seatConfig.priceStandard : 75000;
+  const pVIP = (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.priceVIP) ? seatConfig.priceVIP : 95000;
+  const pCouple = (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.priceCouple) ? seatConfig.priceCouple : 170000;
+  let sMatrix = {};
+  if (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.seatMatrix) {
+    sMatrix = (typeof seatConfig.seatMatrix === 'string') ? JSON.parse(seatConfig.seatMatrix) : seatConfig.seatMatrix;
+  }
+  const vipStartRow = Math.max(1, Math.floor(nRows * 0.45));
+%>
+
+<style>
+  /* Dark cinema styling cho sơ đồ ghế theo chuẩn ảnh phác họa */
+  .seat-unit {
+    width: 33px;
+    height: 31px;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    transition: all 0.15s ease;
+    user-select: none;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .seat-unit.seat-free {
+    background-color: #1F2432 !important;
+    color: #94A3B8 !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  }
+  .seat-unit.seat-free:hover {
+    border-color: #BA2D27 !important;
+    color: #FFFFFF !important;
+    transform: scale(1.15);
+    z-index: 10;
+  }
+  .seat-unit.seat-free.is-vip {
+    background-color: #27221A !important;
+    border: 1px solid rgba(217, 119, 6, 0.45) !important;
+    color: #FBBF24 !important;
+  }
+  .seat-unit.seat-free.is-vip:hover {
+    border-color: #F59E0B !important;
+    color: #FFFFFF !important;
+  }
+  .seat-unit.seat-free.is-couple {
+    width: 74px !important;
+    background-color: #2B1724 !important;
+    border: 1px solid rgba(236, 72, 153, 0.45) !important;
+    color: #F472B6 !important;
+  }
+  .seat-unit.seat-selected {
+    background-color: #BA2D27 !important;
+    color: #FFFFFF !important;
+    border: 1.5px solid #FFFFFF !important;
+    transform: scale(1.1);
+    box-shadow: 0 0 14px rgba(186, 45, 39, 0.7);
+    z-index: 5;
+  }
+  .seat-unit.seat-sold {
+    background-color: #141722 !important;
+    color: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    cursor: not-allowed !important;
+    text-decoration: none;
+  }
+  .seat-unit.seat-held {
+    background-color: #1A1D27 !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+    border: 1px dashed #D97706 !important;
+    cursor: not-allowed !important;
+  }
+  @media (max-width: 640px) {
+    .seat-unit {
+      width: 25px !important;
+      height: 25px !important;
+      font-size: 8px !important;
+      border-radius: 3px !important;
+    }
+    .seat-unit.seat-free.is-couple {
+      width: 54px !important;
+      font-size: 7.5px !important;
+    }
+  }
+</style>
+
+<main class="min-h-screen py-4 sm:py-6 pb-20 bg-[#0E1015] text-[#FAF8F5] font-['Be_Vietnam_Pro',sans-serif]">
+  <div class="max-w-[1520px] mx-auto px-3 sm:px-6">
+
     <!-- =========================================================================
-         1. BREADCRUMB & MOVIE HEADLINE (COMPACT)
+         TOP BAR: TIÊU ĐỀ & TIẾN TRÌNH STEPPER (THEO ĐÚNG 100% ẢNH MẪU CỦA BẠN)
          ========================================================================= -->
-    <div class="pb-4 border-b border-[#E5E0D5] mb-5 flex flex-col md:flex-row md:items-end justify-between gap-3">
-      <div>
-        <a href="/phim/<%= phim._id %>" class="text-xs text-[#6B7280] hover:text-[#BA2D27] font-medium inline-flex items-center gap-1.5 mb-1.5 transition-colors">
-          <span>←</span> Quay Lại Chi Tiết Phim
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-white/10 mb-4">
+      
+      <!-- Left: Back button + Subtitle + Main Title -->
+      <div class="flex items-center gap-3">
+        <a href="/phim/<%= phim._id %>" class="w-9 h-9 rounded-lg border border-white/15 bg-white/5 hover:bg-white/15 text-white/80 hover:text-white transition-colors flex items-center justify-center shrink-0" title="Quay lại chi tiết phim">
+          <span class="material-symbols-outlined text-[19px]">arrow_back</span>
         </a>
-        <h1 class="text-2xl sm:text-3xl text-[#111827] font-extrabold leading-tight">
-          Đặt Vé: <%= phim.title %>
-        </h1>
-        <div class="flex flex-wrap items-center gap-2 text-xs text-[#6B7280] mt-1.5">
-          <span class="px-2 py-0.5 bg-[#BA2D27] text-white font-bold rounded-xs"><%= phim.ageRating || 'P' %></span>
-          <span>•</span>
-          <span class="px-2 py-0.5 <%= (phim && phim.format === 'IMAX Laser') ? 'bg-[#D97706] text-[#111827]' : 'bg-[#111827] text-white' %> font-bold rounded-xs"><%= (phim && phim.format === 'IMAX Laser') ? 'IMAX Laser' : '2D Standard' %></span>
-          <span>•</span>
-          <span><%= phim.duration || 120 %> Phút</span>
-          <span>•</span>
-          <span class="text-[#111827] font-semibold"><%= phim.genre || 'Điện ảnh' %></span>
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-[#BA2D27] block">ĐẶT VÉ TRỰC TUYẾN • BẢO MẬT 100%</span>
+          <h1 class="text-base sm:text-xl font-bold text-white leading-tight">Hoàn tất đặt vé & Thanh toán</h1>
         </div>
       </div>
 
-      <!-- Quick Steps -->
-      <div class="hidden sm:flex items-center gap-2 text-xs bg-white border border-[#E5E0D5] px-3 py-2 rounded-sm shadow-xs">
-        <span class="px-2 py-0.5 bg-[#111827] text-white font-bold rounded-xs">1. Rạp & Giờ</span>
-        <span class="text-[#CDC6B8]">→</span>
-        <span class="px-2 py-0.5 bg-[#BA2D27] text-white font-bold rounded-xs">2. Chọn Ghế</span>
-        <span class="text-[#CDC6B8]">→</span>
-        <span class="text-[#6B7280] font-medium">3. Thanh Toán</span>
-      </div>
-    </div>
-
-    <!-- =========================================================================
-         BẢNG ĐIỀU KHIỂN CHỌN RẠP & LỊCH CHIẾU DẠNG TABS THẢ XUỐNG (1 DÒNG DUY NHẤT)
-         Nhấn vào tab để xổ ra danh sách lựa chọn, cực kỳ gọn gàng, không tràn nút bấm
-         ========================================================================= -->
-    <% 
-      // Chuẩn hóa thời gian Việt Nam (Asia/Ho_Chi_Minh - UTC+7)
-      const nowVN = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
-      const todayBooking = nowVN;
-      const yearNow = todayBooking.getFullYear();
-      const monthNow = String(todayBooking.getMonth() + 1).padStart(2, '0');
-      const dayNow = String(todayBooking.getDate()).padStart(2, '0');
-      const initDateIso = `${yearNow}-${monthNow}-${dayNow}`;
-      const currentHNow = todayBooking.getHours();
-      const currentMNow = todayBooking.getMinutes();
-      const daysOfWeekVi = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-      let initDateLabel = 'Hôm nay (' + todayBooking.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) + ')';
-
-      const normCinEjs = (s) => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
-      const targetCinEjs = normCinEjs('CGV Kim Cúc Plaza');
-      let initShowtimesList = [];
-      if (typeof phim !== 'undefined' && phim && Array.isArray(phim.showtimes)) {
-        const foundSt = phim.showtimes.find(s => {
-          const cin = normCinEjs(s.cinema);
-          const isCin = cin === targetCinEjs || cin.includes(targetCinEjs) || targetCinEjs.includes(cin);
-          let sDate = s.date;
-          if (sDate && sDate.includes('T')) sDate = sDate.split('T')[0];
-          const isDate = (sDate === initDateIso);
-          return isCin && isDate && s.times && s.times.length > 0;
-        });
-        if (foundSt) {
-          const arr = Array.isArray(foundSt.times) ? foundSt.times : [foundSt.times];
-          initShowtimesList = arr.map(t => (t || '').trim()).filter(Boolean);
-        }
-      }
-
-      const isShowtimePastServer = (tStr, dIso) => {
-        if (dIso < initDateIso) return true;
-        if (dIso > initDateIso) return false;
-        const [h, m] = (tStr || '').split(':').map(Number);
-        if (isNaN(h) || isNaN(m)) return false;
-        return (h < currentHNow || (h === currentHNow && m <= currentMNow));
-      };
-      const validFutureTimes = initShowtimesList.filter(t => !isShowtimePastServer(t, initDateIso));
-      let initDefaultTime = validFutureTimes.length > 0 ? validFutureTimes[0] : '';
-    %>
-
-    <div class="bg-white border border-[#E5E0D5] p-2 sm:p-2.5 mb-5 rounded-md shadow-xs relative z-20" id="bookingBarContainer">
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        
-        <!-- TAB 1: CHỌN RẠP (Nhấn vào xổ ra các lựa chọn rạp) -->
-        <div class="relative" id="tabCinemaWrapper">
-          <button type="button" 
-                  id="tabCinemaTrigger"
-                  onclick="toggleBookingTab('menuCinema', event)" 
-                  class="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#E5E0D5] hover:border-[#111827] rounded text-left transition-all cursor-pointer select-none">
-            <div class="flex items-center gap-2.5 truncate">
-              <span class="w-7 h-7 rounded bg-[#BA2D27]/10 text-[#BA2D27] flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-[17px]">theater_comedy</span>
-              </span>
-              <div class="truncate">
-                <span class="block text-[10px] uppercase font-bold text-[#6B7280] leading-none">1. Cụm Rạp Chiếu</span>
-                <span class="font-bold text-xs sm:text-[13px] text-[#111827] truncate block mt-0.5" id="labelSelectedCinema">CGV Kim Cúc Plaza</span>
-              </div>
-            </div>
-            <span class="material-symbols-outlined text-[18px] text-[#6B7280] transition-transform duration-200" id="arrowCinema">expand_more</span>
-          </button>
-
-          <!-- Dropdown Options Menu for Cinema -->
-          <div id="menuCinema" class="booking-tab-menu hidden absolute top-full left-0 right-0 mt-1 bg-white border border-[#E5E0D5] shadow-2xl rounded-md z-30 py-1 max-h-60 overflow-y-auto">
-            <button type="button" onclick="selectCinema('CGV Kim Cúc Plaza')" class="cinema-option w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-left hover:bg-[#FAF8F5] transition-colors border-b border-[#F3EFE6] text-[#BA2D27] font-bold">
-              <span>CGV Kim Cúc Plaza</span>
-              <span class="text-[10px] text-[#6B7280]">P. Ghềnh Ráng</span>
-            </button>
-            <button type="button" onclick="selectCinema('Starlight Nguyễn Kim')" class="cinema-option w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-left hover:bg-[#FAF8F5] transition-colors border-b border-[#F3EFE6] text-[#374151]">
-              <span>Starlight Nguyễn Kim</span>
-              <span class="text-[10px] text-[#6B7280]">TTTM Nguyễn Kim</span>
-            </button>
-            <button type="button" onclick="selectCinema('DCine Quy Nhơn')" class="cinema-option w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-left hover:bg-[#FAF8F5] transition-colors text-[#374151]">
-              <span>DCine Quy Nhơn</span>
-              <span class="text-[10px] text-[#6B7280]">Ngã ba Đống Đa</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- TAB 2: CHỌN NGÀY CHIẾU (Nhấn vào xổ ra các ngày lựa chọn) -->
-        <div class="relative" id="tabDateWrapper">
-          <button type="button" 
-                  id="tabDateTrigger"
-                  onclick="toggleBookingTab('menuDate', event)" 
-                  class="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#E5E0D5] hover:border-[#111827] rounded text-left transition-all cursor-pointer select-none">
-            <div class="flex items-center gap-2.5 truncate">
-              <span class="w-7 h-7 rounded bg-[#111827]/10 text-[#111827] flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-[17px]">calendar_today</span>
-              </span>
-              <div class="truncate">
-                <span class="block text-[10px] uppercase font-bold text-[#6B7280] leading-none">2. Ngày Chiếu</span>
-                <span class="font-bold text-xs sm:text-[13px] text-[#111827] truncate block mt-0.5" id="labelSelectedDate"><%= initDateLabel %></span>
-              </div>
-            </div>
-            <span class="material-symbols-outlined text-[18px] text-[#6B7280] transition-transform duration-200" id="arrowDate">expand_more</span>
-          </button>
-
-          <!-- Dropdown Options Menu for Date -->
-          <div id="menuDate" class="booking-tab-menu hidden absolute top-full left-0 right-0 mt-1 bg-white border border-[#E5E0D5] shadow-2xl rounded-md z-30 py-1 max-h-64 overflow-y-auto">
-            <% 
-              for (let i = 0; i < 7; i++) {
-                const d = new Date(todayBooking);
-                d.setDate(todayBooking.getDate() + i);
-                const isToday = (i === 0);
-                const isTomorrow = (i === 1);
-                const dayLabel = isToday ? 'Hôm nay' : (isTomorrow ? 'Ngày mai' : daysOfWeekVi[d.getDay()]);
-                const dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-                const fullIso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-            %>
-              <button type="button" 
-                      onclick="selectDate('<%= fullIso %>', '<%= dayLabel %> (<%= dateStr %>)')" 
-                      class="date-option w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-left hover:bg-[#FAF8F5] transition-colors border-b border-[#F3EFE6] last:border-b-0 <%= isToday ? 'text-[#BA2D27] font-bold bg-[#FAF8F5]' : 'text-[#374151]' %>"
-                      data-iso="<%= fullIso %>">
-                <span class="font-semibold"><%= dayLabel %></span>
-                <span class="text-[11px] text-[#6B7280]"><%= dateStr %></span>
-              </button>
-            <% } %>
-          </div>
-        </div>
-
-        <!-- TAB 3: CHỌN SUẤT CHIẾU (Nhấn vào xổ ra danh sách giờ chiếu) -->
-        <div class="relative" id="tabTimeWrapper">
-          <button type="button" 
-                  id="tabTimeTrigger"
-                  onclick="toggleBookingTab('menuTime', event)" 
-                  class="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#E5E0D5] hover:border-[#111827] rounded text-left transition-all cursor-pointer select-none">
-            <div class="flex items-center gap-2.5 truncate">
-              <span class="w-7 h-7 rounded bg-[#BA2D27]/10 text-[#BA2D27] flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-[17px]">schedule</span>
-              </span>
-              <div class="truncate">
-                <span class="block text-[10px] uppercase font-bold text-[#6B7280] leading-none">3. Suất Chiếu</span>
-                <span class="font-bold text-xs sm:text-[13px] text-[#BA2D27] truncate block mt-0.5" id="labelSelectedTime">
-                  <%= initDefaultTime ? initDefaultTime + ' (2D Phụ Đề)' : (initShowtimesList.length > 0 ? 'Đã hết suất chiếu hôm nay' : 'Chưa có lịch chiếu') %>
-                </span>
-              </div>
-            </div>
-            <span class="material-symbols-outlined text-[18px] text-[#6B7280] transition-transform duration-200" id="arrowTime">expand_more</span>
-          </button>
-
-          <!-- Dropdown Options Menu for Showtimes -->
-          <div id="menuTime" class="booking-tab-menu hidden absolute top-full left-0 right-0 mt-1 bg-white border border-[#E5E0D5] shadow-2xl rounded-md z-30 py-1 max-h-64 overflow-y-auto">
-            <div id="timeOptionsList">
-              <!-- Rendered via JS -->
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- =========================================================================
-         BƯỚC 2: CHỌN GHẾ NGỒI (SEAT MAP TRỰC QUAN & TINH GỌN)
-         ========================================================================= -->
-    <div class="bg-[#0E1015] border border-white/10 p-3 sm:p-6 mb-5 overflow-x-auto shadow-xl relative rounded-sm">
-      <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
-        <div class="flex items-center gap-2">
-          <span class="w-5 h-5 bg-[#BA2D27] text-white text-[11px] font-bold flex items-center justify-center rounded-xs">2</span>
-          <h2 class="text-sm sm:text-base font-bold text-white">Chọn Ghế Ngồi Trong Phòng Chiếu</h2>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="px-2 py-0.5 <%= (phim && phim.format === 'IMAX Laser') ? 'bg-[#D97706] text-[#121316]' : 'bg-white/10 text-white/80' %> text-[10px] font-bold uppercase rounded-xs">
-            <%= (phim && phim.format === 'IMAX Laser') ? 'RẠP IMAX LASER' : 'RẠP TIÊU CHUẨN (2D)' %>
-          </span>
-          <span class="hidden sm:inline text-xs text-white/60">Phòng Chiếu 1</span>
-        </div>
-      </div>
-
-      <!-- Mobile scroll hint -->
-      <div class="block sm:hidden text-center text-[10.5px] text-white/60 mb-2">
-        ⇄ Vuốt ngang để xem trọn vẹn sơ đồ phòng chiếu
-      </div>
-
-      <!-- Screen Arc -->
-      <div class="cinema-screen-arc"></div>
-      <div class="text-center text-[11px] font-bold tracking-[0.2em] text-white/60 uppercase mb-4">
-        MÀN HÌNH CHIẾU (SCREEN)
-      </div>
-
-      <!-- No showtime notice banner -->
-      <div id="noShowtimeNotice" class="hidden max-w-lg mx-auto mb-6 p-4 bg-[#1E232E] border border-amber-500/40 text-center font-['JetBrains_Mono'] text-xs text-amber-300 rounded-sm">
-        ⚠️ Cụm rạp và ngày này hiện chưa có suất chiếu. Vui lòng chọn ngày khác hoặc cụm rạp khác ở Bước 2.
-      </div>
-
-      <!-- SEAT ROWS CONTAINER -->
-      <% 
-        const nRows = (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.rows) ? seatConfig.rows : 6;
-        const nCols = (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.cols) ? seatConfig.cols : 10;
-        const pStd = (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.priceStandard) ? seatConfig.priceStandard : 75000;
-        const pVIP = (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.priceVIP) ? seatConfig.priceVIP : 95000;
-        const pCouple = (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.priceCouple) ? seatConfig.priceCouple : 170000;
-        let sMatrix = {};
-        if (typeof seatConfig !== 'undefined' && seatConfig && seatConfig.seatMatrix) {
-          sMatrix = (typeof seatConfig.seatMatrix === 'string') ? JSON.parse(seatConfig.seatMatrix) : seatConfig.seatMatrix;
-        }
-        const vipStartRow = Math.max(1, Math.floor(nRows * 0.45));
-      %>
-      <div class="w-max min-w-full sm:min-w-[560px] max-w-2xl mx-auto space-y-2 sm:space-y-3.5 text-center mt-4 sm:mt-6 transition-opacity px-1" id="auditoriumSeatMatrix">
-        <% for(let r = 0; r < nRows; r++) { %>
-          <% 
-            const rChar = String.fromCharCode(65 + r); 
-            const isLastRow = (r === nRows - 1);
-            const isVIPRow = (!isLastRow && r >= vipStartRow);
-          %>
-
-          <% if (r === vipStartRow && nRows >= 3) { %>
-            <div class="py-2 font-['JetBrains_Mono'] text-[11px] font-bold uppercase tracking-[0.2em] text-[#D97706]">
-              — KHU VỰC GHẾ TRUNG TÂM VIP (<%= pVIP.toLocaleString('vi-VN') %>đ) —
-            </div>
-          <% } %>
-
-          <% if (isLastRow && nRows >= 2) { %>
-            <div class="py-2 font-['JetBrains_Mono'] text-[11px] font-bold uppercase tracking-[0.2em] text-white/50">
-              — HÀNG GHẾ ĐÔI SWEETBOX (<%= pCouple.toLocaleString('vi-VN') %>đ / 2 Người) —
-            </div>
-          <% } %>
-
-          <div class="flex items-center justify-center gap-1 sm:gap-2">
-            <span class="w-4 sm:w-6 font-['JetBrains_Mono'] text-[10px] sm:text-xs font-bold <%= isVIPRow ? 'text-[#D97706]' : 'text-white/50' %>"><%= rChar %></span>
-
-            <% if (isLastRow) { %>
-              <% for(let c = 1; c <= nCols; c += 2) { %>
-                <% const pairCode = (c + 1 <= nCols) ? `${rChar}${c}-${rChar}${c+1}` : `${rChar}${c}`; %>
-                <div class="seat-unit seat-free is-couple" data-seat="<%= pairCode %>" data-price="<%= pCouple %>" data-type="couple"><%= pairCode %></div>
-              <% } %>
-            <% } else { %>
-              <% for(let c = 1; c <= nCols; c++) { %>
-                <% 
-                  const sCode = rChar + c;
-                  let sType = sMatrix[sCode];
-                  if (!sType) {
-                    sType = isVIPRow ? 'vip' : 'standard';
-                  }
-                  const sPrice = (sType === 'vip') ? pVIP : ((sType === 'couple') ? pCouple : pStd);
-                  const sClass = (sType === 'vip') ? 'is-vip' : ((sType === 'couple') ? 'is-couple' : '');
-                %>
-                <% if (sType === 'empty') { %>
-                  <div class="w-[28px] sm:w-[38px] h-[26px] sm:h-[35px] invisible"></div>
-                <% } else { %>
-                  <div class="seat-unit seat-free <%= sClass %>" data-seat="<%= sCode %>" data-price="<%= sPrice %>" data-type="<%= sType %>"><%= sCode %></div>
-                <% } %>
-              <% } %>
-            <% } %>
-
-            <span class="w-4 sm:w-6 font-['JetBrains_Mono'] text-[10px] sm:text-xs font-bold <%= isVIPRow ? 'text-[#D97706]' : 'text-white/50' %>"><%= rChar %></span>
-          </div>
-
-        <% } %>
-      </div>
-
-      <!-- CLEAR SEAT LEGEND -->
-      <div class="mt-10 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-5 sm:gap-8 font-['Plus_Jakarta_Sans'] text-xs">
-        <div class="flex items-center gap-2">
-          <div class="w-6 h-6 rounded bg-white border border-[#CBD5E1]"></div>
-          <span class="text-white/80 font-medium">Ghế Trống (<%= (pStd/1000) %>k)</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="w-6 h-6 rounded bg-[#BA2D27] text-white flex items-center justify-center font-bold text-[10px]">✓</div>
-          <span class="text-white font-bold">Đang Chọn</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="w-6 h-6 rounded bg-white border-b-2 border-b-[#D97706]"></div>
-          <span class="text-[#D97706] font-bold">Ghế VIP (<%= (pVIP/1000) %>k)</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="w-10 h-6 rounded bg-white border border-[#CBD5E1] text-[9px] font-bold text-center leading-6 text-[#121316]">SWEET</div>
-          <span class="text-white/80 font-medium">Ghế Đôi (<%= (pCouple/1000) %>k)</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="w-6 h-6 rounded bg-[#64748B] opacity-60 text-white flex items-center justify-center text-[10px]">✕</div>
-          <span class="text-white/40">Đã Bán</span>
-        </div>
+      <!-- Right: Stepper & Countdown Timer (Theo đúng ảnh mẫu) -->
+      <div class="flex items-center gap-1.5 sm:gap-2 text-xs flex-wrap">
+        <span class="px-2.5 py-1 bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30 rounded-md font-semibold text-[11px] flex items-center gap-1">✓ Suất chiếu</span>
+        <span class="text-white/20">/</span>
+        <span class="px-2.5 py-1 bg-[#BA2D27] text-white rounded-md font-bold text-[11px] flex items-center gap-1.5 shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>2. Chọn ghế
+        </span>
+        <span class="text-white/20">/</span>
+        <span class="text-white/40 text-[11px]">3. Bắp nước</span>
+        <span class="text-white/20">/</span>
+        <span class="text-white/40 text-[11px]">4. Thanh toán</span>
+        <span class="px-2.5 py-1 bg-[#BA2D27]/20 text-[#BA2D27] border border-[#BA2D27]/40 rounded-md font-mono text-[11px] font-bold flex items-center gap-1.5 ml-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#BA2D27] animate-ping"></span>
+          <span id="bookingTimerText">05:00</span>
+        </span>
       </div>
 
     </div>
 
     <!-- =========================================================================
-         BƯỚC 3: CHỌN ĐỒ ĂN DỊCH VỤ & COMBO BẮP NƯỚC (THU GỌN THÔNG MINH ĐỠ CUỘN TRANG)
+         BỐ CỤC 2 CỘT (SPLIT-SCREEN DASHBOARD THEO ĐÚNG 100% ẢNH MẪU CỦA BẠN)
          ========================================================================= -->
-    <details class="group bg-white border border-[#E5E0D5] mb-5 rounded-sm shadow-xs transition-all" id="bookingComboAccordion">
-      <summary class="p-3.5 sm:p-4 cursor-pointer flex items-center justify-between font-bold text-sm text-[#111827] hover:bg-[#F3EFE6]/50 transition-colors select-none">
-        <div class="flex items-center gap-2.5">
-          <span class="w-5 h-5 bg-[#A6853B] text-white text-[11px] font-bold flex items-center justify-center rounded-xs">3</span>
-          <span class="text-sm font-bold text-[#111827]">Thêm Bắp Nước & Combo (Tùy chọn)</span>
-          <span class="hidden sm:inline text-xs text-[#6B7280] font-normal">• Nhận nhanh tại quầy Fast-Track</span>
-        </div>
-        <div class="flex items-center gap-2.5">
-          <span id="comboSelectedCountBadge" class="hidden px-2.5 py-0.5 bg-[#BA2D27] text-white text-[11px] font-bold rounded-full">0 combo</span>
-          <span class="text-xs text-[#BA2D27] font-semibold group-open:rotate-180 transition-transform duration-200">▼</span>
-        </div>
-      </summary>
+    <form id="bookingForm" action="/thanh-toan" method="POST">
+      
+      <!-- Hidden inputs matching Express Route requirements -->
+      <input type="hidden" name="movieId" value="<%= phim._id %>" />
+      <input type="hidden" name="cinema" id="input_cinema" value="CGV Kim Cúc Plaza" />
+      <input type="hidden" name="showDate" id="input_showDate" value="<%= initDateIso %>" />
+      <input type="hidden" name="showTime" id="input_showTime" value="<%= initDefaultTime %>" />
+      <input type="hidden" name="seats" id="input_seats" value="" />
+      <input type="hidden" name="total" id="input_total" value="0" />
+      <input type="hidden" name="comboDetails" id="input_comboDetails" value="" />
+      <input type="hidden" name="comboTotal" id="input_comboTotal" value="0" />
+      <input type="hidden" name="preVoucher" id="input_preVoucher" value="" />
+      <input type="hidden" name="payment_method" id="input_payment_method" value="momo" />
+      <input type="hidden" name="voucherCode" id="input_voucherCode" value="" />
+      <input type="hidden" name="discountAmount" id="input_discountAmount" value="0" />
+      <input type="hidden" name="finalAmount" id="input_finalAmount" value="0" />
 
-      <div class="p-4 sm:p-5 border-t border-[#E5E0D5]">
-        <div class="flex items-center justify-between pb-3 mb-4 border-b border-[#E5E0D5]">
-          <span class="text-xs text-[#4B5563]">Chọn món bắp nước ưa thích để thưởng thức cùng bộ phim</span>
-          <a href="/bap-nuoc" target="_blank" class="text-xs text-[#A6853B] hover:underline font-semibold flex items-center gap-1">
-            <span>Menu đầy đủ</span>
-            <span>→</span>
-          </a>
-        </div>
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
-        <!-- Combo Grid from MongoDB FoodCombo -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="bookingComboGrid">
-        <% if (typeof combos !== 'undefined' && Array.isArray(combos) && combos.length > 0) { %>
-          <% combos.forEach(function(item, idx) { 
-              const itemId = 'combo_' + (item._id || idx);
-          %>
-            <div class="border border-[#E5E0D5] p-3.5 flex flex-col justify-between bg-[#FAF8F5] hover:border-[#111827] transition-all rounded-sm combo-card"
-                 data-id="<%= itemId %>"
-                 data-name="<%= item.name %>"
-                 data-price="<%= item.price %>">
-              <div>
-                <div class="relative aspect-video bg-[#EFEBE3] overflow-hidden mb-2.5 border border-[#E5E0D5] rounded-xs">
-                  <img src="<%= item.imageUrl || 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?auto=format&fit=crop&w=400&q=80' %>" 
-                       alt="<%= item.name %>" 
-                       class="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
-                  <% if (item.badge) { %>
-                    <span class="absolute top-1.5 left-1.5 px-2 py-0.5 bg-[#BA2D27] text-white text-[9.5px] font-bold uppercase tracking-wider rounded-xs">
-                      <%= item.badge %>
-                    </span>
+        <!-- =====================================================================
+             CỘT TRÁI (Khoảng 68% - span 8): 4 KHỐI THAO TÁC THEO ĐÚNG ẢNH
+             1. Thông tin suất chiếu (Rạp, Ngày, Giờ)
+             2. Sơ đồ chọn ghế (Màn hình cong, ma trận ghế)
+             3. Bắp nước combo ưu đãi (3 combo ngang)
+             4. Phương thức thanh toán & Voucher
+             ===================================================================== -->
+        <div class="lg:col-span-8 space-y-4">
+
+          <!-- KHỐI 1: THÔNG TIN SUẤT CHIẾU (1 DÒNG 3 Ô ĐÚNG ẢNH MẪU) -->
+          <div class="bg-[#12141C] border border-white/10 rounded-xl p-3.5 sm:p-4 text-white">
+            <div class="flex items-center justify-between pb-2.5 border-b border-white/10">
+              <div class="flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-[#BA2D27] text-white text-[11px] font-bold flex items-center justify-center">1</span>
+                <h2 class="font-bold text-sm text-white">Thông Tin Suất Chiếu</h2>
+              </div>
+              <span class="text-xs text-white/50 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-[#10B981]"></span>
+                Phòng IMAX Laser chuẩn quốc tế
+              </span>
+            </div>
+
+            <!-- 3 Ô CHỌN: RẠP - NGÀY - GIỜ -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-3">
+              
+              <!-- Ô 1: Rạp & Phòng Chiếu (Có dropdown Đổi rạp) -->
+              <div class="bg-[#181C26] border border-white/10 rounded-lg p-2.5 relative">
+                <div class="flex items-center justify-between text-[11px] font-bold text-white/50 uppercase mb-1">
+                  <span class="flex items-center gap-1">📍 RẠP & PHÒNG CHIẾU</span>
+                  <button type="button" onclick="toggleCinemaDropdown(event)" class="text-[#BA2D27] hover:underline cursor-pointer text-[10.5px] font-bold flex items-center">
+                    <span>Đổi rạp</span>
+                    <span class="material-symbols-outlined text-[13px]">expand_more</span>
+                  </button>
+                </div>
+                <div class="font-bold text-xs sm:text-[13px] text-white truncate" id="labelSelectedCinema">CGV Kim Cúc Plaza</div>
+                <div class="text-[11px] text-white/40 truncate mt-0.5">Phòng 01 • Màn hình IMAX Laser</div>
+
+                <!-- Dropdown chọn rạp -->
+                <div id="cinemaDropdownList" class="hidden absolute top-full left-0 right-0 mt-1.5 bg-[#181C26] border border-white/20 shadow-2xl rounded-lg z-30 py-1 overflow-hidden">
+                  <button type="button" onclick="selectCinema('CGV Kim Cúc Plaza')" class="cinema-option-btn w-full px-3 py-2 text-xs text-left hover:bg-white/10 flex items-center justify-between text-[#BA2D27] font-bold">
+                    <span>CGV Kim Cúc Plaza</span>
+                    <span class="text-[10px] text-white/50">Ghềnh Ráng</span>
+                  </button>
+                  <button type="button" onclick="selectCinema('Starlight Nguyễn Kim')" class="cinema-option-btn w-full px-3 py-2 text-xs text-left hover:bg-white/10 flex items-center justify-between text-white/80">
+                    <span>Starlight Nguyễn Kim</span>
+                    <span class="text-[10px] text-white/50">Trần Phú</span>
+                  </button>
+                  <button type="button" onclick="selectCinema('DCine Quy Nhơn')" class="cinema-option-btn w-full px-3 py-2 text-xs text-left hover:bg-white/10 flex items-center justify-between text-white/80">
+                    <span>DCine Quy Nhơn</span>
+                    <span class="text-[10px] text-white/50">Đống Đa</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Ô 2: Chọn Ngày Chiếu (Pills ngang theo ngày) -->
+              <div class="bg-[#181C26] border border-white/10 rounded-lg p-2.5">
+                <div class="flex items-center justify-between text-[11px] font-bold text-white/50 uppercase mb-1">
+                  <span>📅 CHỌN NGÀY CHIẾU</span>
+                  <span class="text-[10px] text-white/40">Tháng <%= monthNow %></span>
+                </div>
+                <div class="flex items-center gap-1.5 overflow-x-auto py-0.5 pb-1 no-scrollbar" id="datePillsContainer">
+                  <% 
+                    for (let i = 0; i < 7; i++) { 
+                      const d = new Date(todayBooking);
+                      d.setDate(todayBooking.getDate() + i);
+                      const isToday = (i === 0);
+                      const isTomorrow = (i === 1);
+                      const dayName = isToday ? 'H.NAY' : (isTomorrow ? 'N.MAI' : daysOfWeekVi[d.getDay()]);
+                      const dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+                      const fullIso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                  %>
+                    <button type="button" 
+                            onclick="selectDate('<%= fullIso %>', '<%= dayName %> <%= dateStr %>', this)" 
+                            class="date-pill-btn px-2.5 py-1 rounded-md text-center transition-all cursor-pointer shrink-0 select-none <%= isToday ? 'bg-[#BA2D27] text-white font-bold shadow-md' : 'bg-[#12141C] text-white/70 border border-white/10 hover:border-white/30' %>" 
+                            data-iso="<%= fullIso %>">
+                      <div class="text-[9px] uppercase <%= isToday ? 'text-white/90' : 'text-white/40' %> leading-none"><%= dayName %></div>
+                      <div class="text-[11px] font-bold mt-0.5 leading-none"><%= dateStr %></div>
+                    </button>
                   <% } %>
                 </div>
-                <div class="flex items-center justify-between gap-1">
-                  <h4 class="font-bold text-xs text-[#111827] line-clamp-1"><%= item.name %></h4>
-                  <span class="px-1.5 py-0.5 bg-[#EFEBE3] text-[#6B7280] text-[9.5px] uppercase font-bold shrink-0 rounded-xs">
-                    <%= item.category === 'popcorn' ? 'Bắp' : (item.category === 'drink' ? 'Nước' : (item.category === 'snack' ? 'Snack' : 'Combo')) %>
-                  </span>
-                </div>
-                <p class="text-[11px] text-[#6B7280] mt-1 leading-snug line-clamp-2"><%= item.description || '' %></p>
-
-                <% if (item.flavors && item.flavors.length > 0) { %>
-                  <div class="mt-2 pt-2 border-t border-[#E5E0D5] flex items-center justify-between text-xs">
-                    <span class="text-[10.5px] text-[#6B7280]">Vị:</span>
-                    <select id="flavor_<%= itemId %>" class="bg-white border border-[#E5E0D5] text-[11px] py-0.5 px-2 font-medium text-[#111827] focus:outline-none rounded-xs">
-                      <% item.flavors.forEach(function(flv) { %>
-                        <option value="<%= flv %>"><%= flv %></option>
-                      <% }); %>
-                    </select>
-                  </div>
-                <% } else { %>
-                  <input type="hidden" id="flavor_<%= itemId %>" value="" />
-                <% } %>
               </div>
 
-              <div class="pt-2.5 mt-2.5 border-t border-[#E5E0D5] flex items-center justify-between">
-                <div>
-                  <span class="font-bold text-xs text-[#111827] block">
-                    <%= Number(item.price).toLocaleString('vi-VN') %>đ
-                  </span>
-                  <% if (item.originalPrice && item.originalPrice > item.price) { %>
-                    <span class="text-[10px] text-[#9CA3AF] line-through block">
-                      <%= Number(item.originalPrice).toLocaleString('vi-VN') %>đ
-                    </span>
-                  <% } %>
+              <!-- Ô 3: Giờ Chiếu -->
+              <div class="bg-[#181C26] border border-white/10 rounded-lg p-2.5">
+                <div class="flex items-center justify-between text-[11px] font-bold text-white/50 uppercase mb-1">
+                  <span>🕒 GIỜ CHIẾU</span>
+                  <span class="px-1.5 py-0.2 bg-white/10 text-white/80 text-[9.5px] rounded-xs font-semibold">IMAX 2D</span>
+                </div>
+                <div class="flex items-center gap-1.5 flex-wrap overflow-y-auto max-h-[56px]" id="timeOptionsList">
+                  <!-- Được render tự động bằng JS -->
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- KHỐI 2: SƠ ĐỒ CHỌN GHẾ (THEO ĐÚNG ẢNH MẪU CỦA BẠN) -->
+          <div class="bg-[#12141C] border border-white/10 rounded-xl p-3.5 sm:p-5 text-white relative overflow-hidden">
+            
+            <!-- Header của sơ đồ ghế: Tên khối + Ghế đang chọn + Chú thích giá góc phải -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-white/10 gap-2">
+              <div class="flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-[#BA2D27] text-white text-[11px] font-bold flex items-center justify-center">2</span>
+                <h2 class="font-bold text-sm text-white">Sơ Đồ Chọn Ghế</h2>
+                <span id="headerSelectedSeats" class="text-xs text-[#BA2D27] font-semibold ml-1"></span>
+              </div>
+              
+              <!-- Chú thích loại ghế (Legend trên góc phải đúng như ảnh) -->
+              <div class="flex items-center gap-2.5 sm:gap-3.5 text-[11px] text-white/70 flex-wrap">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-3.5 h-3.5 rounded-xs bg-[#1F2432] border border-white/20"></span>
+                  <span>Trống (<%= Math.round(pStd/1000) %>k)</span>
                 </div>
                 <div class="flex items-center gap-1.5">
-                  <button type="button" 
-                          onclick="stepCombo(this, -1)" 
-                          class="w-6 h-6 bg-white border border-[#E5E0D5] font-bold text-xs text-[#111827] flex items-center justify-center hover:bg-[#FAF8F5] transition-colors rounded-xs">-</button>
-                  <span id="qty_<%= itemId %>" class="text-xs font-bold w-5 text-center">0</span>
-                  <button type="button" 
-                          onclick="stepCombo(this, 1)" 
-                          class="w-6 h-6 bg-[#111827] text-white font-bold text-xs flex items-center justify-center hover:bg-[#BA2D27] transition-colors rounded-xs">+</button>
+                  <span class="w-3.5 h-3.5 rounded-xs bg-[#27221A] border-b-2 border-b-[#D97706]"></span>
+                  <span class="text-[#FBBF24] font-bold">VIP (<%= Math.round(pVIP/1000) %>k)</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="w-3.5 h-3.5 rounded-xs bg-[#BA2D27] text-white flex items-center justify-center text-[9px] font-bold">✓</span>
+                  <span class="text-white font-bold">Chọn</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="w-3.5 h-3.5 rounded-xs bg-[#141722] border border-white/10 text-white/30 flex items-center justify-center text-[9px]">✕</span>
+                  <span class="text-white/40">Đã mua</span>
                 </div>
               </div>
             </div>
-          <% }); %>
-        <% } else { %>
-          <!-- Fallback default combos nếu database chưa load -->
-          <div class="col-span-full p-4 text-center text-[#6B7280] text-xs">
-            Hiện chưa có danh sách bắp nước khả dụng. Bạn có thể đặt bắp nước trực tiếp tại quầy rạp.
+
+            <!-- Vệt sáng màn hình cong IMAX Laser (Ánh sáng đỏ tỏa nhẹ đúng như ảnh) -->
+            <div class="relative py-4 text-center">
+              <div class="w-4/5 max-w-lg mx-auto h-2 bg-gradient-to-r from-transparent via-[#BA2D27] to-transparent rounded-full shadow-[0_0_20px_rgba(186,45,39,0.9)] opacity-95"></div>
+              <div class="text-[10px] font-bold uppercase tracking-[0.25em] text-white/40 mt-2">MÀN HÌNH CHIẾU IMAX LASER</div>
+            </div>
+
+            <!-- Thông báo chưa có suất chiếu -->
+            <div id="noShowtimeNotice" class="hidden max-w-md mx-auto my-4 p-3 bg-amber-500/10 border border-amber-500/30 text-center text-xs text-amber-300 rounded-lg">
+              ⚠️ Cụm rạp và ngày này hiện chưa có suất chiếu khả dụng. Vui lòng chọn ngày khác hoặc cụm rạp khác ở Khối 1.
+            </div>
+
+            <!-- Ma trận ghế ngồi -->
+            <div class="w-full overflow-x-auto py-2 text-center" id="auditoriumSeatMatrix">
+              <div class="w-max min-w-full sm:min-w-[540px] max-w-2xl mx-auto space-y-1.5 sm:space-y-2.5 transition-opacity px-1">
+                <% for(let r = 0; r < nRows; r++) { %>
+                  <% 
+                    const rChar = String.fromCharCode(65 + r); 
+                    const isLastRow = (r === nRows - 1);
+                    const isVIPRow = (!isLastRow && r >= vipStartRow);
+                  %>
+
+                  <div class="flex items-center justify-center gap-1 sm:gap-1.5">
+                    <span class="w-4 sm:w-5 font-mono text-[10px] sm:text-xs font-bold <%= isVIPRow ? 'text-[#FBBF24]' : 'text-white/40' %>"><%= rChar %></span>
+
+                    <% if (isLastRow) { %>
+                      <% for(let c = 1; c <= nCols; c += 2) { %>
+                        <% const pairCode = (c + 1 <= nCols) ? `${rChar}${c}-${rChar}${c+1}` : `${rChar}${c}`; %>
+                        <div class="seat-unit seat-free is-couple" data-seat="<%= pairCode %>" data-price="<%= pCouple %>" data-type="couple"><%= pairCode %></div>
+                      <% } %>
+                    <% } else { %>
+                      <% for(let c = 1; c <= nCols; c++) { %>
+                        <% 
+                          const sCode = rChar + c;
+                          let sType = sMatrix[sCode];
+                          if (!sType) {
+                            sType = isVIPRow ? 'vip' : 'standard';
+                          }
+                          const sPrice = (sType === 'vip') ? pVIP : ((sType === 'couple') ? pCouple : pStd);
+                          const sClass = (sType === 'vip') ? 'is-vip' : ((sType === 'couple') ? 'is-couple' : '');
+                        %>
+                        <% if (sType === 'empty') { %>
+                          <div class="w-[25px] sm:w-[33px] h-[25px] sm:h-[31px] invisible"></div>
+                        <% } else { %>
+                          <div class="seat-unit seat-free <%= sClass %>" data-seat="<%= sCode %>" data-price="<%= sPrice %>" data-type="<%= sType %>"><%= c %></div>
+                        <% } %>
+                      <% } %>
+                    <% } %>
+
+                    <span class="w-4 sm:w-5 font-mono text-[10px] sm:text-xs font-bold <%= isVIPRow ? 'text-[#FBBF24]' : 'text-white/40' %>"><%= rChar %></span>
+                  </div>
+
+                <% } %>
+              </div>
+            </div>
+
           </div>
-        <% } %>
+
+          <!-- KHỐI 3: BẮP & NƯỚC (COMBO ƯU ĐÃI NẰM NGANG ĐÚNG NHƯ ẢNH MẪU) -->
+          <div class="bg-[#12141C] border border-white/10 rounded-xl p-3.5 sm:p-4 text-white">
+            <div class="flex items-center justify-between pb-2.5 border-b border-white/10">
+              <div class="flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-[#BA2D27] text-white text-[11px] font-bold flex items-center justify-center">3</span>
+                <h2 class="font-bold text-sm text-white">Bắp & Nước (Combo Ưu Đãi)</h2>
+              </div>
+              <span id="comboBadgeSummary" class="text-xs text-white/50">Chưa chọn món</span>
+            </div>
+
+            <!-- 3 Thẻ combo bắp nước nằm ngang đúng như mẫu ảnh -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3">
+              <% 
+                // Danh sách 3 combo mẫu chuẩn thương hiệu CineGo như phác họa
+                const sampleCombos = [
+                  {
+                    id: 'combo_solo',
+                    name: 'Combo Solo',
+                    desc: '1 Bắp Rang + 1 Coca',
+                    price: 85000,
+                    img: 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?auto=format&fit=crop&w=400&q=80'
+                  },
+                  {
+                    id: 'combo_couple',
+                    name: 'Combo Couple',
+                    desc: '1 Bắp Phô Mai + 2 Nước',
+                    price: 139000,
+                    img: 'https://images.unsplash.com/photo-1572177191856-3cde618dee1f?auto=format&fit=crop&w=400&q=80'
+                  },
+                  {
+                    id: 'combo_family',
+                    name: 'Family VIP -20%',
+                    desc: '2 Bắp + 3 Nước + Snack',
+                    price: 199000,
+                    img: 'https://images.unsplash.com/photo-1505686994434-e3cc5abf1330?auto=format&fit=crop&w=400&q=80'
+                  }
+                ];
+                const displayCombos = (typeof combos !== 'undefined' && Array.isArray(combos) && combos.length >= 3)
+                  ? combos.slice(0, 3).map((c, i) => ({
+                      id: 'combo_' + (c._id || i),
+                      name: c.name,
+                      desc: c.description || (c.items ? c.items.map(it => it.name).join(' + ') : 'Bắp nước rạp phim'),
+                      price: c.price,
+                      img: c.imageUrl || sampleCombos[i].img
+                    }))
+                  : sampleCombos;
+              %>
+
+              <% displayCombos.forEach(function(item) { %>
+                <div class="bg-[#181C26] border border-white/10 rounded-lg p-2.5 flex items-center justify-between gap-2.5 combo-card hover:border-white/20 transition-all select-none"
+                     data-id="<%= item.id %>"
+                     data-name="<%= item.name %>"
+                     data-price="<%= item.price %>">
+                  <div class="flex items-center gap-2.5 overflow-hidden">
+                    <img src="<%= item.img %>" 
+                         alt="<%= item.name %>" 
+                         class="w-11 h-11 rounded-md object-cover border border-white/10 shrink-0" />
+                    <div class="overflow-hidden">
+                      <h4 class="font-bold text-xs text-white truncate"><%= item.name %></h4>
+                      <p class="text-[10px] text-white/40 truncate"><%= item.desc %></p>
+                      <span class="text-xs font-bold text-[#BA2D27] block mt-0.5"><%= Number(item.price).toLocaleString('vi-VN') %>đ</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Nút thêm hoặc Stepper theo đúng ảnh -->
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button type="button" onclick="stepCombo(this, 1)" class="btn-add-combo px-2.5 py-1 bg-white/10 hover:bg-white/20 text-white font-bold text-[11px] rounded transition-colors cursor-pointer">
+                      + Thêm
+                    </button>
+                    <div class="stepper-combo hidden items-center gap-1">
+                      <button type="button" onclick="stepCombo(this, -1)" class="w-6 h-6 rounded bg-white/10 text-white font-bold text-xs flex items-center justify-center hover:bg-white/20 transition-colors">-</button>
+                      <span id="qty_<%= item.id %>" class="text-xs font-bold w-4 text-center">0</span>
+                      <button type="button" onclick="stepCombo(this, 1)" class="w-6 h-6 rounded bg-[#BA2D27] text-white font-bold text-xs flex items-center justify-center hover:bg-[#8E1F1A] transition-colors">+</button>
+                    </div>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          </div>
+
+          <!-- KHỐI 4: PHƯƠNG THỨC THANH TOÁN & VOUCHER (THEO ĐÚNG 100% ẢNH MẪU CỦA BẠN) -->
+          <div class="bg-[#12141C] border border-white/10 rounded-xl p-3.5 sm:p-4 text-white">
+            <div class="flex items-center justify-between pb-2.5 border-b border-white/10">
+              <div class="flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-[#BA2D27] text-white text-[11px] font-bold flex items-center justify-center">4</span>
+                <h2 class="font-bold text-sm text-white">Phương Thức Thanh Toán</h2>
+              </div>
+              <span class="text-xs text-[#10B981] flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">lock</span>
+                Bảo mật SSL 256-bit
+              </span>
+            </div>
+
+            <!-- 4 Phương thức thanh toán nằm ngang -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3">
+              
+              <!-- MoMo (Mặc định chọn) -->
+              <div class="payment-method-card cursor-pointer border rounded-lg p-2.5 flex items-center gap-2.5 transition-all select-none border-[#BA2D27] bg-[#1E1719]" 
+                   data-method="momo" 
+                   onclick="selectPaymentMethod('momo', this)">
+                <span class="radio-indicator w-3.5 h-3.5 rounded-full border-2 border-[#BA2D27] flex items-center justify-center shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-[#BA2D27]"></span>
+                </span>
+                <span class="w-6 h-6 rounded bg-[#A50064] text-white text-[10px] font-bold flex items-center justify-center shrink-0">Mo</span>
+                <span class="text-xs font-bold text-white truncate">MoMo</span>
+              </div>
+
+              <!-- ZaloPay -->
+              <div class="payment-method-card cursor-pointer border rounded-lg p-2.5 flex items-center gap-2.5 transition-all select-none border-white/10 bg-[#181C26] hover:border-white/20" 
+                   data-method="zalopay" 
+                   onclick="selectPaymentMethod('zalopay', this)">
+                <span class="radio-indicator w-3.5 h-3.5 rounded-full border-2 border-white/30 flex items-center justify-center shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
+                </span>
+                <span class="w-6 h-6 rounded bg-[#0068FF] text-white text-[10px] font-bold flex items-center justify-center shrink-0">Za</span>
+                <span class="text-xs font-bold text-white truncate">ZaloPay</span>
+              </div>
+
+              <!-- VNPAY-QR -->
+              <div class="payment-method-card cursor-pointer border rounded-lg p-2.5 flex items-center gap-2.5 transition-all select-none border-white/10 bg-[#181C26] hover:border-white/20" 
+                   data-method="vnpay" 
+                   onclick="selectPaymentMethod('vnpay', this)">
+                <span class="radio-indicator w-3.5 h-3.5 rounded-full border-2 border-white/30 flex items-center justify-center shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
+                </span>
+                <span class="w-6 h-6 rounded bg-gradient-to-br from-[#ED1C24] to-[#005BAA] text-white text-[10px] font-bold flex items-center justify-center shrink-0">VN</span>
+                <span class="text-xs font-bold text-white truncate">VNPAY-QR</span>
+              </div>
+
+              <!-- Visa/Master -->
+              <div class="payment-method-card cursor-pointer border rounded-lg p-2.5 flex items-center gap-2.5 transition-all select-none border-white/10 bg-[#181C26] hover:border-white/20" 
+                   data-method="card" 
+                   onclick="selectPaymentMethod('card', this)">
+                <span class="radio-indicator w-3.5 h-3.5 rounded-full border-2 border-white/30 flex items-center justify-center shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
+                </span>
+                <span class="w-6 h-6 rounded bg-white/10 text-white/90 text-[12px] flex items-center justify-center shrink-0">
+                  <span class="material-symbols-outlined text-[14px]">credit_card</span>
+                </span>
+                <span class="text-xs font-bold text-white truncate">Visa/Master</span>
+              </div>
+
+            </div>
+
+            <!-- Dòng nhập mã Voucher theo đúng ảnh -->
+            <div class="mt-3 pt-3 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div class="flex items-center gap-2 flex-1 max-w-md">
+                <div class="relative flex-1">
+                  <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/40 material-symbols-outlined text-[15px]">confirmation_number</span>
+                  <input type="text" id="voucherCodeInput" placeholder="Nhập mã voucher (VD: CINEGO50K)..." class="w-full pl-8 pr-3 py-1.5 bg-[#181C26] border border-white/15 rounded-md text-xs text-white placeholder-white/40 uppercase font-mono tracking-wider focus:outline-none focus:border-[#BA2D27]" />
+                </div>
+                <button type="button" id="btnApplyVoucher" onclick="applyVoucherCode()" class="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-md transition-colors shrink-0 cursor-pointer">
+                  Áp dụng
+                </button>
+              </div>
+              <div id="voucherFeedback" class="text-xs font-semibold flex items-center gap-1 min-h-[20px]">
+                <!-- Hiển thị '✔ Giảm 50.000đ' màu xanh lá khi áp dụng thành công -->
+              </div>
+            </div>
+
+          </div>
+
         </div>
+
+        <!-- =====================================================================
+             CỘT PHẢI (Khoảng 32% - span 4): HÓA ĐƠN & THANH TOÁN (STICKY SIDEBAR)
+             Đúng 100% hình mẫu phác họa của bạn
+             ===================================================================== -->
+        <div class="lg:col-span-4 sticky top-20">
+          <div class="bg-[#12141C] border border-white/10 rounded-xl p-4 sm:p-5 text-white shadow-2xl space-y-4">
+            
+            <!-- Movie Header with Poster -->
+            <div class="flex gap-3 pb-3 border-b border-white/10">
+              <img src="<%= phim.posterUrl %>" alt="<%= phim.title %>" class="w-16 h-22 object-cover rounded-lg border border-white/10 shrink-0 shadow-md" />
+              <div class="overflow-hidden flex flex-col justify-center">
+                <div class="flex items-center gap-1.5 mb-1">
+                  <span class="px-1.5 py-0.2 bg-[#BA2D27] text-white text-[9.5px] font-bold rounded-xs"><%= phim.ageRating || 'P' %></span>
+                  <span class="px-1.5 py-0.2 bg-white/10 text-white/80 text-[9.5px] font-semibold rounded-xs"><%= (phim && phim.format === 'IMAX Laser') ? 'IMAX 2D' : '2D Standard' %></span>
+                </div>
+                <h3 class="font-bold text-sm sm:text-base text-white line-clamp-2 leading-snug"><%= phim.title %></h3>
+                <span class="text-xs text-white/50 mt-1 block">⏱️ <%= phim.duration || 120 %> phút</span>
+              </div>
+            </div>
+
+            <!-- Booking Info Ledger -->
+            <div class="space-y-1.5 text-xs border-b border-white/10 pb-3 font-medium">
+              <div class="flex justify-between text-white/70">
+                <span>Rạp:</span>
+                <span class="font-bold text-white text-right" id="sideCinema">CGV Kim Cúc Plaza</span>
+              </div>
+              <div class="flex justify-between text-white/70">
+                <span>Suất:</span>
+                <span class="font-bold text-white text-right" id="sideShowtime"><%= initDefaultTime %> | <%= initDateIso %></span>
+              </div>
+              <div class="flex justify-between text-white/70 items-start">
+                <span class="shrink-0">Ghế:</span>
+                <div class="text-right font-bold text-[#BA2D27] flex flex-wrap justify-end gap-1 max-w-[200px]" id="sideSeatsContainer">
+                  <span class="text-white/40 italic font-normal">Chưa chọn ghế</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Price Breakdown Ledger -->
+            <div class="space-y-2 text-xs border-b border-white/10 pb-3">
+              <div class="flex justify-between text-white/70">
+                <span>Vé xem phim <span id="sideSeatCount" class="text-white/50 font-normal">(0x)</span>:</span>
+                <span class="font-bold text-white" id="sideSeatTotal">0 đ</span>
+              </div>
+              <div class="flex justify-between text-white/70">
+                <span>Combo Solo / Bắp nước:</span>
+                <span class="font-bold text-white" id="sideComboTotal">0 đ</span>
+              </div>
+              <div id="sideVoucherRow" class="hidden flex justify-between text-white/70">
+                <span id="sideVoucherLabel">Voucher:</span>
+                <span class="font-bold text-[#10B981]" id="sideVoucherDiscount">-0 đ</span>
+              </div>
+              <div class="flex justify-between text-white/70">
+                <span>Phí dịch vụ:</span>
+                <span class="font-bold text-[#10B981]">0 đ (Miễn phí)</span>
+              </div>
+            </div>
+
+            <!-- Total Price Row (Đỏ to đậm theo chuẩn ảnh) -->
+            <div class="pt-1">
+              <div class="flex items-baseline justify-between">
+                <div>
+                  <span class="block text-[10.5px] font-bold uppercase text-white/50 tracking-wider">TỔNG THANH TOÁN:</span>
+                  <span class="text-[9.5px] text-white/40">Đã bao gồm VAT</span>
+                </div>
+                <div class="text-2xl font-black text-[#BA2D27] tracking-tight" id="sideGrandTotal">
+                  0 đ
+                </div>
+              </div>
+            </div>
+
+            <!-- Big Submit CTA Button: XÁC NHẬN & THANH TOÁN theo đúng ảnh -->
+            <button type="submit" id="btnContinueCheckout" disabled class="w-full py-3.5 px-4 bg-gradient-to-r from-[#BA2D27] to-[#E50914] hover:from-[#d3342d] hover:to-[#f61c27] text-white font-bold text-xs uppercase tracking-wider rounded-lg shadow-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer select-none">
+              <span>VUI LÒNG CHỌN GHẾ NGỒI</span>
+            </button>
+
+            <!-- Trust Badges (Đúng như ảnh) -->
+            <div class="space-y-1.5 pt-2 text-[10.5px] text-white/50 border-t border-white/10">
+              <div class="flex items-center justify-between">
+                <span class="flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[14px] text-[#10B981]">verified_user</span>
+                  <span>Bảo mật 100%</span>
+                </span>
+                <span class="text-white/40">Hotline: 1900 6000</span>
+              </div>
+              <div class="flex items-center gap-1.5 text-white/40">
+                <span class="material-symbols-outlined text-[14px] text-[#BA2D27]">qr_code_2</span>
+                <span>Vé điện tử (QR Code) được gửi qua SMS & Email sau thanh toán.</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
       </div>
-    </details>
+
+    </form>
 
   </div>
-
-  <!-- =========================================================================
-       STICKY BOTTOM CHECKOUT SUMMARY BAR (TINH GỌN & TẬP TRUNG HÀNH ĐỘNG)
-       ========================================================================= -->
-  <form id="bookingForm" action="/thanh-toan" method="POST" class="fixed bottom-0 left-0 right-0 bg-[#FAF8F5]/98 border-t border-[#E5E0D5] backdrop-blur-md p-3 sm:p-4 z-40 shadow-2xl">
-    
-    <!-- Hidden inputs matching Express Route requirements -->
-    <input type="hidden" name="movieId" value="<%= phim._id %>" />
-    <input type="hidden" name="cinema" id="input_cinema" value="CGV Kim Cúc Plaza" />
-    <input type="hidden" name="showDate" id="input_showDate" value="<%= initDateIso %>" />
-    <input type="hidden" name="showTime" id="input_showTime" value="<%= initDefaultTime %>" />
-    <input type="hidden" name="seats" id="input_seats" value="" />
-    <input type="hidden" name="total" id="input_total" value="0" />
-    <input type="hidden" name="comboDetails" id="input_comboDetails" value="" />
-    <input type="hidden" name="comboTotal" id="input_comboTotal" value="0" />
-    <input type="hidden" name="preVoucher" id="input_preVoucher" value="" />
-
-    <div class="max-w-[1440px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 font-['Be_Vietnam_Pro',sans-serif]">
-      
-      <!-- Left: Cinema, Time, Seats and Price summary -->
-      <div class="grid grid-cols-3 sm:flex items-center gap-2 sm:gap-6 w-full sm:w-auto text-xs">
-        <div class="truncate">
-          <span class="block text-[9.5px] text-[#6B7280] uppercase tracking-wide truncate">Suất chiếu:</span>
-          <div class="text-[#111827] font-bold text-xs truncate mt-0.5" id="summaryScreening">
-            CGV Kim Cúc Plaza • <%= initDefaultTime %>
-          </div>
-        </div>
-        <div class="border-l border-[#E5E0D5] pl-2 sm:pl-6 truncate">
-          <span class="block text-[9.5px] text-[#6B7280] uppercase tracking-wide truncate">Ghế đã chọn:</span>
-          <div id="selectedSeatsLabel" class="text-[#111827] font-bold text-xs truncate mt-0.5">
-            <span class="text-[#9CA3AF] italic font-normal">Chưa chọn ghế</span>
-          </div>
-        </div>
-        <div class="border-l border-[#E5E0D5] pl-2 sm:pl-6 text-right sm:text-left">
-          <span class="block text-[9.5px] text-[#6B7280] uppercase tracking-wide">Tạm tính:</span>
-          <div id="totalPriceLabel" class="text-sm sm:text-xl font-bold text-[#BA2D27] mt-0.5 whitespace-nowrap">
-            0 đ
-          </div>
-        </div>
-      </div>
-
-      <!-- Right: Single Primary Call-to-Action Button (Ý 5: Loại bỏ nút lưu giỏ hàng gây phân vân) -->
-      <div class="flex items-center w-full sm:w-auto justify-end">
-        <button type="submit" id="btnContinueCheckout" disabled class="btn-editorial-primary w-full sm:w-auto py-2.5 sm:py-3 px-6 sm:px-10 text-xs font-bold block text-center disabled:opacity-40 disabled:cursor-not-allowed shadow-md rounded-xs">
-          TIẾP TỤC ĐẶT VÉ →
-        </button>
-      </div>
-
-    </div>
-  </form>
-
 </main>
 
+<%- include('partials/footer') %>
+
 <script>
-  const currentMovieId = '<%= (typeof phim !== "undefined" && phim && phim._id) ? phim._id : "" %>';
-  const movieShowtimes = <%- JSON.stringify((typeof phim !== 'undefined' && phim && phim.showtimes) ? phim.showtimes : []) %>;
+  // Dữ liệu suất chiếu từ server
+  const rawShowtimes = <%- JSON.stringify((typeof phim !== 'undefined' && phim && phim.showtimes) ? phim.showtimes : []) %>;
+  const currentMovieId = '<%= (typeof phim !== 'undefined' && phim && phim._id) ? phim._id : "" %>';
+  const initialCinema = 'CGV Kim Cúc Plaza';
+  let initialDate = '<%= initDateIso %>';
+  let selectedCinema = initialCinema;
+  let selectedDate = initialDate;
+  let selectedTime = '<%= initDefaultTime %>';
 
   let selectedSeats = [];
   let seatTotal = 0;
   let comboItems = {};
   let comboTotal = 0;
-  let currentCinema = 'CGV Kim Cúc Plaza';
-  let currentDate = '<%= initDateIso %>';
-  let currentTime = '<%= initDefaultTime %>';
+  let appliedVoucher = null;
+  let selectedPaymentMethod = 'momo';
 
-  // Lấy các suất chiếu CHỈ của rạp đã chọn và ngày đã chọn (Tuyệt đối không lấy lộn xộn rạp khác hoặc ngày khác)
-  function getAvailableShowtimes(cinemaName, dateIso) {
-    if (!Array.isArray(movieShowtimes) || movieShowtimes.length === 0) {
-      return [];
-    }
+  const normCin = (s) => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
 
-    const norm = (s) => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
-    const targetCin = norm(cinemaName);
-
-    // Lọc các bản ghi khớp CHÍNH XÁC cả rạp và ngày
-    const matchedEntries = movieShowtimes.filter(st => {
-      const cin = norm(st.cinema);
-      const isCinMatch = (cin === targetCin || cin.includes(targetCin) || targetCin.includes(cin));
-      let isDateMatch = false;
-      if (st.date) {
-        if (st.date === dateIso) isDateMatch = true;
-        else {
-          try {
-            const parsed = new Date(st.date).toISOString().split('T')[0];
-            if (parsed === dateIso) isDateMatch = true;
-          } catch(e) {}
-        }
-      }
-      return isCinMatch && isDateMatch;
-    });
-
-    if (matchedEntries.length === 0) {
-      return []; // KHÔNG có lịch -> trả về mảng rỗng, không fallback lung tung
-    }
-
-    let allTimes = [];
-    matchedEntries.forEach(entry => {
-      if (entry && entry.times) {
-        const times = Array.isArray(entry.times) ? entry.times : [entry.times];
-        times.forEach(t => {
-          const trimmed = (t || '').trim();
-          if (trimmed && !allTimes.includes(trimmed)) allTimes.push(trimmed);
-        });
-      }
-    });
-
-    allTimes.sort((a, b) => a.localeCompare(b));
-    return allTimes;
+  function toggleCinemaDropdown(e) {
+    e.stopPropagation();
+    const dd = document.getElementById('cinemaDropdownList');
+    if (dd) dd.classList.toggle('hidden');
   }
 
-  // Kiểm tra suất chiếu đã qua giờ chiếu chưa
-  function isPastShowtime(timeStr, dateIso) {
-    if (!timeStr || !dateIso) return false;
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    const todayIso = `${y}-${m}-${d}`;
-
-    if (dateIso < todayIso) return true; // Ngày hôm qua hoặc các ngày quá khứ luôn là ĐÃ QUA
-    if (dateIso > todayIso) return false; // Ngày mai hoặc tương lai chưa qua
-
-    const parts = timeStr.split(':');
-    if (parts.length < 2) return false;
-    const shHour = parseInt(parts[0], 10);
-    const shMin = parseInt(parts[1], 10);
-    if (isNaN(shHour) || isNaN(shMin)) return false;
-
-    const nowH = now.getHours();
-    const nowM = now.getMinutes();
-    return (shHour < nowH || (shHour === nowH && shMin <= nowM));
-  }
-
-  // Cập nhật nhãn trạng thái của từng nút ngày (Có suất chiếu / Đã hết suất / Chưa có lịch)
-  function updateDatePillsStatus() {
-    document.querySelectorAll('.date-btn').forEach(btn => {
-      const iso = btn.getAttribute('data-iso');
-      if (!iso) return;
-      const allTimes = getAvailableShowtimes(currentCinema, iso);
-      const futureTimes = allTimes.filter(t => !isPastShowtime(t, iso));
-      const statusEl = btn.querySelector('.date-status-indicator');
-      if (statusEl) {
-        if (futureTimes.length > 0) {
-          statusEl.className = 'date-status-indicator block text-[9px] mt-0.5 font-bold text-[#10B981]';
-          statusEl.innerText = `● Có ${futureTimes.length} suất`;
-        } else if (allTimes.length > 0) {
-          statusEl.className = 'date-status-indicator block text-[9px] mt-0.5 font-bold text-[#BA2D27]';
-          statusEl.innerText = '● Đã hết suất';
-        } else {
-          statusEl.className = 'date-status-indicator block text-[9px] mt-0.5 font-normal text-[#A6AAB6]';
-          statusEl.innerText = 'Chưa có lịch';
-        }
-      }
-    });
-  }
-
-  function renderShowtimes() {
-    const listContainer = document.getElementById('timeOptionsList') || document.getElementById('timePickerContainer');
-    const labelTime = document.getElementById('labelSelectedTime');
-
-    let displayDate = currentDate;
-    try {
-      const parts = currentDate.split('-');
-      if (parts.length === 3) displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-    } catch(e) {}
-
-    const availableTimes = getAvailableShowtimes(currentCinema, currentDate);
-    const validFutureTimes = availableTimes.filter(t => !isPastShowtime(t, currentDate));
-
-    if (availableTimes.length === 0) {
-      currentTime = '';
-      const inputTime = document.getElementById('input_showTime');
-      if (inputTime) inputTime.value = '';
-      if (labelTime) labelTime.innerHTML = '<span class="text-[#6B7280] font-medium">Chưa có lịch chiếu</span>';
-
-      if (listContainer) {
-        listContainer.innerHTML = `
-          <div class="p-4 text-center text-xs text-[#6B7280]">
-            <p class="font-bold text-[#111827]">Chưa có lịch chiếu</p>
-            <p class="text-[11px] text-[#6B7280] mt-1">Rạp ${currentCinema} chưa mở suất vào ${displayDate}.</p>
-            <p class="text-[11px] text-[#BA2D27] mt-1 font-semibold">Vui lòng bấm chọn ngày khác hoặc cụm rạp khác.</p>
-          </div>
-        `;
-      }
-
-      updateSummaryScreening();
-      loadOccupiedSeats(true);
-      return;
-    }
-
-    if (validFutureTimes.length === 0) {
-      currentTime = '';
-      const inputTime = document.getElementById('input_showTime');
-      if (inputTime) inputTime.value = '';
-      if (labelTime) labelTime.innerHTML = '<span class="text-[#BA2D27] font-bold">Đã hết suất hôm nay</span>';
-
-      if (listContainer) {
-        listContainer.innerHTML = `
-          <div class="p-4 text-center text-xs text-[#BA2D27]">
-            <p class="font-bold">Đã hết suất chiếu hôm nay</p>
-            <p class="text-[11px] text-[#6B7280] mt-1">Tất cả suất ngày ${displayDate} tại ${currentCinema} đã qua giờ.</p>
-            <p class="text-[11px] text-[#111827] mt-1 font-semibold">Vui lòng bấm chọn ngày mai để tiếp tục.</p>
-          </div>
-        `;
-      }
-
-      updateSummaryScreening();
-      loadOccupiedSeats(true);
-      return;
-    }
-
-    if (!currentTime || isPastShowtime(currentTime, currentDate) || !availableTimes.includes(currentTime)) {
-      currentTime = validFutureTimes[0];
-      const inputTime = document.getElementById('input_showTime');
-      if (inputTime) inputTime.value = currentTime;
-    }
-
-    if (labelTime) {
-      labelTime.innerText = currentTime ? `${currentTime} (2D Phụ Đề)` : 'Chọn suất chiếu';
-    }
-
-    if (listContainer) {
-      listContainer.innerHTML = '';
-      availableTimes.forEach(t => {
-        const isPast = isPastShowtime(t, currentDate);
-        const isSelected = (t === currentTime);
-        const btn = document.createElement('button');
-        btn.type = 'button';
-
-        if (isPast) {
-          btn.disabled = true;
-          btn.className = 'w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-left text-[#9CA3AF] bg-[#FAF8F5] opacity-50 cursor-not-allowed border-b border-[#F3EFE6] last:border-b-0';
-          btn.innerHTML = `
-            <span class="line-through">${t} - 2D Phụ Đề</span>
-            <span class="text-[10px] bg-[#E5E0D5] text-[#6B7280] px-1.5 py-0.5 rounded-xs">Đã qua giờ</span>
-          `;
-          btn.title = `Suất ${t} đã qua giờ chiếu`;
-        } else {
-          btn.onclick = function() { selectTime(t); };
-          btn.className = `time-option w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-left transition-colors border-b border-[#F3EFE6] last:border-b-0 cursor-pointer ${
-            isSelected ? 'bg-[#FAF8F5] text-[#BA2D27] font-bold' : 'text-[#374151] hover:bg-[#FAF8F5]'
-          }`;
-          btn.innerHTML = `
-            <span class="flex items-center gap-2">
-              <span class="font-bold text-xs">${t}</span>
-              <span class="text-[11px] text-[#6B7280] font-normal">• 2D Phụ Đề</span>
-            </span>
-            ${isSelected ? '<span class="material-symbols-outlined text-[16px] text-[#BA2D27]">check</span>' : ''}
-          `;
-        }
-        listContainer.appendChild(btn);
-      });
-    }
-
-    updateSummaryScreening();
-    loadOccupiedSeats(true);
-  }
-
-  async function loadOccupiedSeats(resetSelected = false) {
-    if (resetSelected) {
-      selectedSeats = [];
-      seatTotal = 0;
-      updateBottomSummary();
-    }
-
-    const seatMatrix = document.getElementById('auditoriumSeatMatrix');
-    const notice = document.getElementById('noShowtimeNotice');
-
-    if (!currentTime) {
-      if (notice) notice.classList.remove('hidden');
-      if (seatMatrix) {
-        seatMatrix.classList.add('opacity-40');
-        seatMatrix.classList.remove('pointer-events-none');
-      }
-      document.querySelectorAll('.seat-unit').forEach(el => {
-        el.classList.remove('seat-selected', 'seat-sold', 'seat-held');
-        el.classList.add('seat-free');
-      });
-      return;
-    }
-
-    if (notice) notice.classList.add('hidden');
-    if (seatMatrix) {
-      seatMatrix.classList.remove('opacity-40', 'opacity-25', 'pointer-events-none');
-    }
-
-    // Lưu mã các ghế người dùng đang chọn hiện tại để bảo toàn nếu không reset
-    const userSelectedCodes = new Set(selectedSeats.map(s => s.code));
-
-    // Đặt lại toàn bộ ghế về trạng thái trống
-    document.querySelectorAll('.seat-unit').forEach(el => {
-      const code = el.getAttribute('data-seat');
-      el.classList.remove('seat-sold', 'seat-held', 'seat-selected');
-      el.classList.add('seat-free');
-      el.innerText = code;
-      el.title = `Ghế ${code} - Trống`;
-    });
-
-    if (!currentMovieId) return;
-
-    try {
-      const url = `/api/ghe-da-dat?movieId=${encodeURIComponent(currentMovieId)}&cinema=${encodeURIComponent(currentCinema)}&showDate=${encodeURIComponent(currentDate)}&showTime=${encodeURIComponent(currentTime)}`;
-      const res = await fetch(url);
-      if (!res.ok) return;
-      const data = await res.json();
-      const booked = Array.isArray(data.bookedSeats) ? data.bookedSeats : [];
-      const locked = Array.isArray(data.tempLocked) ? data.tempLocked : [];
-
-      let conflictSeats = [];
-
-      booked.forEach(code => {
-        const el = document.querySelector(`.seat-unit[data-seat="${code}"]`);
-        if (el) {
-          el.classList.remove('seat-free', 'seat-held', 'seat-selected');
-          el.classList.add('seat-sold');
-          el.innerText = '✕';
-          el.title = `Ghế ${code} - Đã bán`;
-        }
-        if (userSelectedCodes.has(code)) {
-          conflictSeats.push(code);
-        }
-      });
-
-      locked.forEach(code => {
-        const el = document.querySelector(`.seat-unit[data-seat="${code}"]`);
-        if (el && !el.classList.contains('seat-sold')) {
-          el.classList.remove('seat-free', 'seat-selected');
-          el.classList.add('seat-held');
-          el.innerText = code;
-          el.title = `Ghế ${code} - Đang có người chọn`;
-        }
-        if (userSelectedCodes.has(code)) {
-          conflictSeats.push(code);
-        }
-      });
-
-      // Nếu có ghế bị người khác chiếm khi đang chọn
-      if (conflictSeats.length > 0) {
-        selectedSeats = selectedSeats.filter(s => !conflictSeats.includes(s.code));
-        seatTotal = selectedSeats.reduce((sum, s) => sum + s.price, 0);
-        updateBottomSummary();
-        if (window.cinegoToast) {
-          window.cinegoToast.warning(`Ghế ${conflictSeats.join(', ')} vừa có khách hàng khác đặt giữ.`);
-        }
-      }
-
-      // Khôi phục trạng thái seat-selected cho các ghế đang chọn hợp lệ
-      selectedSeats.forEach(s => {
-        const el = document.querySelector(`.seat-unit[data-seat="${s.code}"]`);
-        if (el && !el.classList.contains('seat-sold') && !el.classList.contains('seat-held')) {
-          el.classList.remove('seat-free');
-          el.classList.add('seat-selected');
-          el.title = `Ghế ${s.code} - Đang chọn (${s.price.toLocaleString('vi-VN')}đ)`;
-        }
-      });
-    } catch(err) {
-      console.warn('Lỗi kiểm tra ghế đã đặt:', err);
-    }
-  }
-
-  // ==========================================
-  // XỬ LÝ DROPDOWN TABS ĐẶT VÉ TINH GỌN (1 DÒNG DUY NHẤT)
-  // ==========================================
-  function toggleBookingTab(menuId, event) {
-    if (event) event.stopPropagation();
-    const targetMenu = document.getElementById(menuId);
-    if (!targetMenu) return;
-    const isClosed = targetMenu.classList.contains('hidden');
-    closeAllBookingTabs();
-    if (isClosed) {
-      targetMenu.classList.remove('hidden');
-      const arrowId = menuId === 'menuCinema' ? 'arrowCinema' : (menuId === 'menuDate' ? 'arrowDate' : 'arrowTime');
-      const arrow = document.getElementById(arrowId);
-      if (arrow) arrow.style.transform = 'rotate(180deg)';
-    }
-  }
-
-  function closeAllBookingTabs() {
-    document.querySelectorAll('.booking-tab-menu').forEach(m => m.classList.add('hidden'));
-    ['arrowCinema', 'arrowDate', 'arrowTime'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.style.transform = 'rotate(0deg)';
-    });
-  }
-
-  document.addEventListener('click', function(e) {
-    if (!e.target.closest('#bookingBarContainer')) {
-      closeAllBookingTabs();
-    }
+  document.addEventListener('click', () => {
+    const dd = document.getElementById('cinemaDropdownList');
+    if (dd) dd.classList.add('hidden');
   });
 
   function selectCinema(name) {
-    currentCinema = name;
-    const inp = document.getElementById('input_cinema');
-    if (inp) inp.value = name;
-    const lbl = document.getElementById('labelSelectedCinema');
-    if (lbl) lbl.innerText = name;
-
-    document.querySelectorAll('.cinema-option').forEach(btn => {
+    selectedCinema = name;
+    document.getElementById('labelSelectedCinema').innerText = name;
+    document.getElementById('sideCinema').innerText = name;
+    document.getElementById('input_cinema').value = name;
+    
+    document.querySelectorAll('.cinema-option-btn').forEach(btn => {
       if (btn.innerText.includes(name)) {
-        btn.classList.add('text-[#BA2D27]', 'font-bold', 'bg-[#FAF8F5]');
-        btn.classList.remove('text-[#374151]');
+        btn.classList.add('text-[#BA2D27]', 'font-bold');
+        btn.classList.remove('text-white/80');
       } else {
-        btn.classList.remove('text-[#BA2D27]', 'font-bold', 'bg-[#FAF8F5]');
-        btn.classList.add('text-[#374151]');
+        btn.classList.remove('text-[#BA2D27]', 'font-bold');
+        btn.classList.add('text-white/80');
       }
     });
 
-    closeAllBookingTabs();
-    renderShowtimes();
+    const dd = document.getElementById('cinemaDropdownList');
+    if (dd) dd.classList.add('hidden');
+
+    selectedSeats = [];
+    seatTotal = 0;
+    updateBottomSummary();
+    renderTimeOptions();
   }
 
-  function selectDate(dateVal, dateLabel) {
-    currentDate = dateVal;
-    const inp = document.getElementById('input_showDate');
-    if (inp) inp.value = dateVal;
-    const lbl = document.getElementById('labelSelectedDate');
-    if (lbl) lbl.innerText = dateLabel;
+  function selectDate(dateIso, label, btnEl) {
+    selectedDate = dateIso;
+    document.getElementById('input_showDate').value = dateIso;
 
-    document.querySelectorAll('.date-option').forEach(btn => {
-      if (btn.getAttribute('data-iso') === dateVal) {
-        btn.classList.add('text-[#BA2D27]', 'font-bold', 'bg-[#FAF8F5]');
-        btn.classList.remove('text-[#374151]');
-      } else {
-        btn.classList.remove('text-[#BA2D27]', 'font-bold', 'bg-[#FAF8F5]');
-        btn.classList.add('text-[#374151]');
-      }
+    document.querySelectorAll('.date-pill-btn').forEach(b => {
+      b.className = 'date-pill-btn px-2.5 py-1 rounded-md text-center transition-all cursor-pointer shrink-0 select-none bg-[#12141C] text-white/70 border border-white/10 hover:border-white/30';
+      const dName = b.querySelector('div:first-child');
+      if (dName) dName.className = 'text-[9px] uppercase text-white/40 leading-none';
     });
 
-    closeAllBookingTabs();
-    renderShowtimes();
+    if (btnEl) {
+      btnEl.className = 'date-pill-btn px-2.5 py-1 rounded-md text-center transition-all cursor-pointer shrink-0 select-none bg-[#BA2D27] text-white font-bold shadow-md';
+      const dName = btnEl.querySelector('div:first-child');
+      if (dName) dName.className = 'text-[9px] uppercase text-white/90 leading-none';
+    }
+
+    selectedSeats = [];
+    seatTotal = 0;
+    updateBottomSummary();
+    renderTimeOptions();
   }
 
-  function selectTime(timeVal) {
-    if (isPastShowtime(timeVal, currentDate)) {
-      if (window.cinegoToast) window.cinegoToast.warning(`Suất chiếu lúc ${timeVal} đã qua giờ bắt đầu, không thể đặt vé!`);
+  function isShowtimePastClient(timeStr, dateIso) {
+    if (!timeStr) return true;
+    const now = new Date();
+    const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    if (dateIso < todayIso) return true;
+    if (dateIso > todayIso) return false;
+    const [h, m] = timeStr.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return false;
+    return (h < now.getHours() || (h === now.getHours() && m <= now.getMinutes()));
+  }
+
+  function renderTimeOptions() {
+    const listEl = document.getElementById('timeOptionsList');
+    const noticeEl = document.getElementById('noShowtimeNotice');
+    if (!listEl) return;
+
+    listEl.innerHTML = '';
+    const targetCin = normCin(selectedCinema);
+    let times = [];
+
+    const found = rawShowtimes.find(st => {
+      const cin = normCin(st.cinema);
+      const isCin = cin === targetCin || cin.includes(targetCin) || targetCin.includes(cin);
+      let sDate = st.date;
+      if (sDate && sDate.includes('T')) sDate = sDate.split('T')[0];
+      return isCin && (sDate === selectedDate);
+    });
+
+    if (found && found.times) {
+      const arr = Array.isArray(found.times) ? found.times : [found.times];
+      times = arr.map(t => (t || '').trim()).filter(Boolean);
+    }
+
+    if (times.length === 0) {
+      listEl.innerHTML = '<span class="text-white/40 text-xs italic py-1">Chưa có suất</span>';
+      selectedTime = '';
+      document.getElementById('input_showTime').value = '';
+      document.getElementById('sideShowtime').innerText = `--:-- | ${selectedDate}`;
+      if (noticeEl) noticeEl.classList.remove('hidden');
+      refreshSeatsView();
       return;
     }
 
-    currentTime = timeVal;
-    const inp = document.getElementById('input_showTime');
-    if (inp) inp.value = timeVal;
-    const lbl = document.getElementById('labelSelectedTime');
-    if (lbl) lbl.innerText = `${timeVal} (2D Phụ Đề)`;
+    if (noticeEl) noticeEl.classList.add('hidden');
+    let hasSelected = false;
 
-    closeAllBookingTabs();
-    updateSummaryScreening();
-    loadOccupiedSeats(true);
-  }
+    times.forEach(tStr => {
+      const isPast = isShowtimePastClient(tStr, selectedDate);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.time = tStr;
 
-  // Tương thích ngược các hàm cũ
-  function setBookingCinema(name, btnEl) { selectCinema(name); }
-  function setBookingDate(dateVal, dateLabel, btnEl) { selectDate(dateVal, dateLabel); }
-  function setBookingTime(timeVal, btnEl) { selectTime(timeVal); }
-
-  function updateSummaryScreening() {
-    const scrLabel = document.getElementById('activeScreeningLabel');
-    const sumScreening = document.getElementById('summaryScreening');
-    if (currentTime) {
-      if (scrLabel) scrLabel.innerText = currentDate + ' • ' + currentTime;
-      if (sumScreening) sumScreening.innerText = currentCinema + ' • ' + currentTime;
-    } else {
-      if (scrLabel) scrLabel.innerHTML = `<span class="text-[#BA2D27] font-bold">${currentDate} • Chưa có lịch chiếu</span>`;
-      if (sumScreening) sumScreening.innerHTML = `<span class="text-[#BA2D27] font-bold">${currentCinema} • Chưa có suất chiếu</span>`;
-    }
-  }
-
-  function initBookingPage() {
-    // Parse URL params for preselected cinema/date/time
-    const urlParams = new URLSearchParams(window.location.search);
-    const preCinema = urlParams.get('cinema');
-    const preDate = urlParams.get('date');
-    const preTime = urlParams.get('time');
-    const preVoucher = urlParams.get('voucher') || urlParams.get('flashVoucher');
-    if (preVoucher) {
-      const pvEl = document.getElementById('input_preVoucher');
-      if (pvEl) pvEl.value = preVoucher;
-      if (window.cinegoToast) window.cinegoToast.success(`Mã ưu đãi ${preVoucher} đã được áp dụng vào đơn đặt vé!`);
-    }
-
-    if (urlParams.get('release') === 'true') {
-      if (window.cinegoToast) window.cinegoToast.info('Bạn có thể chọn lại suất chiếu và ghế mới.');
-    }
-
-    if (preCinema) {
-      currentCinema = preCinema;
-      const inp = document.getElementById('input_cinema');
-      if (inp) inp.value = preCinema;
-      const lbl = document.getElementById('labelSelectedCinema');
-      if (lbl) lbl.innerText = preCinema;
-    }
-
-    if (preDate) {
-      currentDate = preDate;
-      const inp = document.getElementById('input_showDate');
-      if (inp) inp.value = preDate;
-      const targetDateBtn = Array.from(document.querySelectorAll('.date-option')).find(b => b.getAttribute('data-iso') === preDate);
-      if (targetDateBtn) {
-        const lbl = document.getElementById('labelSelectedDate');
-        if (lbl) {
-          const dayText = targetDateBtn.querySelector('.font-semibold')?.innerText || '';
-          const dateText = targetDateBtn.querySelector('.text-\\[11px\\]')?.innerText || '';
-          lbl.innerText = dayText ? `${dayText} (${dateText})` : preDate;
-        }
-      }
-    }
-
-    if (preTime) {
-      if (!isPastShowtime(preTime, currentDate)) {
-        currentTime = preTime;
-        const inp = document.getElementById('input_showTime');
-        if (inp) inp.value = preTime;
-        const lbl = document.getElementById('labelSelectedTime');
-        if (lbl) lbl.innerText = `${preTime} (2D Phụ Đề)`;
+      if (isPast) {
+        btn.disabled = true;
+        btn.className = 'px-2.5 py-1 text-xs font-semibold rounded bg-white/5 border border-white/5 text-white/20 cursor-not-allowed select-none';
+        btn.innerText = tStr;
+        btn.title = 'Suất chiếu này đã qua giờ chiếu';
       } else {
-        if (window.cinegoToast) {
-          window.cinegoToast.warning(`Suất chiếu lúc ${preTime} hôm nay đã qua giờ bắt đầu. Hệ thống sẽ chuyển sang suất chiếu tiếp theo.`);
+        const isCurrent = (!hasSelected && (selectedTime === tStr || !selectedTime));
+        if (isCurrent) {
+          hasSelected = true;
+          selectedTime = tStr;
         }
+        btn.className = isCurrent
+          ? 'time-pill-btn px-2.5 py-1 text-xs font-bold rounded bg-[#BA2D27] text-white border border-[#BA2D27] shadow cursor-pointer select-none transition-all'
+          : 'time-pill-btn px-2.5 py-1 text-xs font-semibold rounded bg-[#12141C] text-white/80 border border-white/10 hover:border-white/30 cursor-pointer select-none transition-all';
+        btn.innerText = tStr;
+        btn.onclick = () => selectTime(tStr, btn);
+      }
+      listEl.appendChild(btn);
+    });
+
+    if (!hasSelected) {
+      const firstValid = times.find(t => !isShowtimePastClient(t, selectedDate));
+      if (firstValid) {
+        selectedTime = firstValid;
+        const targetBtn = listEl.querySelector(`button[data-time="${firstValid}"]`);
+        if (targetBtn) {
+          targetBtn.className = 'time-pill-btn px-2.5 py-1 text-xs font-bold rounded bg-[#BA2D27] text-white border border-[#BA2D27] shadow cursor-pointer select-none transition-all';
+        }
+      } else {
+        selectedTime = '';
       }
     }
 
-    // Nếu hôm nay đã qua hết các suất chiếu hoặc chưa có suất:
-    // Tự động tìm ngày gần nhất tiếp theo có suất chiếu để chọn giúp khách hàng
-    if (!currentTime || isPastShowtime(currentTime, currentDate)) {
-      const dateButtons = Array.from(document.querySelectorAll('.date-option'));
-      for (const btn of dateButtons) {
-        const iso = btn.getAttribute('data-iso');
-        const allTimes = getAvailableShowtimes(currentCinema, iso);
-        const futureTimes = allTimes.filter(t => !isPastShowtime(t, iso));
-        if (futureTimes.length > 0) {
-          currentDate = iso;
-          const inp = document.getElementById('input_showDate');
-          if (inp) inp.value = iso;
-          const lblDate = document.getElementById('labelSelectedDate');
-          if (lblDate) {
-            const dayText = btn.querySelector('.font-semibold')?.innerText || '';
-            const dateText = btn.querySelector('.text-\\[11px\\]')?.innerText || '';
-            lblDate.innerText = dayText ? `${dayText} (${dateText})` : iso;
-          }
-          currentTime = futureTimes[0];
-          const inpTime = document.getElementById('input_showTime');
-          if (inpTime) inpTime.value = currentTime;
-          break;
-        }
-      }
+    document.getElementById('input_showTime').value = selectedTime;
+    document.getElementById('sideShowtime').innerText = selectedTime ? `${selectedTime} | ${selectedDate}` : `--:-- | ${selectedDate}`;
+    refreshSeatsView();
+  }
+
+  function selectTime(tStr, btnEl) {
+    selectedTime = tStr;
+    document.getElementById('input_showTime').value = tStr;
+    document.getElementById('sideShowtime').innerText = `${selectedTime} | ${selectedDate}`;
+
+    document.querySelectorAll('.time-pill-btn').forEach(b => {
+      b.className = 'time-pill-btn px-2.5 py-1 text-xs font-semibold rounded bg-[#12141C] text-white/80 border border-white/10 hover:border-white/30 cursor-pointer select-none transition-all';
+    });
+    if (btnEl) {
+      btnEl.className = 'time-pill-btn px-2.5 py-1 text-xs font-bold rounded bg-[#BA2D27] text-white border border-[#BA2D27] shadow cursor-pointer select-none transition-all';
     }
 
-    renderShowtimes();
+    selectedSeats = [];
+    seatTotal = 0;
+    updateBottomSummary();
+    refreshSeatsView();
+  }
 
-    // Tự động khôi phục các ghế đã lưu từ Giỏ Hàng nếu người dùng bấm tiếp tục từ Giỏ Hàng
-    const preSeats = urlParams.get('seats');
-    if (preSeats) {
-      setTimeout(() => {
-        const seatCodes = preSeats.split(',').map(s => s.trim()).filter(Boolean);
-        seatCodes.forEach(code => {
-          const el = document.querySelector(`.seat-unit[data-seat="${code}"]`);
-          if (el && !el.classList.contains('seat-sold') && !el.classList.contains('seat-held')) {
-            el.classList.add('seat-selected');
-            const price = parseInt(el.getAttribute('data-price') || '75000', 10);
-            if (!selectedSeats.find(s => s.code === code)) {
-              selectedSeats.push({ code, price });
-              seatTotal += price;
-            }
+  // Phương thức thanh toán (MoMo, ZaloPay, VNPAY, Visa/Master)
+  function selectPaymentMethod(method, el) {
+    selectedPaymentMethod = method;
+    const inpMethod = document.getElementById('input_payment_method');
+    if (inpMethod) inpMethod.value = method;
+
+    document.querySelectorAll('.payment-method-card').forEach(card => {
+      card.classList.remove('border-[#BA2D27]', 'bg-[#1E1719]');
+      card.classList.add('border-white/10', 'bg-[#181C26]');
+      const radioDot = card.querySelector('.radio-indicator span');
+      if (radioDot) {
+        radioDot.classList.remove('bg-[#BA2D27]');
+        radioDot.classList.add('bg-transparent');
+      }
+      const radioBox = card.querySelector('.radio-indicator');
+      if (radioBox) {
+        radioBox.classList.remove('border-[#BA2D27]');
+        radioBox.classList.add('border-white/30');
+      }
+    });
+
+    if (el) {
+      el.classList.remove('border-white/10', 'bg-[#181C26]');
+      el.classList.add('border-[#BA2D27]', 'bg-[#1E1719]');
+      const radioDot = el.querySelector('.radio-indicator span');
+      if (radioDot) {
+        radioDot.classList.remove('bg-transparent');
+        radioDot.classList.add('bg-[#BA2D27]');
+      }
+      const radioBox = el.querySelector('.radio-indicator');
+      if (radioBox) {
+        radioBox.classList.remove('border-white/30');
+        radioBox.classList.add('border-[#BA2D27]');
+      }
+    }
+  }
+
+  // Kiểm tra & áp dụng Voucher qua API
+  async function applyVoucherCode() {
+    const input = document.getElementById('voucherCodeInput');
+    const feedback = document.getElementById('voucherFeedback');
+    const code = (input ? input.value : '').trim().toUpperCase();
+    if (!code) {
+      if (feedback) feedback.innerHTML = '<span class="text-rose-400">Vui lòng nhập mã voucher!</span>';
+      return;
+    }
+
+    const currentTotal = seatTotal + comboTotal;
+    try {
+      const res = await fetch('/api/kiem-tra-voucher', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, currentTotal, orderType: 'movie' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        let discount = 0;
+        if (data.discountType === 'percent') {
+          discount = Math.round((currentTotal * data.discountValue) / 100);
+          if (data.maxDiscountValue && discount > data.maxDiscountValue) {
+            discount = data.maxDiscountValue;
           }
-        });
+        } else {
+          discount = Number(data.discountValue) || 0;
+        }
+        if (discount > currentTotal) discount = currentTotal;
+
+        appliedVoucher = {
+          code: data.code,
+          discount: discount
+        };
+
+        document.getElementById('input_voucherCode').value = data.code;
+        document.getElementById('input_discountAmount').value = discount;
+        document.getElementById('input_preVoucher').value = data.code;
+
+        if (feedback) {
+          feedback.innerHTML = `<span class="text-[#10B981] flex items-center gap-1 font-bold">✔ Giảm ${discount.toLocaleString('vi-VN')}đ</span>`;
+        }
         updateBottomSummary();
-        if (seatCodes.length > 0 && window.cinegoToast) {
-          window.cinegoToast.info(`Đã khôi phục các ghế bạn chọn trong Giỏ Hàng (${seatCodes.join(', ')})`);
-        }
-      }, 400);
-    }
-
-    function parseSeatInfo(code) {
-      if (!code) return null;
-      const parts = code.split('-');
-      const m = parts[0].match(/^([A-Za-z]+)(\d+)$/);
-      if (!m) return null;
-      const row = m[1].toUpperCase();
-      const cols = parts.map(p => {
-        const pm = p.match(/^([A-Za-z]+)(\d+)$/);
-        return pm ? parseInt(pm[2], 10) : NaN;
-      }).filter(n => !isNaN(n));
-      return { row, cols };
-    }
-
-    // Delegated seat click handlers
-    document.addEventListener('click', (e) => {
-      const seat = e.target.closest('.seat-unit');
-      if (!seat) return;
-
-      if (!currentTime) {
-        if (window.cinegoToast) window.cinegoToast.warning('Vui lòng chọn ngày & suất chiếu ở Bước 2 trước khi chọn ghế!');
-        else alert('Vui lòng chọn ngày & suất chiếu ở Bước 2 trước khi chọn ghế!');
-        document.getElementById('timePickerContainer')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return;
-      }
-
-      const seatCode = seat.getAttribute('data-seat');
-      if (!seatCode) return;
-
-      const price = parseInt(seat.getAttribute('data-price') || '75000', 10);
-
-      if (seat.classList.contains('seat-sold')) {
-        if (window.cinegoToast) window.cinegoToast.error(`Ghế ${seatCode} đã được bán! Vui lòng chọn ghế khác.`);
-        else alert(`Ghế ${seatCode} đã được bán!`);
-        return;
-      }
-
-      if (seat.classList.contains('seat-held')) {
-        // Tái kiểm tra ngay lập tức với Backend: nếu phiên giữ 5 phút đã hết hạn thì cho phép chọn ngay
-        loadOccupiedSeats().then(() => {
-          const freshSeat = document.querySelector(`.seat-unit[data-seat="${seatCode}"]`);
-          if (freshSeat && !freshSeat.classList.contains('seat-held') && !freshSeat.classList.contains('seat-sold')) {
-            if (window.cinegoToast) window.cinegoToast.success(`Đã chọn ghế ${seatCode} thành công.`);
-            freshSeat.classList.add('seat-selected');
-            selectedSeats.push({ code: seatCode, price: price });
-            seatTotal += price;
-            updateBottomSummary();
-          } else {
-            if (window.cinegoToast) window.cinegoToast.warning(`Ghế ${seatCode} đang có người chọn!`);
-            else alert(`Ghế ${seatCode} đang có người chọn!`);
-          }
-        });
-        return;
-      }
-
-      const currentSeatInfo = parseSeatInfo(seatCode);
-
-      if (seat.classList.contains('seat-selected')) {
-        // Kiểm tra nếu bỏ chọn ghế này thì các ghế còn lại có bị đứt đoạn không:
-        if (selectedSeats.length > 2 && currentSeatInfo) {
-          const remaining = selectedSeats.filter(s => s.code !== seatCode);
-          let remainingCols = [];
-          remaining.forEach(s => {
-            const info = parseSeatInfo(s.code);
-            if (info) remainingCols.push(...info.cols);
-          });
-          remainingCols = [...new Set(remainingCols)].sort((a, b) => a - b);
-          let isContiguous = true;
-          for (let i = 1; i < remainingCols.length; i++) {
-            if (remainingCols[i] !== remainingCols[i-1] + 1) {
-              isContiguous = false;
-              break;
-            }
-          }
-          if (!isContiguous) {
-            const msg = 'Vui lòng bỏ chọn ghế từ hai đầu ngoài cùng để tránh để lại khoảng trống ở giữa!';
-            if (window.cinegoToast) window.cinegoToast.warning(msg);
-            else alert(msg);
-            return;
-          }
-        }
-        seat.classList.remove('seat-selected');
-        selectedSeats = selectedSeats.filter(s => s.code !== seatCode);
-        seatTotal -= price;
       } else {
-        if (selectedSeats.length >= 8) {
-          if (window.cinegoToast) window.cinegoToast.warning('Bạn chỉ có thể chọn tối đa 8 ghế trong một lần đặt vé.');
-          else alert('Bạn chỉ có thể chọn tối đa 8 ghế trong một lần đặt vé.');
+        appliedVoucher = null;
+        document.getElementById('input_voucherCode').value = '';
+        document.getElementById('input_discountAmount').value = 0;
+        document.getElementById('input_preVoucher').value = '';
+        if (feedback) {
+          feedback.innerHTML = `<span class="text-rose-400">✕ ${data.message || 'Mã voucher không hợp lệ'}</span>`;
+        }
+        updateBottomSummary();
+      }
+    } catch (err) {
+      console.error('Lỗi kiểm tra voucher:', err);
+      if (feedback) feedback.innerHTML = '<span class="text-rose-400">✕ Không thể kiểm tra voucher lúc này</span>';
+    }
+  }
+
+  // Tương tác ma trận ghế ngồi
+  function setupSeatInteractions() {
+    document.querySelectorAll('.seat-unit').forEach(el => {
+      el.addEventListener('click', () => {
+        if (!selectedTime) {
+          if (window.cinegoToast) window.cinegoToast.warning('Vui lòng chọn suất chiếu trước khi chọn ghế!');
+          return;
+        }
+        if (el.classList.contains('seat-sold') || el.classList.contains('seat-held') || el.classList.contains('invisible')) {
           return;
         }
 
-        // RÀNG BUỘC 1: Phải chọn các ghế trong cùng 1 hàng
-        if (selectedSeats.length > 0 && currentSeatInfo) {
-          const firstInfo = parseSeatInfo(selectedSeats[0].code);
-          if (firstInfo && currentSeatInfo.row !== firstInfo.row) {
-            const msg = `Vui lòng chỉ chọn các ghế trong cùng một hàng (Hàng ${firstInfo.row})! Nếu muốn đổi sang hàng ${currentSeatInfo.row}, hãy hủy các ghế đã chọn trước.`;
-            if (window.cinegoToast) window.cinegoToast.warning(msg);
-            else alert(msg);
+        const seatCode = el.getAttribute('data-seat');
+        const price = Number(el.getAttribute('data-price')) || 0;
+        const type = el.getAttribute('data-type') || 'standard';
+
+        const rowChar = seatCode.match(/^([A-Za-z]+)/)?.[1]?.toUpperCase();
+        const isSelected = el.classList.contains('seat-selected');
+
+        if (isSelected) {
+          // Bỏ chọn ghế
+          el.classList.remove('seat-selected');
+          el.classList.add('seat-free');
+          selectedSeats = selectedSeats.filter(s => s.code !== seatCode);
+          seatTotal -= price;
+        } else {
+          // Chọn thêm ghế
+          if (selectedSeats.length >= 8) {
+            if (window.cinegoToast) window.cinegoToast.warning('Bạn chỉ được chọn tối đa 8 ghế cho 1 lần đặt vé!');
             return;
           }
 
-          // RÀNG BUỘC 2: Các ghế chọn phải nằm sát bên nhau (liền kề liên tiếp, không chọn cách quãng)
-          let allCols = [];
-          selectedSeats.forEach(s => {
-            const info = parseSeatInfo(s.code);
-            if (info) allCols.push(...info.cols);
-          });
-          allCols.push(...currentSeatInfo.cols);
-          allCols = [...new Set(allCols)].sort((a, b) => a - b);
-
-          let isContiguous = true;
-          for (let i = 1; i < allCols.length; i++) {
-            if (allCols[i] !== allCols[i-1] + 1) {
-              isContiguous = false;
-              break;
+          // Kiểm tra quy tắc bắt buộc cùng 1 hàng ghế
+          if (selectedSeats.length > 0) {
+            const firstRow = selectedSeats[0].code.match(/^([A-Za-z]+)/)?.[1]?.toUpperCase();
+            if (firstRow && rowChar && firstRow !== rowChar) {
+              if (window.cinegoToast) {
+                window.cinegoToast.warning(`Vui lòng chỉ chọn các ghế trong cùng hàng ${firstRow}!`);
+              }
+              return;
             }
           }
 
-          if (!isContiguous) {
-            const msg = `Vui lòng chọn ghế nằm sát bên (liền kề) với ghế bạn đang chọn trong Hàng ${firstInfo.row}!`;
-            if (window.cinegoToast) window.cinegoToast.warning(msg);
-            else alert(msg);
-            return;
-          }
+          el.classList.remove('seat-free');
+          el.classList.add('seat-selected');
+          selectedSeats.push({ code: seatCode, price, type });
+          seatTotal += price;
         }
 
-        seat.classList.add('seat-selected');
-        selectedSeats.push({ code: seatCode, price: price });
-        seatTotal += price;
-      }
-
-      updateBottomSummary();
-    });
-
-    // Bắt sự kiện submit form đặt vé để phòng ngừa submit khi chưa chọn ghế hoặc chưa chọn suất
-    const bookingForm = document.getElementById('bookingForm');
-    if (bookingForm) {
-      bookingForm.addEventListener('submit', (e) => {
-        if (!currentTime) {
-          e.preventDefault();
-          if (window.cinegoToast) window.cinegoToast.warning('Vui lòng chọn suất chiếu ở Bước 2 trước khi tiếp tục!');
-          else alert('Vui lòng chọn suất chiếu ở Bước 2 trước khi tiếp tục!');
-          document.getElementById('timePickerContainer')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          return false;
-        }
-        if (!selectedSeats || selectedSeats.length === 0) {
-          e.preventDefault();
-          if (window.cinegoToast) window.cinegoToast.warning('Vui lòng chọn ít nhất 1 ghế trước khi thanh toán!');
-          else alert('Vui lòng chọn ít nhất 1 ghế trước khi thanh toán!');
-          document.getElementById('auditoriumSeatMatrix')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          return false;
-        }
+        if (seatTotal < 0) seatTotal = 0;
+        updateBottomSummary();
       });
+    });
+  }
+
+  function removeSelectedSeat(code) {
+    const el = document.querySelector(`.seat-unit[data-seat="${code}"]`);
+    if (el) {
+      el.classList.remove('seat-selected');
+      el.classList.add('seat-free');
     }
-
-    // Tự động đồng bộ ghế real-time theo chuẩn Modern Web (Page Visibility API)
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && currentTime) {
-        loadOccupiedSeats(false);
-      }
-    });
-    window.addEventListener('focus', () => {
-      if (currentTime) loadOccupiedSeats(false);
-    });
-    setInterval(() => {
-      if (document.visibilityState === 'visible' && currentTime) {
-        loadOccupiedSeats(false);
-      }
-    }, 10000);
+    const idx = selectedSeats.findIndex(s => s.code === code);
+    if (idx !== -1) {
+      seatTotal -= selectedSeats[idx].price;
+      selectedSeats.splice(idx, 1);
+    }
+    if (seatTotal < 0) seatTotal = 0;
+    updateBottomSummary();
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initBookingPage);
-  } else {
-    initBookingPage();
-  }
-
+  // Tương tác Bắp & Nước Combo
   function stepCombo(btn, delta) {
     const card = btn.closest('.combo-card');
     if (!card) return;
     const id = card.getAttribute('data-id');
     const baseName = card.getAttribute('data-name');
     const price = Number(card.getAttribute('data-price')) || 0;
-    adjustComboWithFlavor(id, baseName, price, delta);
-  }
 
-  function adjustComboWithFlavor(id, baseName, price, delta) {
-    const flavorEl = document.getElementById('flavor_' + id);
-    const chosenFlavor = flavorEl && flavorEl.value ? flavorEl.value.trim() : '';
-    const itemKey = chosenFlavor ? (id + '__' + chosenFlavor) : id;
-    const displayName = chosenFlavor ? `${baseName} (${chosenFlavor})` : baseName;
-
-    if (!comboItems[itemKey]) {
-      comboItems[itemKey] = { id, name: displayName, price, qty: 0 };
+    if (!comboItems[id]) {
+      comboItems[id] = { id, name: baseName, price, qty: 0 };
     }
-    comboItems[itemKey].qty += delta;
-    if (comboItems[itemKey].qty < 0) comboItems[itemKey].qty = 0;
+    comboItems[id].qty += delta;
+    if (comboItems[id].qty < 0) comboItems[id].qty = 0;
 
-    // Tổng số lượng đang chọn cho thẻ món này
-    let cardQty = 0;
-    for (const k in comboItems) {
-      if (comboItems[k].id === id) {
-        cardQty += comboItems[k].qty;
-      }
-    }
+    const currentQty = comboItems[id].qty;
     const qtyEl = document.getElementById('qty_' + id);
-    if (qtyEl) qtyEl.innerText = cardQty;
+    if (qtyEl) qtyEl.innerText = currentQty;
 
-    // Cập nhật tổng tiền và mô tả combo gửi qua form thanh toán
+    const btnAdd = card.querySelector('.btn-add-combo');
+    const stepper = card.querySelector('.stepper-combo');
+    if (currentQty > 0) {
+      if (btnAdd) btnAdd.classList.add('hidden');
+      if (stepper) stepper.classList.remove('hidden');
+      if (stepper) stepper.classList.add('flex');
+    } else {
+      if (btnAdd) btnAdd.classList.remove('hidden');
+      if (stepper) stepper.classList.add('hidden');
+      if (stepper) stepper.classList.remove('flex');
+    }
+
     comboTotal = 0;
     const comboDescList = [];
     for (const key in comboItems) {
@@ -1214,108 +1038,178 @@
     document.getElementById('input_comboDetails').value = comboDescList.join(', ');
     document.getElementById('input_comboTotal').value = comboTotal;
 
-    const badge = document.getElementById('comboSelectedCountBadge');
-    let totalComboCount = 0;
-    for (const key in comboItems) {
-      totalComboCount += comboItems[key].qty;
-    }
-    if (badge) {
-      if (totalComboCount > 0) {
-        badge.classList.remove('hidden');
-        badge.innerText = `${totalComboCount} món (${comboTotal.toLocaleString('vi-VN')}đ)`;
-      } else {
-        badge.classList.add('hidden');
-      }
-    }
-
     updateBottomSummary();
   }
 
-  function adjustCombo(id, name, price, delta) {
-    adjustComboWithFlavor(id, name, price, delta);
-  }
-
+  // Cập nhật hóa đơn trực tiếp (Right Column Live Invoice)
   function updateBottomSummary() {
-    const seatsLabel = document.getElementById('selectedSeatsLabel');
-    const priceLabel = document.getElementById('totalPriceLabel');
+    const sideSeats = document.getElementById('sideSeatsContainer');
+    const sideCount = document.getElementById('sideSeatCount');
+    const sideSeatTot = document.getElementById('sideSeatTotal');
+    const sideComboTot = document.getElementById('sideComboTotal');
+    const sideVoucherRow = document.getElementById('sideVoucherRow');
+    const sideVoucherLabel = document.getElementById('sideVoucherLabel');
+    const sideVoucherDiscount = document.getElementById('sideVoucherDiscount');
+    const sideGrand = document.getElementById('sideGrandTotal');
     const btnSubmit = document.getElementById('btnContinueCheckout');
+    const headSeatsBadge = document.getElementById('headerSelectedSeats');
+    const comboBadge = document.getElementById('comboBadgeSummary');
 
-    const grandTotal = seatTotal + comboTotal;
-    document.getElementById('input_total').value = grandTotal;
+    // Combo count & description
+    let totalComboCount = 0;
+    let comboFirstTitle = '';
+    for (const key in comboItems) {
+      if (comboItems[key].qty > 0) {
+        totalComboCount += comboItems[key].qty;
+        if (!comboFirstTitle) comboFirstTitle = `${comboItems[key].name}`;
+      }
+    }
+
+    if (comboBadge) {
+      if (totalComboCount === 1) {
+        comboBadge.innerText = `Đã chọn: 1 ${comboFirstTitle}`;
+      } else if (totalComboCount > 1) {
+        comboBadge.innerText = `Đã chọn: ${totalComboCount} món (${comboTotal.toLocaleString('vi-VN')}đ)`;
+      } else {
+        comboBadge.innerText = 'Chưa chọn món';
+      }
+    }
+
+    if (sideComboTot) {
+      sideComboTot.innerText = comboTotal > 0 ? (comboTotal.toLocaleString('vi-VN') + ' đ') : '0 đ';
+    }
+
+    // Voucher recalculation
+    let discountVal = 0;
+    if (appliedVoucher) {
+      discountVal = appliedVoucher.discount;
+      if (sideVoucherRow) sideVoucherRow.classList.remove('hidden');
+      if (sideVoucherLabel) sideVoucherLabel.innerText = `Voucher ${appliedVoucher.code}:`;
+      if (sideVoucherDiscount) sideVoucherDiscount.innerText = `-${discountVal.toLocaleString('vi-VN')} đ`;
+    } else {
+      if (sideVoucherRow) sideVoucherRow.classList.add('hidden');
+      if (sideVoucherDiscount) sideVoucherDiscount.innerText = '-0 đ';
+    }
+
+    const subTotal = seatTotal + comboTotal;
+    const grandTotal = Math.max(0, subTotal - discountVal);
+
+    document.getElementById('input_total').value = subTotal;
+    document.getElementById('input_finalAmount').value = grandTotal;
 
     if (selectedSeats.length === 0) {
-      seatsLabel.innerHTML = '<span class="text-[#A6AAB6] italic font-normal">Chưa chọn ghế</span>';
-      priceLabel.innerText = comboTotal > 0 ? (comboTotal.toLocaleString('vi-VN') + ' đ') : '0 đ';
-      btnSubmit.disabled = true;
+      if (sideSeats) sideSeats.innerHTML = '<span class="text-white/40 italic font-normal">Chưa chọn ghế</span>';
+      if (sideCount) sideCount.innerText = '(0x)';
+      if (sideSeatTot) sideSeatTot.innerText = '0 đ';
+      if (sideGrand) sideGrand.innerText = comboTotal > 0 ? (grandTotal.toLocaleString('vi-VN') + ' đ') : '0 đ';
+      if (headSeatsBadge) headSeatsBadge.innerText = '';
+      if (btnSubmit) {
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<span>VUI LÒNG CHỌN GHẾ NGỒI</span>';
+      }
       document.getElementById('input_seats').value = '';
     } else {
       const seatCodes = selectedSeats.map(s => s.code);
-      seatsLabel.innerHTML = seatCodes.map(code => 
-        `<span class="inline-block px-1.5 py-0.5 bg-[#121316] text-white text-[11px] font-bold mr-1">${code}</span>`
-      ).join('');
-      priceLabel.innerText = grandTotal.toLocaleString('vi-VN') + ' đ';
-      btnSubmit.disabled = false;
+      if (sideSeats) {
+        sideSeats.innerHTML = selectedSeats.map(s => 
+          `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-[#BA2D27] text-white rounded text-[11px] font-bold shadow-xs">
+            ${s.code}
+            <span class="cursor-pointer text-white/80 hover:text-white font-normal ml-0.5" onclick="removeSelectedSeat('${s.code}')" title="Bỏ chọn ghế này">✕</span>
+          </span>`
+        ).join('');
+      }
+      if (sideCount) sideCount.innerText = `(${selectedSeats.length}x)`;
+      if (sideSeatTot) sideSeatTot.innerText = seatTotal.toLocaleString('vi-VN') + ' đ';
+      if (sideGrand) sideGrand.innerText = grandTotal.toLocaleString('vi-VN') + ' đ';
+      if (headSeatsBadge) headSeatsBadge.innerText = `(${seatCodes.join(', ')} đang chọn)`;
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = `<span>XÁC NHẬN & THANH TOÁN (${grandTotal.toLocaleString('vi-VN')}đ)</span><span class="material-symbols-outlined text-[16px]">arrow_forward</span>`;
+      }
       document.getElementById('input_seats').value = seatCodes.join(',');
     }
   }
-  function saveCurrentBookingToCart(e) {
-    if (e) e.preventDefault();
-    if (!selectedSeats || selectedSeats.length === 0) {
-      if (window.cinegoToast) window.cinegoToast.warning('Vui lòng chọn ít nhất 1 ghế để lưu vào giỏ hàng!');
-      else alert('Vui lòng chọn ít nhất 1 ghế để lưu vào giỏ hàng!');
+
+  // 5-minute Countdown Timer (Đồng hồ đếm ngược góc phải)
+  let remainingSec = 300;
+  const timerDisplay = document.getElementById('bookingTimerText');
+  const timerInterval = setInterval(() => {
+    remainingSec--;
+    if (remainingSec <= 0) {
+      clearInterval(timerInterval);
+      if (timerDisplay) timerDisplay.innerText = '00:00';
+      if (window.cinegoToast) window.cinegoToast.error('Đã hết 5 phút giữ vé! Vui lòng chọn lại suất chiếu.');
       return;
     }
-    const movieTitle = '<%= phim ? phim.title.replace(/'/g, "\\'") : "" %>';
-    const moviePoster = '<%= phim ? (phim.posterUrl || "").replace(/'/g, "\\'") : "" %>';
-    const movieFormat = '<%= (phim && phim.format) ? phim.format : "2D Standard" %>';
-    const cinemaVal = document.getElementById('input_cinema').value;
-    const showDateVal = document.getElementById('input_showDate').value;
-    const showTimeVal = document.getElementById('input_showTime').value;
-    const seatCodes = selectedSeats.map(s => s.code);
-    
-    // Thu thập combo bắp nước nếu có
-    const comboList = [];
-    Object.keys(comboItems).forEach(id => {
-      const item = comboItems[id];
-      if (item && item.qty > 0) {
-        comboList.push({
-          id: id,
-          name: item.name,
-          flavor: item.flavor || 'Mặc định',
-          price: item.price,
-          qty: item.qty
-        });
-      }
-    });
+    const m = String(Math.floor(remainingSec / 60)).padStart(2, '0');
+    const s = String(remainingSec % 60).padStart(2, '0');
+    if (timerDisplay) timerDisplay.innerText = `${m}:${s}`;
+  }, 1000);
 
-    const ticketItem = {
-      movieId: currentMovieId,
-      movieTitle: movieTitle,
-      posterUrl: moviePoster,
-      format: movieFormat,
-      cinema: cinemaVal,
-      showDate: showDateVal,
-      showTime: showTimeVal,
-      seats: seatCodes,
-      seatTotal: seatTotal,
-      comboDetails: document.getElementById('input_comboDetails').value,
-      comboTotal: comboTotal,
-      grandTotal: seatTotal + comboTotal,
-      savedAt: new Date().toISOString()
-    };
+  // Lấy trạng thái ghế đã đặt / đang giữ từ server qua API
+  async function refreshSeatsView() {
+    if (!selectedTime) return;
+    try {
+      const url = `/api/ghe-da-dat?movieId=${encodeURIComponent(currentMovieId)}&cinema=${encodeURIComponent(selectedCinema)}&showDate=${encodeURIComponent(selectedDate)}&showTime=${encodeURIComponent(selectedTime)}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      
+      const soldList = data.bookedSeats || [];
+      const heldList = data.heldSeats || [];
 
-    if (typeof window.saveTicketToHeaderCart === 'function') {
-      window.saveTicketToHeaderCart(ticketItem, comboList);
-      if (window.cinegoToast) {
-        window.cinegoToast.success(`Đã lưu vé "${movieTitle}" (${seatCodes.join(', ')}) vào Giỏ Hàng!`);
-      }
-      if (typeof window.openHeaderCartDrawer === 'function') {
-        window.openHeaderCartDrawer();
-      }
-    } else {
-      if (window.cinegoToast) window.cinegoToast.success('Đã lưu vào giỏ hàng thành công!');
+      document.querySelectorAll('.seat-unit').forEach(el => {
+        const code = el.getAttribute('data-seat');
+        if (!code) return;
+
+        if (soldList.includes(code)) {
+          el.className = 'seat-unit seat-sold';
+          el.innerText = '✕';
+          el.title = 'Ghế này đã được thanh toán';
+        } else if (heldList.includes(code)) {
+          el.className = 'seat-unit seat-held';
+          el.innerText = '⌛';
+          el.title = 'Ghế đang được người khác giữ chỗ trong 5 phút';
+        } else {
+          const type = el.getAttribute('data-type') || 'standard';
+          const isSelected = selectedSeats.some(s => s.code === code);
+          if (isSelected) {
+            el.className = 'seat-unit seat-selected';
+            el.innerText = code.includes('-') ? code : code.replace(/^[A-Za-z]+/, '');
+          } else {
+            const extra = (type === 'vip') ? 'is-vip' : ((type === 'couple') ? 'is-couple' : '');
+            el.className = `seat-unit seat-free ${extra}`;
+            el.innerText = code.includes('-') ? code : code.replace(/^[A-Za-z]+/, '');
+          }
+        }
+      });
+    } catch(err) {
+      console.warn('Lỗi lấy trạng thái ghế:', err);
     }
   }
-</script>
 
-<%- include('partials/footer') %>
+  // Khởi tạo trang
+  document.addEventListener('DOMContentLoaded', () => {
+    setupSeatInteractions();
+    renderTimeOptions();
+    updateBottomSummary();
+
+    // Hỗ trợ Enter khi nhập mã voucher
+    const vInput = document.getElementById('voucherCodeInput');
+    if (vInput) {
+      vInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          applyVoucherCode();
+        }
+      });
+    }
+
+    // Tự động áp dụng voucher từ URL nếu có
+    const urlParams = new URLSearchParams(window.location.search);
+    const preVoucher = urlParams.get('voucher') || urlParams.get('flashVoucher');
+    if (preVoucher && vInput) {
+      vInput.value = preVoucher;
+      applyVoucherCode();
+    }
+  });
+</script>
