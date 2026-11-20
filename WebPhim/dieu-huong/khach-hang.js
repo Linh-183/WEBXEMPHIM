@@ -403,11 +403,13 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
             $or: [{ expiryDate: { $gte: new Date() } }, { expiryDate: null }] 
         }).lean();
         const availableCombos = await FoodCombo.find({ isActive: true }).sort({ category: 1, price: 1 }).lean();
+        const seatConfig = await SeatConfig.findOne().lean();
         const safeDiscount = Number(discountAmount) || 0;
         const safeTotal = Number(total) || 0;
         const calcFinal = Number(finalAmount) > 0 ? Number(finalAmount) : Math.max(0, safeTotal - safeDiscount);
         res.render('trangthanhtoan', { 
             phim, 
+            seatConfig,
             cinema: selectedCinema, 
             showDate, 
             showTime, 
