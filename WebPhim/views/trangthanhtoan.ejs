@@ -1,12 +1,60 @@
 <%- include('partials/header') %>
 
-<main class="min-h-screen py-10 pb-24 bg-[#FAF8F5]">
+<%
+  const defaultSystemVouchers = [
+    {
+      code: 'CINEGO50K',
+      title: 'Giảm 50.000đ cho đơn đặt vé',
+      discountType: 'fixed',
+      discountValue: 50000,
+      minOrderValue: 100000
+    },
+    {
+      code: 'CHAOBANMOI',
+      title: 'Ưu đãi Chào Bạn Mới',
+      discountType: 'fixed',
+      discountValue: 20000,
+      minOrderValue: 75000
+    },
+    {
+      code: 'VIP20',
+      title: 'Giảm 20% cho thành viên VIP',
+      discountType: 'percentage',
+      discountValue: 20,
+      minOrderValue: 120000
+    }
+  ];
+
+  const dbVouchers = (typeof vouchers !== 'undefined' && Array.isArray(vouchers) && vouchers.length > 0) ? vouchers : [];
+  const walletVouchers = (typeof savedVouchers !== 'undefined' && Array.isArray(savedVouchers) && savedVouchers.length > 0) ? savedVouchers : [];
+  const mergedV = [...walletVouchers, ...dbVouchers];
+  const seenCodes = new Set();
+  const availableVouchers = [];
+
+  mergedV.forEach(v => {
+    if (v && v.code && !seenCodes.has(v.code.toUpperCase())) {
+      seenCodes.add(v.code.toUpperCase());
+      availableVouchers.push(v);
+    }
+  });
+
+  if (availableVouchers.length === 0) {
+    defaultSystemVouchers.forEach(v => {
+      if (!seenCodes.has(v.code.toUpperCase())) {
+        seenCodes.add(v.code.toUpperCase());
+        availableVouchers.push(v);
+      }
+    });
+  }
+%>
+
+<main class="min-h-screen py-8 sm:py-10 pb-24 bg-[#FAF8F5] text-[#121316]">
   <div class="max-w-[1440px] mx-auto px-4 sm:px-8">
     
     <!-- =========================================================================
          1. EDITORIAL CHECKOUT MASTHEAD & 5-MINUTE COUNTDOWN BAR
          ========================================================================= -->
-    <div class="pb-6 border-b border-[#E5E0D5] mb-8">
+    <div class="pb-5 border-b border-[#E5E0D5] mb-6">
       <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <span class="font-['JetBrains_Mono'] text-xs text-[#7A7E8B] uppercase tracking-wider block">
@@ -15,7 +63,7 @@
           <h1 class="font-serif text-2xl sm:text-4xl font-bold text-[#121316] mt-1">
             Xác Nhận Đơn Hàng & Thanh Toán
           </h1>
-          <p class="text-xs text-[#7A7E8B] mt-1.5 font-normal">
+          <p class="text-xs text-[#7A7E8B] mt-1 font-normal">
             Vé điện tử có mã QR sẽ được gửi tức thì vào lịch sử vé và tài khoản sau khi giao dịch thành công.
           </p>
         </div>
@@ -24,29 +72,29 @@
         <div class="flex flex-wrap items-center gap-3">
           <button type="button" 
                   onclick="cancelAndReturnToSeats()" 
-                  class="bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[#BA2D27] p-3 px-4 flex items-center gap-2 text-xs font-bold font-['JetBrains_Mono'] transition-all shadow-sm">
-            <span class="material-symbols-outlined text-base">close</span>
+                  class="bg-white border border-[#E5E0D5] hover:border-[#BA2D27] text-[#BA2D27] p-2.5 px-3.5 flex items-center gap-2 text-xs font-bold font-['JetBrains_Mono'] transition-all shadow-xs select-none">
+            <span>←</span>
             <span>CHỌN LẠI GHẾ & SUẤT</span>
           </button>
 
           <!-- Cancellation Countdown Widget -->
-          <div class="bg-white border border-[#E5E0D5] p-3.5 px-5 flex items-center gap-4 shadow-sm">
+          <div class="bg-white border border-[#E5E0D5] p-2.5 px-4 flex items-center gap-3.5 shadow-xs select-none">
             <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-[#BA2D27] text-xl animate-spin" style="animation-duration: 4s;">timer</span>
+              <span class="text-base text-[#BA2D27]">⏱</span>
               <div>
-                <span class="block font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] uppercase">Thời gian thanh toán:</span>
-                <span id="countdownTimer" class="font-['JetBrains_Mono'] text-lg font-black text-[#BA2D27]">05:00</span>
+                <span class="block font-['JetBrains_Mono'] text-[9.5px] text-[#7A7E8B] uppercase">Thời gian giữ vé:</span>
+                <span id="countdownTimer" class="font-['JetBrains_Mono'] text-base font-black text-[#BA2D27]">05:00</span>
               </div>
             </div>
-            <div class="hidden sm:block border-l border-[#E5E0D5] pl-4 text-[11px] text-[#7A7E8B] font-['Plus_Jakarta_Sans']">
-              Đơn hàng sẽ tự động hủy<br>khi hết thời gian đếm ngược.
+            <div class="hidden sm:block border-l border-[#E5E0D5] pl-3 text-[10.5px] text-[#7A7E8B] font-['Plus_Jakarta_Sans'] leading-tight">
+              Đơn hàng tự hủy<br>khi hết giờ.
             </div>
           </div>
         </div>
       </div>
 
       <!-- Live Dynamic Countdown Progress Bar -->
-      <div class="w-full bg-[#E5E0D5] h-1.5 mt-5 overflow-hidden">
+      <div class="w-full bg-[#E5E0D5] h-1.5 mt-4 overflow-hidden">
         <div id="countdownProgressBar" class="bg-[#BA2D27] h-full w-full transition-all duration-1000 ease-linear"></div>
       </div>
     </div>
@@ -67,17 +115,19 @@
       <input type="hidden" name="comboTotal" value="<%= typeof comboTotal !== 'undefined' ? comboTotal : 0 %>" />
 
       <!-- =========================================================================
-           2. TWO-COLUMN LAYOUT:
-              LEFT: CHỌN / XEM LẠI VỊ TRÍ GHẾ + PHƯƠNG THỨC THANH TOÁN + VOUCHER (SPAN 7)
-              RIGHT: THÔNG TIN ĐƠN HÀNG & PHIẾU THANH TOÁN (SPAN 5)
+           2. BỐ CỤC 2 CỘT VUÔNG VỨC CHUẨN XÁC:
+              - CỘT TRÁI: Sơ đồ phòng chiếu vị trí ghế + Thông tin nhận vé
+              - CỘT PHẢI: PHIẾU XÁC NHẬN ĐƠN HÀNG (Tích hợp Voucher + Phương thức thanh toán)
            ========================================================================= -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        <!-- Left Column: Seat Selector/Preview & Payment Gateways (Span 7) -->
-        <div class="lg:col-span-7 space-y-6">
+        <!-- =====================================================================
+             CỘT TRÁI (Span 6): SƠ ĐỒ VỊ TRÍ GHẾ + THÔNG TIN NHẬN VÉ
+             ===================================================================== -->
+        <div class="lg:col-span-6 space-y-5">
           
-          <!-- 1. VỊ TRÍ GHẾ NGỒI TRONG PHÒNG CHIẾU -->
-          <div class="bg-white border border-[#E5E0D5] p-4 sm:p-6 space-y-4">
+          <!-- 1. VỊ TRÍ GHẾ NGỒI TRONG PHÒNG CHIẾU (VUÔNG VỨC) -->
+          <div class="bg-white border border-[#E5E0D5] p-5 space-y-4 shadow-xs">
             <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-3">
               <div>
                 <span class="font-['JetBrains_Mono'] text-[10px] text-[#BA2D27] font-bold uppercase tracking-wider block">SƠ ĐỒ PHÒNG CHIẾU</span>
@@ -89,20 +139,20 @@
                 <span class="text-xs font-['JetBrains_Mono'] text-[#7A7E8B] block">
                   <%= typeof cinema !== 'undefined' ? cinema : 'CGV Kim Cúc Plaza' %> • <%= typeof showTime !== 'undefined' ? showTime : '19:30' %>
                 </span>
-                <span class="inline-block mt-0.5 px-2 py-0.5 font-['JetBrains_Mono'] text-[10px] font-bold uppercase <%= (phim && phim.format === 'IMAX Laser') ? 'bg-[#121316] text-[#D97706] border border-[#D97706]' : 'bg-[#EFEBE3] text-[#121316]' %>">
-                  <%= (phim && phim.format) ? ((phim.format === 'IMAX Laser') ? 'Rạp IMAX Laser' : (phim.format === '3D Standard' ? 'Rạp 3D Standard' : 'Rạp Thường (Standard 2D)')) : 'Rạp Thường (Standard 2D)' %>
+                <span class="inline-block mt-0.5 px-2 py-0.5 font-['JetBrains_Mono'] text-[10px] font-bold uppercase bg-[#EFEBE3] text-[#121316]">
+                  <%= (phim && phim.format && !phim.format.toLowerCase().includes('imax')) ? phim.format : 'Rạp Thường (2D)' %>
                 </span>
               </div>
             </div>
 
-            <!-- Mini Auditorium Seat Map (Responsive with overflow containment) -->
-            <div class="bg-[#0E1015] p-3 sm:p-5 border border-white/10 rounded-sm overflow-x-auto">
-              <div class="w-3/4 mx-auto h-2 bg-gradient-to-r from-transparent via-[#BA2D27]/80 to-transparent mb-1 rounded-full"></div>
+            <!-- Mini Auditorium Seat Map (Vuông vức, tối chuẩn rạp) -->
+            <div class="bg-[#0E1015] p-4 sm:p-5 border border-white/10 overflow-x-auto text-white">
+              <div class="w-3/4 mx-auto h-2 bg-gradient-to-r from-transparent via-[#BA2D27]/80 to-transparent mb-1"></div>
               <div class="text-center font-['JetBrains_Mono'] text-[9px] text-white/50 tracking-widest uppercase mb-4">
                 MÀN HÌNH CHIẾU
               </div>
 
-              <!-- Seat Rows Visualizer (Full 10 Seats for Rows A-E & Row F Sweetbox Couple) -->
+              <!-- Seat Rows Visualizer -->
               <div class="space-y-1.5 sm:space-y-2 max-w-md mx-auto text-center min-w-[280px]" id="checkoutSeatVisualizer">
                 <% 
                   var activeSeats = (typeof seats !== 'undefined' && Array.isArray(seats)) ? seats : ((typeof seats === 'string' && seats) ? seats.split(',') : []);
@@ -114,7 +164,7 @@
                     var code = 'A' + i;
                     var isSelected = activeSeats.includes(code);
                   %>
-                    <div class="w-5 xs:w-6 h-5 rounded-sm flex items-center justify-center text-[8px] xs:text-[9px] font-['JetBrains_Mono'] font-bold <%= isSelected ? 'bg-[#BA2D27] text-white ring-1 ring-white' : 'bg-white/10 text-white/40' %>">
+                    <div class="w-5 xs:w-6 h-5 flex items-center justify-center text-[8px] xs:text-[9px] font-['JetBrains_Mono'] font-bold <%= isSelected ? 'bg-[#BA2D27] text-white ring-1 ring-white' : 'bg-white/10 text-white/40' %>">
                       <%= code %>
                     </div>
                   <% } %>
@@ -128,7 +178,7 @@
                     var code = 'B' + i;
                     var isSelected = activeSeats.includes(code);
                   %>
-                    <div class="w-5 xs:w-6 h-5 rounded-sm flex items-center justify-center text-[8px] xs:text-[9px] font-['JetBrains_Mono'] font-bold <%= isSelected ? 'bg-[#BA2D27] text-white ring-1 ring-white' : 'bg-white/10 text-white/40' %>">
+                    <div class="w-5 xs:w-6 h-5 flex items-center justify-center text-[8px] xs:text-[9px] font-['JetBrains_Mono'] font-bold <%= isSelected ? 'bg-[#BA2D27] text-white ring-1 ring-white' : 'bg-white/10 text-white/40' %>">
                       <%= code %>
                     </div>
                   <% } %>
@@ -142,7 +192,7 @@
                     var code = 'C' + i;
                     var isSelected = activeSeats.includes(code);
                   %>
-                    <div class="w-5 xs:w-6 h-5 rounded-sm flex items-center justify-center text-[8px] xs:text-[9px] font-['JetBrains_Mono'] font-bold <%= isSelected ? 'bg-[#BA2D27] text-white ring-1 ring-white' : 'bg-white/10 text-white/40' %>">
+                    <div class="w-5 xs:w-6 h-5 flex items-center justify-center text-[8px] xs:text-[9px] font-['JetBrains_Mono'] font-bold <%= isSelected ? 'bg-[#BA2D27] text-white ring-1 ring-white' : 'bg-white/10 text-white/40' %>">
                       <%= code %>
                     </div>
                   <% } %>
@@ -156,7 +206,7 @@
                     var code = 'D' + i;
                     var isSelected = activeSeats.includes(code);
                   %>
-                    <div class="w-5 xs:w-6 h-5 rounded-sm flex items-center justify-center text-[8px] xs:text-[9px] font-['JetBrains_Mono'] font-bold <%= isSelected ? 'bg-[#BA2D27] text-white ring-1 ring-white' : 'bg-white/10 text-[#D97706] border-b border-[#D97706]' %>">
+                    <div class="w-5 xs:w-6 h-5 flex items-center justify-center text-[8px] xs:text-[9px] font-['JetBrains_Mono'] font-bold <%= isSelected ? 'bg-[#BA2D27] text-white ring-1 ring-white' : 'bg-white/10 text-[#D97706] border-b-2 border-[#D97706]' %>">
                       <%= code %>
                     </div>
                   <% } %>
@@ -170,7 +220,7 @@
                     var code = 'E' + i;
                     var isSelected = activeSeats.includes(code);
                   %>
-                    <div class="w-5 xs:w-6 h-5 rounded-sm flex items-center justify-center text-[8px] xs:text-[9px] font-['JetBrains_Mono'] font-bold <%= isSelected ? 'bg-[#BA2D27] text-white ring-1 ring-white' : 'bg-white/10 text-[#D97706] border-b border-[#D97706]' %>">
+                    <div class="w-5 xs:w-6 h-5 flex items-center justify-center text-[8px] xs:text-[9px] font-['JetBrains_Mono'] font-bold <%= isSelected ? 'bg-[#BA2D27] text-white ring-1 ring-white' : 'bg-white/10 text-[#D97706] border-b-2 border-[#D97706]' %>">
                       <%= code %>
                     </div>
                   <% } %>
@@ -184,7 +234,7 @@
                   <% checkoutCouples.forEach(code => { 
                     var isSelected = activeSeats.includes(code);
                   %>
-                    <div class="w-10 xs:w-12 h-5 rounded-sm flex items-center justify-center text-[8px] xs:text-[9px] font-['JetBrains_Mono'] font-bold <%= isSelected ? 'bg-[#BA2D27] text-white ring-1 ring-white' : 'bg-white/10 text-white/40' %>">
+                    <div class="w-10 xs:w-12 h-5 flex items-center justify-center text-[8px] xs:text-[9px] font-['JetBrains_Mono'] font-bold <%= isSelected ? 'bg-[#BA2D27] text-white ring-1 ring-white' : 'bg-white/10 text-white/40' %>">
                       <%= code %>
                     </div>
                   <% }); %>
@@ -195,11 +245,11 @@
               <!-- Seat Preview Legend -->
               <div class="mt-4 pt-3 border-t border-white/10 flex items-center justify-center gap-4 text-[10px] font-['JetBrains_Mono']">
                 <div class="flex items-center gap-1.5">
-                  <div class="w-3 h-3 rounded-sm bg-[#BA2D27]"></div>
+                  <div class="w-3 h-3 bg-[#BA2D27]"></div>
                   <span class="text-white font-bold">Ghế bạn đang chọn (<%= activeSeats.length %> ghế)</span>
                 </div>
                 <div class="flex items-center gap-1.5">
-                  <div class="w-3 h-3 rounded-sm bg-white/10"></div>
+                  <div class="w-3 h-3 bg-white/10"></div>
                   <span class="text-white/40">Ghế khác</span>
                 </div>
               </div>
@@ -220,182 +270,54 @@
             </div>
           </div>
 
-          <!-- 2. PHƯƠNG THỨC THANH TOÁN -->
-          <div class="bg-white border border-[#E5E0D5] p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-3">
+          <!-- 2. THÔNG TIN KHÁCH HÀNG & NHẬN VÉ ĐIỆN TỬ -->
+          <div class="bg-white border border-[#E5E0D5] p-5 space-y-3.5 shadow-xs">
+            <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-2.5">
               <div>
                 <span class="font-['JetBrains_Mono'] text-[10px] text-[#10B981] font-bold uppercase tracking-wider block">BẢO MẬT SSL 256-BIT</span>
-                <h2 class="font-serif text-base font-bold text-[#121316]">
-                  Chọn Phương Thức Thanh Toán
-                </h2>
+                <h3 class="font-serif text-sm font-bold text-[#121316]">
+                  Thông Tin Người Nhận Vé
+                </h3>
               </div>
               <span class="text-[10px] font-['JetBrains_Mono'] text-[#10B981] font-bold">XÁC THỰC TỨC THÌ</span>
             </div>
 
-            <div class="space-y-3 text-xs" id="paymentMethodContainer">
-              
-              <!-- 1. Chuyển Khoản Ngân Hàng (VietQR 24/7) -->
-              <label class="payment-method-card flex items-center justify-between p-4 bg-[#FAF8F5] border-2 border-[#121316] cursor-pointer transition-all has-[:checked]:border-2 has-[:checked]:border-[#121316] has-[:checked]:bg-[#FAF8F5]">
-                <div class="flex items-center gap-3">
-                  <input type="radio" name="payment_method" value="vietqr" checked class="accent-[#BA2D27] cursor-pointer" />
-                  <div>
-                    <span class="block font-bold text-[#121316] font-['Plus_Jakarta_Sans']">Chuyển Khoản Ngân Hàng 24/7 (VietQR - Khuyên dùng)</span>
-                    <span class="text-[11px] text-[#7A7E8B]">Quét mã QR tự động trên mọi App Ngân Hàng (Vietcombank, MB, Techcombank, BIDV, Agribank, ACB...)</span>
-                  </div>
-                </div>
-                <span class="font-['JetBrains_Mono'] text-[10px] text-[#10B981] font-bold uppercase">Miễn phí 24/7</span>
-              </label>
-
-              <!-- 2. Thẻ ATM & Tài Khoản Ngân Hàng Nội Địa -->
-              <label class="payment-method-card flex items-center justify-between p-4 bg-white border border-[#E5E0D5] hover:border-[#121316] cursor-pointer transition-all has-[:checked]:border-2 has-[:checked]:border-[#121316] has-[:checked]:bg-[#FAF8F5]">
-                <div class="flex items-center gap-3">
-                  <input type="radio" name="payment_method" value="atm" class="accent-[#BA2D27] cursor-pointer" />
-                  <div>
-                    <span class="block font-bold text-[#121316] font-['Plus_Jakarta_Sans']">Thẻ ATM & Tài Khoản Ngân Hàng Nội Địa (Internet Banking)</span>
-                    <span class="text-[11px] text-[#7A7E8B]">Thanh toán trực tiếp bằng thẻ ATM / Internet Banking của hơn 40 ngân hàng Việt Nam</span>
-                  </div>
-                </div>
-                <span class="font-['JetBrains_Mono'] text-[10px] text-[#BA2D27] font-bold uppercase">Xác thực OTP</span>
-              </label>
-
-              <!-- 3. Cổng Thanh Toán VNPay -->
-              <label class="payment-method-card flex items-center justify-between p-4 bg-white border border-[#E5E0D5] hover:border-[#121316] cursor-pointer transition-all has-[:checked]:border-2 has-[:checked]:border-[#121316] has-[:checked]:bg-[#FAF8F5]">
-                <div class="flex items-center gap-3">
-                  <input type="radio" name="payment_method" value="vnpay" class="accent-[#BA2D27] cursor-pointer" />
-                  <div>
-                    <span class="block font-bold text-[#121316] font-['Plus_Jakarta_Sans']">Cổng Thanh Toán Quốc Tế & VNPAY</span>
-                    <span class="text-[11px] text-[#7A7E8B]">VNPAY-QR, Thẻ quốc tế Visa, MasterCard, JCB, American Express</span>
-                  </div>
-                </div>
-                <span class="font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] uppercase">Bảo mật SSL</span>
-              </label>
-
-              <!-- 4. MoMo -->
-              <label class="payment-method-card flex items-center justify-between p-4 bg-white border border-[#E5E0D5] hover:border-[#121316] cursor-pointer transition-all has-[:checked]:border-2 has-[:checked]:border-[#121316] has-[:checked]:bg-[#FAF8F5]">
-                <div class="flex items-center gap-3">
-                  <input type="radio" name="payment_method" value="momo" class="accent-[#BA2D27] cursor-pointer" />
-                  <div>
-                    <span class="block font-bold text-[#121316] font-['Plus_Jakarta_Sans']">Ví Điện Tử MoMo</span>
-                    <span class="text-[11px] text-[#7A7E8B]">Thanh toán 1 chạm siêu tốc qua ứng dụng ví điện tử MoMo</span>
-                  </div>
-                </div>
-                <span class="font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] uppercase">Tức thời</span>
-              </label>
-
-              <!-- 5. ZaloPay -->
-              <label class="payment-method-card flex items-center justify-between p-4 bg-white border border-[#E5E0D5] hover:border-[#121316] cursor-pointer transition-all has-[:checked]:border-2 has-[:checked]:border-[#121316] has-[:checked]:bg-[#FAF8F5]">
-                <div class="flex items-center gap-3">
-                  <input type="radio" name="payment_method" value="zalopay" class="accent-[#BA2D27] cursor-pointer" />
-                  <div>
-                    <span class="block font-bold text-[#121316] font-['Plus_Jakarta_Sans']">Ví Điện Tử ZaloPay</span>
-                    <span class="text-[11px] text-[#7A7E8B]">Thanh toán liên kết ví ZaloPay và ứng dụng Zalo</span>
-                  </div>
-                </div>
-                <span class="font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] uppercase">Tiện lợi</span>
-              </label>
-
-            </div>
-          </div>
-
-          <!-- 3. MÃ GIẢM GIÁ / VOUCHER -->
-          <div class="bg-white border border-[#E5E0D5] p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-[#E5E0D5] pb-3">
-              <h2 class="font-serif text-sm font-bold text-[#121316] uppercase tracking-wider">
-                Mã Giảm Giá / Voucher Ưu Đãi
-              </h2>
-              <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B]">CINEGO WALLET</span>
+            <div class="space-y-2 text-xs font-['Plus_Jakarta_Sans']">
+              <div class="flex justify-between py-1 border-b border-[#FAF8F5]">
+                <span class="text-[#6B7280]">Họ và tên:</span>
+                <span class="font-bold text-[#121316]"><%= (typeof user !== 'undefined' && user && user.hoTen) ? user.hoTen : 'Khách Hàng CineGo' %></span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-[#FAF8F5]">
+                <span class="text-[#6B7280]">Số điện thoại:</span>
+                <span class="font-bold text-[#121316] font-['JetBrains_Mono']"><%= (typeof user !== 'undefined' && user && user.soDienThoai) ? user.soDienThoai : 'Liên kết tài khoản' %></span>
+              </div>
+              <div class="flex justify-between py-1">
+                <span class="text-[#6B7280]">Email nhận vé:</span>
+                <span class="font-bold text-[#121316] font-['JetBrains_Mono']"><%= (typeof user !== 'undefined' && user && user.email) ? user.email : 'Tài khoản đăng nhập' %></span>
+              </div>
             </div>
 
-            <div class="flex gap-2">
-              <input type="text" 
-                     id="voucherCodeInput" 
-                     placeholder="Nhập mã voucher (Ví dụ: CINEGO50)..." 
-                     class="flex-1 bg-[#FAF8F5] border border-[#E5E0D5] px-4 py-3 text-xs uppercase font-['JetBrains_Mono'] text-[#121316] focus:outline-none focus:border-[#121316]" />
-              <button type="button" 
-                       id="btnApplyVoucher" 
-                       onclick="checkAndApplyVoucher()" 
-                       class="btn-editorial-primary text-xs !py-2.5 !px-6">
-                Áp Dụng
-              </button>
+            <div class="p-3 bg-[#FAF8F5] border border-[#E5E0D5] text-[11px] text-[#6B7280] leading-relaxed">
+              💡 <strong>Lưu ý nhận vé:</strong> Sau khi thanh toán, mã QR và mã đặt vé sẽ hiển thị ngay trên màn hình và lưu vĩnh viễn trong mục <em>"Vé Của Tôi"</em>. Bạn chỉ cần đưa mã QR cho nhân viên soát vé hoặc quét tại quầy Kiosk tự động.
             </div>
-
-            <!-- Quick Voucher Pills from User Wallet & Available System Vouchers -->
-            <% 
-              const walletList = (typeof savedVouchers !== 'undefined' && Array.isArray(savedVouchers)) 
-                ? savedVouchers 
-                : ((typeof user !== 'undefined' && user && Array.isArray(user.vouchers) && user.vouchers.length > 0 && user.vouchers[0]._id) ? user.vouchers : []); 
-              const availableSystemVouchers = (typeof vouchers !== 'undefined' && Array.isArray(vouchers)) ? vouchers : [];
-            %>
-
-            <% if (walletList.length > 0) { %>
-              <div class="space-y-1.5 pt-2">
-                <span class="text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B] uppercase font-bold">Mã trong ví của bạn (Click để chọn nhanh):</span>
-                <div class="flex flex-wrap items-center gap-1.5">
-                  <% walletList.forEach(wv => { %>
-                    <button type="button" 
-                            onclick="fillVoucher('<%= wv.code %>')" 
-                            class="px-2.5 py-1 bg-[#FAF8F5] border border-[#BA2D27] text-[#BA2D27] hover:bg-[#BA2D27] hover:text-white text-[11px] font-['JetBrains_Mono'] font-bold transition-colors">
-                      🎟 <%= wv.code %> (<%= wv.discountType === 'percentage' ? ('-' + wv.discountValue + '%') : ('-' + (wv.discountValue/1000) + 'K') %>)
-                    </button>
-                  <% }); %>
-                </div>
-              </div>
-            <% } %>
-
-            <!-- Available System Vouchers Section -->
-            <% if (availableSystemVouchers.length > 0) { %>
-              <div class="space-y-2 pt-3 border-t border-[#E5E0D5]">
-                <div class="flex items-center justify-between text-[10px] font-['JetBrains_Mono'] text-[#7A7E8B] uppercase font-bold">
-                  <span>Voucher Ưu Đãi Có Sẵn Hôm Nay:</span>
-                  <span class="text-[#BA2D27]"><%= availableSystemVouchers.length %> Mã Khả Dụng</span>
-                </div>
-                <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  <% availableSystemVouchers.forEach(v => { %>
-                    <div class="p-2.5 bg-[#FAF8F5] border border-[#E5E0D5] hover:border-[#BA2D27] flex items-center justify-between gap-3 transition-colors">
-                      <div class="min-w-0">
-                        <div class="flex items-center gap-1.5">
-                          <span class="font-['JetBrains_Mono'] font-bold text-xs text-[#121316]"><%= v.code %></span>
-                          <span class="px-1.5 py-0.5 bg-[#BA2D27] text-white text-[9px] font-['JetBrains_Mono'] font-bold">
-                            <%= v.discountType === 'percentage' ? ('-' + v.discountValue + '%') : ('-' + (v.discountValue/1000) + 'K') %>
-                          </span>
-                        </div>
-                        <div class="text-[11px] text-[#7A7E8B] truncate mt-0.5"><%= v.title %></div>
-                        <% if (v.minOrderValue) { %>
-                          <div class="text-[9px] text-[#7A7E8B] font-['JetBrains_Mono']">Đơn tối thiểu: <%= (v.minOrderValue/1000) %>K</div>
-                        <% } %>
-                      </div>
-                      <button type="button" 
-                              onclick="fillVoucher('<%= v.code %>')" 
-                              class="btn-editorial-secondary text-[11px] !py-1 !px-3 font-bold whitespace-nowrap hover:!bg-[#BA2D27] hover:!text-white hover:!border-[#BA2D27] transition-all">
-                        Dùng Mã
-                      </button>
-                    </div>
-                  <% }); %>
-                </div>
-              </div>
-            <% } else if (walletList.length === 0) { %>
-              <div class="pt-1 text-[11px] font-['JetBrains_Mono'] text-[#7A7E8B]">
-                Ví voucher chưa có mã. <a href="/khuyen-mai" target="_blank" class="text-[#BA2D27] underline font-bold">Khám phá & lưu mã tại mục Khuyến Mãi →</a>
-              </div>
-            <% } %>
-
-            <div id="voucherFeedback" class="hidden p-3 text-xs font-['JetBrains_Mono'] font-semibold"></div>
           </div>
 
         </div>
 
-        <!-- Right Column: Itemized Invoice & Order Details (Span 5) -->
-        <div class="lg:col-span-5 space-y-6">
-          
-          <div class="p-6 sm:p-8 bg-white border border-[#E5E0D5] space-y-6 shadow-xl sticky top-28">
+        <!-- =====================================================================
+             CỘT PHẢI (Span 6): PHIẾU XÁC NHẬN ĐƠN HÀNG
+             Tích hợp hoàn toàn: Thông tin vé + Voucher + Phương thức thanh toán
+             ===================================================================== -->
+        <div class="lg:col-span-6">
+          <div class="bg-white border border-[#E5E0D5] p-5 sm:p-6 space-y-4 shadow-sm sticky top-24">
             
             <!-- Movie Stamp Header -->
-            <div class="flex items-start justify-between border-b border-[#E5E0D5] pb-4">
+            <div class="flex items-start justify-between border-b border-[#E5E0D5] pb-3">
               <div>
                 <span class="font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B] uppercase tracking-widest block">
                   PHIẾU XÁC NHẬN ĐƠN HÀNG
                 </span>
-                <h3 class="font-serif text-xl font-bold text-[#121316] mt-1">
+                <h3 class="font-serif text-lg sm:text-xl font-bold text-[#121316] mt-1">
                   <%= phim ? phim.title : 'Phim Đã Chọn' %>
                 </h3>
                 <div class="flex items-center flex-wrap gap-2 mt-1">
@@ -403,13 +325,13 @@
                     <%= typeof cinema !== 'undefined' ? cinema : 'CGV Kim Cúc Plaza' %>
                   </span>
                   <span class="text-[#CDC6B8]">•</span>
-                  <span class="px-2 py-0.5 font-['JetBrains_Mono'] text-[10px] font-bold uppercase <%= (phim && phim.format === 'IMAX Laser') ? 'bg-[#121316] text-[#D97706] border border-[#D97706]' : 'bg-[#EFEBE3] text-[#121316]' %>">
-                    <%= (phim && phim.format) ? ((phim.format === 'IMAX Laser') ? 'Rạp IMAX Laser' : (phim.format === '3D Standard' ? 'Rạp 3D Standard' : 'Rạp Thường (2D)')) : 'Rạp Thường (2D)' %>
+                  <span class="px-2 py-0.5 font-['JetBrains_Mono'] text-[10px] font-bold uppercase bg-[#EFEBE3] text-[#121316]">
+                    <%= (phim && phim.format && !phim.format.toLowerCase().includes('imax')) ? phim.format : 'Rạp Thường (2D)' %>
                   </span>
                 </div>
               </div>
-              <div class="w-10 h-10 bg-[#121316] text-white flex items-center justify-center font-serif font-bold text-sm">
-                <%= (phim && phim.format === 'IMAX Laser') ? 'IMAX' : '2D' %>
+              <div class="w-10 h-10 bg-[#121316] text-white flex items-center justify-center font-serif font-bold text-sm shrink-0">
+                2D
               </div>
             </div>
 
@@ -424,10 +346,10 @@
                 <span class="font-bold text-[#121316]"><%= typeof showDate !== 'undefined' && showDate ? showDate : new Date().toISOString().split('T')[0] %></span>
               </div>
               <div>
-                <span class="text-[#7A7E8B] block text-[10px] uppercase">Định Dạng Rạp:</span>
-                <span class="font-bold text-[#121316]"><%= (phim && phim.format === 'IMAX Laser') ? 'IMAX Laser' : 'Rạp Thường (2D)' %></span>
+                <span class="text-[#7A7E8B] block text-[10px] uppercase">Định Dạng:</span>
+                <span class="font-bold text-[#121316]"><%= (phim && phim.format && !phim.format.toLowerCase().includes('imax')) ? phim.format : 'Rạp Thường (2D)' %></span>
               </div>
-              <div class="col-span-2">
+              <div class="col-span-2 sm:col-span-3">
                 <span class="text-[#7A7E8B] block text-[10px] uppercase">Ghế Ngồi Đã Chọn:</span>
                 <div class="flex flex-wrap gap-1 mt-1">
                   <% if (typeof seats !== 'undefined' && Array.isArray(seats) && seats.length > 0) { %>
@@ -442,20 +364,19 @@
                 </div>
               </div>
               <% if (typeof comboDetails !== 'undefined' && comboDetails && comboDetails.trim() !== '') { %>
-                <div class="col-span-2 pt-3 border-t border-[#E5E0D5]">
+                <div class="col-span-2 sm:col-span-3 pt-2.5 border-t border-[#E5E0D5]">
                   <div class="flex items-center justify-between mb-1.5">
-                    <span class="text-[#A6853B] font-bold text-[10px] uppercase tracking-wider flex items-center gap-1">
-                      <span>🍿</span>
-                      <span>BẮP NƯỚC ĐẶT KÈM (F&B):</span>
+                    <span class="text-[#A6853B] font-bold text-[10px] uppercase tracking-wider">
+                      🍿 BẮP NƯỚC ĐẶT KÈM (F&B):
                     </span>
                     <span class="text-[#121316] font-bold text-xs"><%= Number(typeof comboTotal !== 'undefined' ? comboTotal : 0).toLocaleString('vi-VN') %> đ</span>
                   </div>
-                  <div class="space-y-1.5">
+                  <div class="space-y-1">
                     <% 
                       const comboArr = comboDetails.split(',').map(s => s.trim()).filter(Boolean);
                       comboArr.forEach(c => {
                     %>
-                      <div class="flex items-center justify-between text-[11px] bg-[#FAF8F5] p-2 border border-[#E5E0D5]">
+                      <div class="flex items-center justify-between text-[11px] bg-[#FAF8F5] p-1.5 px-2.5 border border-[#E5E0D5]">
                         <span class="text-[#121316] font-medium font-['Plus_Jakarta_Sans']">✓ <%= c %></span>
                         <span class="text-[#10B981] font-bold text-[10px] font-['JetBrains_Mono']">Fast-Track</span>
                       </div>
@@ -466,7 +387,7 @@
             </div>
 
             <!-- Itemized Pricing Breakdown -->
-            <div class="space-y-2 text-xs font-['JetBrains_Mono']">
+            <div class="space-y-1.5 text-xs font-['JetBrains_Mono'] border-b border-[#E5E0D5] pb-3">
               <div class="flex justify-between text-[#474A54]">
                 <span>Tạm tính vé xem phim:</span>
                 <span class="font-bold text-[#121316]"><%= (typeof total !== 'undefined' ? total - (typeof comboTotal !== 'undefined' ? comboTotal : 0) : 0).toLocaleString('vi-VN') %> đ</span>
@@ -490,22 +411,173 @@
               </div>
             </div>
 
-            <!-- Final Grand Total -->
-            <div class="pt-4 border-t border-[#121316] flex items-baseline justify-between font-['JetBrains_Mono']">
+            <!-- =================================================================
+                 MÃ ƯU ĐÃI / VOUCHER CINEGO (ĐƯỢC CHUYỂN VÀO ĐÂY THEO YÊU CẦU)
+                 Hiển thị danh sách voucher đang có, chạm vào để áp dụng ngay 1 chạm
+                 ================================================================= -->
+            <div class="pt-1">
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-[10.5px] font-bold uppercase tracking-wider text-[#6B7280]">
+                  MÃ ƯU ĐÃI / VOUCHER CINEGO
+                </label>
+                <% if (availableVouchers && availableVouchers.length > 0) { %>
+                  <span class="text-[10px] font-semibold text-[#BA2D27]"><%= availableVouchers.length %> mã khả dụng</span>
+                <% } %>
+              </div>
+              
+              <!-- Input nhập mã + Nút áp dụng -->
+              <div class="flex items-center gap-1.5">
+                <input type="text" 
+                       id="voucherCodeInput" 
+                       placeholder="Nhập mã voucher (VD: CINEGO50K)..." 
+                       class="flex-1 bg-[#FAF8F5] border border-[#E5E0D5] px-3 py-2 text-xs font-['JetBrains_Mono'] uppercase font-bold text-[#121316] focus:outline-none focus:border-[#121316]" />
+                <button type="button" 
+                        id="btnApplyVoucher" 
+                        onclick="checkAndApplyVoucher()" 
+                        class="px-4 py-2 bg-[#121316] hover:bg-[#BA2D27] text-white text-xs font-bold font-['JetBrains_Mono'] transition-colors shrink-0 shadow-xs cursor-pointer">
+                  Áp Dụng
+                </button>
+              </div>
+
+              <div id="voucherFeedback" class="hidden p-2 text-xs font-['JetBrains_Mono'] font-semibold mt-1.5"></div>
+
+              <!-- DANH SÁCH MÃ VOUCHER ĐANG CÓ (CLICK 1 CHẠM ĐỂ CHỌN NHANH) -->
+              <% if (availableVouchers && availableVouchers.length > 0) { %>
+                <div class="mt-2.5 pt-2 border-t border-[#E5E0D5]/70 space-y-1.5">
+                  <div class="flex items-center justify-between text-[10px] font-bold text-[#6B7280] uppercase">
+                    <span>VOUCHER KHẢ DỤNG HÔM NAY:</span>
+                    <span class="text-[9.5px] font-normal text-[#9CA3AF]">Chạm để dùng</span>
+                  </div>
+                  <div class="space-y-1.5 max-h-[148px] overflow-y-auto pr-1" id="availableVouchersContainer">
+                    <% availableVouchers.forEach(function(v) { 
+                        const isPercent = (v.discountType === 'percentage' || v.discountType === 'percent');
+                        const discText = isPercent ? ('-' + v.discountValue + '%') : ('-' + Number(v.discountValue).toLocaleString('vi-VN') + 'đ');
+                    %>
+                      <div class="voucher-card-item p-2 bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#E5E0D5] hover:border-[#BA2D27]/60 transition-all cursor-pointer flex items-center justify-between gap-2 select-none group"
+                           onclick="fillAndApplyVoucher('<%= v.code %>')"
+                           data-voucher-code="<%= v.code %>">
+                        <div class="min-w-0">
+                          <div class="flex items-center gap-1.5">
+                            <span class="font-extrabold text-xs text-[#121316] tracking-wider group-hover:text-[#BA2D27] font-['JetBrains_Mono']"><%= v.code %></span>
+                            <span class="px-1.5 py-0.2 bg-[#BA2D27] text-white text-[9px] font-bold">
+                              <%= discText %>
+                            </span>
+                          </div>
+                          <div class="text-[10px] text-[#6B7280] truncate mt-0.5"><%= v.title || 'Ưu đãi đặt vé xem phim' %></div>
+                          <% if (v.minOrderValue && v.minOrderValue > 0) { %>
+                            <div class="text-[9px] text-[#9CA3AF]">Đơn tối thiểu: <%= Number(v.minOrderValue).toLocaleString('vi-VN') %>đ</div>
+                          <% } %>
+                        </div>
+                        <button type="button" class="btn-voucher-action px-2.5 py-1 bg-white group-hover:bg-[#BA2D27] group-hover:text-white border border-[#E5E0D5] group-hover:border-[#BA2D27] text-[#121316] text-[10px] font-bold transition-colors shrink-0 shadow-2xs">
+                          Dùng mã
+                        </button>
+                      </div>
+                    <% }); %>
+                  </div>
+                </div>
+              <% } %>
+            </div>
+
+            <!-- =================================================================
+                 PHƯƠNG THỨC THANH TOÁN (ĐƯỢC CHUYỂN VÀO ĐÂY THEO YÊU CẦU)
+                 Giao diện vuông vức, sạch sẽ, chuẩn xác thực
+                 ================================================================= -->
+            <div class="pt-2 border-t border-[#E5E0D5]">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-['JetBrains_Mono'] text-[10.5px] font-bold text-[#6B7280] uppercase tracking-wider">
+                  PHƯƠNG THỨC THANH TOÁN
+                </span>
+                <span class="text-[9.5px] font-bold text-[#10B981]">MIỄN PHÍ DỊCH VỤ</span>
+              </div>
+
+              <div class="space-y-1.5 text-xs" id="paymentMethodContainer">
+                
+                <!-- 1. Chuyển Khoản Ngân Hàng VietQR 24/7 -->
+                <label class="payment-method-card flex items-center justify-between p-2.5 bg-[#FAF8F5] border-2 border-[#121316] cursor-pointer transition-all select-none">
+                  <div class="flex items-center gap-2.5">
+                    <input type="radio" name="payment_method" value="vietqr" checked class="accent-[#BA2D27] cursor-pointer" />
+                    <div>
+                      <span class="block font-bold text-[#121316] text-xs">Chuyển Khoản VietQR 24/7 (Khuyên dùng)</span>
+                      <span class="text-[10px] text-[#7A7E8B]">Quét mã QR tự động trên mọi App ngân hàng</span>
+                    </div>
+                  </div>
+                  <span class="font-['JetBrains_Mono'] text-[9.5px] text-[#10B981] font-bold uppercase">Miễn phí</span>
+                </label>
+
+                <!-- 2. Thẻ ATM & Tài Khoản Ngân Hàng Nội Địa -->
+                <label class="payment-method-card flex items-center justify-between p-2.5 bg-white border border-[#E5E0D5] hover:border-[#121316] cursor-pointer transition-all select-none">
+                  <div class="flex items-center gap-2.5">
+                    <input type="radio" name="payment_method" value="atm" class="accent-[#BA2D27] cursor-pointer" />
+                    <div>
+                      <span class="block font-bold text-[#121316] text-xs">Thẻ ATM / Internet Banking</span>
+                      <span class="text-[10px] text-[#7A7E8B]">Hơn 40 ngân hàng nội địa Việt Nam</span>
+                    </div>
+                  </div>
+                  <span class="font-['JetBrains_Mono'] text-[9.5px] text-[#BA2D27] font-bold uppercase">OTP</span>
+                </label>
+
+                <!-- 3. Ví Điện Tử MoMo -->
+                <label class="payment-method-card flex items-center justify-between p-2.5 bg-white border border-[#E5E0D5] hover:border-[#121316] cursor-pointer transition-all select-none">
+                  <div class="flex items-center gap-2.5">
+                    <input type="radio" name="payment_method" value="momo" class="accent-[#BA2D27] cursor-pointer" />
+                    <div>
+                      <span class="block font-bold text-[#121316] text-xs">Ví Điện Tử MoMo</span>
+                      <span class="text-[10px] text-[#7A7E8B]">Thanh toán 1 chạm qua ứng dụng MoMo</span>
+                    </div>
+                  </div>
+                  <span class="font-['JetBrains_Mono'] text-[9.5px] text-[#A50064] font-bold uppercase">MoMo</span>
+                </label>
+
+                <!-- 4. Ví Điện Tử ZaloPay -->
+                <label class="payment-method-card flex items-center justify-between p-2.5 bg-white border border-[#E5E0D5] hover:border-[#121316] cursor-pointer transition-all select-none">
+                  <div class="flex items-center gap-2.5">
+                    <input type="radio" name="payment_method" value="zalopay" class="accent-[#BA2D27] cursor-pointer" />
+                    <div>
+                      <span class="block font-bold text-[#121316] text-xs">Ví Điện Tử ZaloPay</span>
+                      <span class="text-[10px] text-[#7A7E8B]">Thanh toán liên kết ZaloPay / Zalo</span>
+                    </div>
+                  </div>
+                  <span class="font-['JetBrains_Mono'] text-[9.5px] text-[#0068FF] font-bold uppercase">ZaloPay</span>
+                </label>
+
+                <!-- 5. VNPAY-QR / Visa / Master -->
+                <label class="payment-method-card flex items-center justify-between p-2.5 bg-white border border-[#E5E0D5] hover:border-[#121316] cursor-pointer transition-all select-none">
+                  <div class="flex items-center gap-2.5">
+                    <input type="radio" name="payment_method" value="vnpay" class="accent-[#BA2D27] cursor-pointer" />
+                    <div>
+                      <span class="block font-bold text-[#121316] text-xs">VNPAY-QR / Visa / Master</span>
+                      <span class="text-[10px] text-[#7A7E8B]">Cổng thanh toán quốc tế & VNPAY</span>
+                    </div>
+                  </div>
+                  <span class="font-['JetBrains_Mono'] text-[9.5px] text-[#7A7E8B] uppercase">CARD</span>
+                </label>
+
+              </div>
+            </div>
+
+            <!-- Đường kẻ vé đứt đoạn với vết khuyết -->
+            <div class="relative py-2">
+              <div class="border-t border-dashed border-[#E5E0D5]"></div>
+              <div class="absolute -left-6 sm:-left-7 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#FAF8F5]"></div>
+              <div class="absolute -right-6 sm:-right-7 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#FAF8F5]"></div>
+            </div>
+
+            <!-- Final Grand Total (Vuông vức, chuẩn CineGo Red) -->
+            <div class="flex items-baseline justify-between font-['JetBrains_Mono']">
               <div>
-                <span class="block text-[10px] uppercase text-[#7A7E8B]">TỔNG TIỀN PHẢI TRẢ:</span>
-                <span class="text-[9px] text-[#A6AAB6]">Đã bao gồm thuế GTGT</span>
+                <span class="block text-[10.5px] uppercase font-bold text-[#7A7E8B] tracking-wider">TỔNG TIỀN PHẢI TRẢ:</span>
+                <span class="text-[9.5px] text-[#A6AAB6]">Đã bao gồm thuế GTGT</span>
               </div>
               <div class="text-right">
-                <span id="grandTotalDisplay" class="font-serif text-3xl font-black text-[#BA2D27]">
+                <span id="grandTotalDisplay" class="font-serif text-2xl sm:text-3xl font-black text-[#BA2D27]">
                   <%= (typeof total !== 'undefined' ? Number(total) : 0).toLocaleString('vi-VN') %> đ
                 </span>
               </div>
             </div>
 
-            <!-- Submit CTA -->
-            <button type="submit" id="btnSubmitPayment" onclick="isPaymentSubmitted = true;" class="btn-editorial-primary w-full py-4 text-xs font-bold text-center block !bg-[#BA2D27] hover:!bg-[#8E1F1A]">
-              XÁC NHẬN THANH TOÁN & NHẬN VÉ →
+            <!-- Submit CTA Button -->
+            <button type="submit" id="btnSubmitPayment" onclick="isPaymentSubmitted = true;" class="w-full py-4 px-4 bg-[#BA2D27] hover:bg-[#8E1F1A] text-white font-bold text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer select-none">
+              <span>XÁC NHẬN THANH TOÁN & NHẬN VÉ →</span>
             </button>
 
             <div class="text-center font-['JetBrains_Mono'] text-[10px] text-[#7A7E8B]">
@@ -513,7 +585,6 @@
             </div>
 
           </div>
-
         </div>
 
       </div>
@@ -528,8 +599,8 @@
      ========================================================================= -->
 <div id="timeoutModal" class="hidden fixed inset-0 z-50 bg-[#121316]/90 backdrop-blur-md flex items-center justify-center p-4">
   <div class="bg-white border-2 border-[#BA2D27] max-w-md w-full p-8 text-center space-y-5 shadow-2xl relative">
-    <div class="w-16 h-16 rounded-full bg-red-100 text-[#BA2D27] flex items-center justify-center mx-auto">
-      <span class="material-symbols-outlined text-3xl">timer_off</span>
+    <div class="w-16 h-16 bg-red-100 text-[#BA2D27] flex items-center justify-center mx-auto text-3xl font-bold">
+      ⏱
     </div>
     
     <h3 class="font-serif text-2xl font-bold text-[#121316]">
@@ -541,7 +612,7 @@
     </p>
 
     <div class="pt-2">
-      <button type="button" onclick="cancelAndReturnToSeats()" class="btn-editorial-primary w-full py-3.5 text-xs font-bold block text-center !bg-[#BA2D27]">
+      <button type="button" onclick="cancelAndReturnToSeats()" class="w-full py-3.5 bg-[#BA2D27] hover:bg-[#8E1F1A] text-white text-xs font-bold block text-center uppercase tracking-wider transition-colors">
         Quay Lại Chọn Suất Chiếu Khác →
       </button>
     </div>
@@ -551,6 +622,7 @@
 <script>
   let baseTotal = <%= typeof total !== 'undefined' ? Number(total) : 0 %>;
   let currentFinal = baseTotal;
+  let appliedVoucherCode = '';
 
   const bookingMeta = {
     movieId: '<%= phim ? phim._id : "" %>',
@@ -610,7 +682,6 @@
         if (isPaymentSubmitted) return;
         const href = link.getAttribute('href');
         const target = link.getAttribute('target');
-        // Không giải phóng nếu mở tab mới hoặc là anchor # / script
         if (target === '_blank') return;
         if (href && !href.startsWith('#') && !href.startsWith('javascript:')) {
           sendBeaconRelease();
@@ -619,8 +690,7 @@
     });
   });
 
-  // 3. Cơ chế NHỊP TIM (HEARTBEAT) - Giải quyết dứt điểm khi khách mất mạng, tắt máy hoặc kill app
-  // Cứ 15s gửi ping một lần để gia hạn thêm 45s. Nếu khách mất mạng/kill app -> sau 45s ghế tự động nhả cho máy khác!
+  // 3. Cơ chế NHỊP TIM (HEARTBEAT)
   let heartbeatTimer = null;
   if (bookingMeta.seats && bookingMeta.seats.length > 0) {
     heartbeatTimer = setInterval(() => {
@@ -632,9 +702,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(bookingMeta)
-      }).catch(err => {
-        // Mất mạng tạm thời -> server sẽ chờ 45s
-      });
+      }).catch(err => {});
     }, 15000);
   }
 
@@ -655,9 +723,7 @@
       if (heartbeatTimer) clearInterval(heartbeatTimer);
       if (timerDisplay) timerDisplay.innerText = '00:00';
       if (progressBar) progressBar.style.width = '0%';
-      // Giải phóng ghế giữ chỗ tức thì trong MongoDB
       releaseSeatsImmediately();
-      // Trigger timeout cancellation
       if (timeoutModal) timeoutModal.classList.remove('hidden');
       document.getElementById('btnSubmitPayment').disabled = true;
       return;
@@ -675,11 +741,53 @@
   }, 1000);
 
   // ==========================================
-  // VOUCHER APPLICATION LOGIC
+  // VOUCHER APPLICATION & ONE-CLICK LOGIC
   // ==========================================
-  function fillVoucher(code) {
-    document.getElementById('voucherCodeInput').value = code;
+  function fillAndApplyVoucher(code) {
+    const input = document.getElementById('voucherCodeInput');
+    if (!input) return;
+
+    if (appliedVoucherCode && appliedVoucherCode.toUpperCase() === code.toUpperCase()) {
+      // Hủy áp dụng nếu bấm lại voucher đang dùng
+      input.value = '';
+      appliedVoucherCode = '';
+      currentFinal = baseTotal;
+      document.getElementById('input_voucher_code').value = '';
+      document.getElementById('input_discount_amount').value = 0;
+      document.getElementById('input_final_amount').value = baseTotal;
+      document.getElementById('voucherDiscountRow').classList.add('hidden');
+      document.getElementById('grandTotalDisplay').innerText = baseTotal.toLocaleString('vi-VN') + ' đ';
+      const feedback = document.getElementById('voucherFeedback');
+      if (feedback) feedback.classList.add('hidden');
+      syncVoucherListUI();
+      return;
+    }
+
+    input.value = code;
     checkAndApplyVoucher();
+  }
+
+  function syncVoucherListUI() {
+    const activeCode = appliedVoucherCode ? appliedVoucherCode.toUpperCase() : '';
+    document.querySelectorAll('.voucher-card-item').forEach(card => {
+      const cardCode = (card.getAttribute('data-voucher-code') || '').toUpperCase();
+      const actionBtn = card.querySelector('.btn-voucher-action');
+      if (activeCode && cardCode === activeCode) {
+        card.classList.add('border-[#BA2D27]', 'bg-[#F9EBEA]');
+        card.classList.remove('border-[#E5E0D5]', 'bg-[#FAF8F5]');
+        if (actionBtn) {
+          actionBtn.innerText = '✓ Đang dùng';
+          actionBtn.className = 'btn-voucher-action px-2.5 py-1 bg-[#BA2D27] text-white border border-[#BA2D27] text-[10px] font-bold shrink-0 shadow-2xs';
+        }
+      } else {
+        card.classList.remove('border-[#BA2D27]', 'bg-[#F9EBEA]');
+        card.classList.add('border-[#E5E0D5]', 'bg-[#FAF8F5]');
+        if (actionBtn) {
+          actionBtn.innerText = 'Dùng mã';
+          actionBtn.className = 'btn-voucher-action px-2.5 py-1 bg-white group-hover:bg-[#BA2D27] group-hover:text-white border border-[#E5E0D5] group-hover:border-[#BA2D27] text-[#121316] text-[10px] font-bold transition-colors shrink-0 shadow-2xs';
+        }
+      }
+    });
   }
 
   async function checkAndApplyVoucher() {
@@ -687,7 +795,7 @@
     const feedback = document.getElementById('voucherFeedback');
     if (!code) {
       feedback.classList.remove('hidden');
-      feedback.className = 'p-3 bg-red-50 text-red-700 border border-red-200 text-xs font-["JetBrains_Mono"]';
+      feedback.className = 'p-2.5 bg-red-50 text-red-700 border border-red-200 text-xs font-["JetBrains_Mono"] mt-1.5';
       feedback.innerText = 'Vui lòng nhập mã voucher!';
       return;
     }
@@ -702,58 +810,52 @@
 
       feedback.classList.remove('hidden');
       if (data.success) {
-        feedback.className = 'p-3 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-["JetBrains_Mono"]';
+        feedback.className = 'p-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-["JetBrains_Mono"] mt-1.5';
         feedback.innerText = '✓ ' + (data.message || 'Áp dụng mã ưu đãi thành công!');
 
         let discount = 0;
         if (data.discountType === 'fixed') {
           discount = data.discountValue;
-        } else if (data.discountType === 'percentage') {
+        } else if (data.discountType === 'percentage' || data.discountType === 'percent') {
           discount = Math.round((baseTotal * data.discountValue) / 100);
           if (data.maxDiscountValue > 0 && discount > data.maxDiscountValue) {
             discount = data.maxDiscountValue;
           }
         }
 
+        appliedVoucherCode = code.toUpperCase();
         currentFinal = Math.max(0, baseTotal - discount);
         document.getElementById('voucherDiscountRow').classList.remove('hidden');
         document.getElementById('voucherDiscountDisplay').innerText = '-' + discount.toLocaleString('vi-VN') + ' đ';
         document.getElementById('grandTotalDisplay').innerText = currentFinal.toLocaleString('vi-VN') + ' đ';
         document.getElementById('input_final_amount').value = currentFinal;
-        document.getElementById('input_voucher_code').value = code.toUpperCase();
+        document.getElementById('input_voucher_code').value = appliedVoucherCode;
         document.getElementById('input_discount_amount').value = discount;
 
         if (window.cinegoToast) window.cinegoToast.success('Áp dụng mã giảm: -' + discount.toLocaleString('vi-VN') + 'đ');
+        syncVoucherListUI();
       } else {
-        feedback.className = 'p-3 bg-red-50 text-red-700 border border-red-200 text-xs font-["JetBrains_Mono"]';
+        appliedVoucherCode = '';
+        feedback.className = 'p-2.5 bg-red-50 text-red-700 border border-red-200 text-xs font-["JetBrains_Mono"] mt-1.5';
         feedback.innerText = '✕ ' + (data.message || 'Mã không hợp lệ!');
         document.getElementById('input_voucher_code').value = '';
         document.getElementById('input_discount_amount').value = 0;
+        document.getElementById('voucherDiscountRow').classList.add('hidden');
+        document.getElementById('grandTotalDisplay').innerText = baseTotal.toLocaleString('vi-VN') + ' đ';
+        document.getElementById('input_final_amount').value = baseTotal;
+        syncVoucherListUI();
       }
     } catch (e) {
+      appliedVoucherCode = '';
       feedback.classList.remove('hidden');
-      feedback.className = 'p-3 bg-red-50 text-red-700 border border-red-200 text-xs font-["JetBrains_Mono"]';
+      feedback.className = 'p-2.5 bg-red-50 text-red-700 border border-red-200 text-xs font-["JetBrains_Mono"] mt-1.5';
       feedback.innerText = '✕ Lỗi kết nối hoặc mã ưu đãi không hợp lệ!';
       document.getElementById('input_voucher_code').value = '';
       document.getElementById('input_discount_amount').value = 0;
+      document.getElementById('voucherDiscountRow').classList.add('hidden');
+      document.getElementById('grandTotalDisplay').innerText = baseTotal.toLocaleString('vi-VN') + ' đ';
+      syncVoucherListUI();
     }
-  }
-
-  function applySimulatedDiscount(discount, msg, vCode = '') {
-    const feedback = document.getElementById('voucherFeedback');
-    feedback.classList.remove('hidden');
-    feedback.className = 'p-3 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-["JetBrains_Mono"]';
-    feedback.innerText = '✓ ' + msg;
-
-    currentFinal = Math.max(0, baseTotal - discount);
-    document.getElementById('voucherDiscountRow').classList.remove('hidden');
-    document.getElementById('voucherDiscountDisplay').innerText = '-' + discount.toLocaleString('vi-VN') + ' đ';
-    document.getElementById('grandTotalDisplay').innerText = currentFinal.toLocaleString('vi-VN') + ' đ';
-    document.getElementById('input_final_amount').value = currentFinal;
-    if (vCode) document.getElementById('input_voucher_code').value = vCode.toUpperCase();
-    document.getElementById('input_discount_amount').value = discount;
-
-    if (window.cinegoToast) window.cinegoToast.success(msg);
   }
 
   // ==========================================
@@ -796,9 +898,11 @@
   // Run on ready to sync active card & attach auto-clear cart on submit
   document.addEventListener('DOMContentLoaded', () => {
     updatePaymentMethodCards();
+    syncVoucherListUI();
+
     const autoVoucher = '<%= (typeof preVoucher !== "undefined" && preVoucher) ? preVoucher : "" %>';
     if (autoVoucher) {
-      fillVoucher(autoVoucher);
+      fillAndApplyVoucher(autoVoucher);
     }
 
     const chkForm = document.getElementById('checkoutForm');
@@ -814,7 +918,6 @@
       });
     }
   });
-  updatePaymentMethodCards();
 </script>
 
 <%- include('partials/footer') %>

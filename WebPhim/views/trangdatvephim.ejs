@@ -54,53 +54,6 @@
     sMatrix = (typeof seatConfig.seatMatrix === 'string') ? JSON.parse(seatConfig.seatMatrix) : seatConfig.seatMatrix;
   }
   const vipStartRow = Math.max(1, Math.floor(nRows * 0.45));
-
-  // Danh sách voucher khả dụng (từ ví User + Voucher rạp trong CSDL + Voucher hệ thống CineGo)
-  const defaultVouchersList = [
-    {
-      code: 'CINEGO50K',
-      title: 'Giảm 50.000đ cho đơn đặt vé',
-      discountType: 'fixed',
-      discountValue: 50000,
-      minOrderValue: 100000
-    },
-    {
-      code: 'CHAOBANMOI',
-      title: 'Ưu đãi Chào Bạn Mới',
-      discountType: 'fixed',
-      discountValue: 20000,
-      minOrderValue: 75000
-    },
-    {
-      code: 'VIP20',
-      title: 'Giảm 20% cho thành viên VIP',
-      discountType: 'percentage',
-      discountValue: 20,
-      minOrderValue: 120000
-    }
-  ];
-
-  const dbVouchers = (typeof vouchers !== 'undefined' && Array.isArray(vouchers) && vouchers.length > 0) ? vouchers : [];
-  const walletVouchers = (typeof savedVouchers !== 'undefined' && Array.isArray(savedVouchers) && savedVouchers.length > 0) ? savedVouchers : [];
-  const mergedV = [...walletVouchers, ...dbVouchers];
-  const seenCodes = new Set();
-  const availableVouchers = [];
-
-  mergedV.forEach(v => {
-    if (v && v.code && !seenCodes.has(v.code.toUpperCase())) {
-      seenCodes.add(v.code.toUpperCase());
-      availableVouchers.push(v);
-    }
-  });
-
-  if (availableVouchers.length === 0) {
-    defaultVouchersList.forEach(v => {
-      if (!seenCodes.has(v.code.toUpperCase())) {
-        seenCodes.add(v.code.toUpperCase());
-        availableVouchers.push(v);
-      }
-    });
-  }
 %>
 
 <style>
@@ -118,7 +71,7 @@
     text-decoration: none !important;
   }
 
-  /* Định dạng sơ đồ ghế ngồi chuẩn màu sắc trang web (Rạp tối, ghế trắng nổi bật) */
+  /* Định dạng sơ đồ ghế ngồi chuẩn màu sắc trang web (Rạp tối, ghế vuông vức nổi bật) */
   .cinema-auditorium-box {
     background-color: #0E1015 !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
@@ -140,7 +93,7 @@
   .seat-unit {
     width: 32px;
     height: 30px;
-    border-radius: 5px;
+    border-radius: 2px;
     font-size: 10px;
     font-weight: 700;
     transition: all 0.15s ease;
@@ -221,7 +174,6 @@
       width: 25px !important;
       height: 25px !important;
       font-size: 8px !important;
-      border-radius: 4px !important;
     }
     .seat-unit.seat-free.is-couple {
       width: 54px !important;
@@ -235,28 +187,28 @@
   <div class="max-w-[1460px] mx-auto px-4 sm:px-6">
 
     <!-- =========================================================================
-         TOP BAR: TIÊU ĐỀ & TIẾN TRÌNH STEPPER (KHÔNG CÓ ICON HỎNG, KHÔNG ĐỒNG HỒ)
+         TOP BAR: TIÊU ĐỀ & TIẾN TRÌNH STEPPER (KHUNG VUÔNG VỨC)
          ========================================================================= -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-[#E5E0D5] mb-5">
       
-      <!-- Left: Back button (unicode mũi tên không bao giờ lỗi font) + Title -->
+      <!-- Left: Back button (vuông vức) + Title -->
       <div class="flex items-center gap-3">
-        <a href="/phim/<%= phim._id %>" class="w-9 h-9 rounded-xl border border-[#E5E0D5] bg-white hover:bg-[#EAE6DC] text-[#111827] text-base font-bold transition-colors flex items-center justify-center shrink-0 shadow-xs select-none" title="Quay lại">
+        <a href="/phim/<%= phim._id %>" class="w-9 h-9 border border-[#E5E0D5] bg-white hover:bg-[#EAE6DC] text-[#111827] text-base font-bold transition-colors flex items-center justify-center shrink-0 shadow-xs select-none" title="Quay lại">
           ←
         </a>
         <div>
           <span class="text-[10.5px] font-bold uppercase tracking-wider text-[#6B7280] block">ĐẶT VÉ TRỰC TUYẾN</span>
-          <h1 class="text-lg sm:text-2xl font-black text-[#111827] leading-tight">Hoàn tất đặt vé & Thanh toán</h1>
+          <h1 class="text-lg sm:text-2xl font-black text-[#111827] leading-tight">Chọn Suất Chiếu, Ghế & Bắp Nước</h1>
         </div>
       </div>
 
-      <!-- Right: Stepper (Gọn nhẹ, sạch sẽ) -->
+      <!-- Right: Stepper (Gọn gàng, vuông vức) -->
       <div class="flex items-center gap-1.5 sm:gap-2 text-xs flex-wrap">
-        <span class="px-2.5 py-1 bg-[#10B981]/15 text-[#059669] border border-[#10B981]/30 rounded-md font-semibold text-[11px]">✓ Suất chiếu</span>
+        <span class="px-2.5 py-1 bg-[#10B981]/15 text-[#059669] border border-[#10B981]/30 font-semibold text-[11px]">✓ 1. Suất chiếu</span>
         <span class="text-[#D1D5DB]">/</span>
-        <span class="px-2.5 py-1 bg-[#BA2D27] text-white rounded-md font-bold text-[11px] shadow-xs">2. Chọn ghế</span>
+        <span class="px-2.5 py-1 bg-[#BA2D27] text-white font-bold text-[11px] shadow-xs">2. Chọn ghế</span>
         <span class="text-[#D1D5DB]">/</span>
-        <span class="text-[#6B7280] text-[11px] font-medium">3. Bắp nước</span>
+        <span class="px-2.5 py-1 bg-white border border-[#E5E0D5] text-[#111827] font-bold text-[11px]">3. Bắp nước</span>
         <span class="text-[#D1D5DB]">/</span>
         <span class="text-[#6B7280] text-[11px] font-medium">4. Thanh toán</span>
       </div>
@@ -264,13 +216,13 @@
     </div>
 
     <!-- =========================================================================
-         BỐ CỤC 2 CỘT CHUẨN 100% THEO ĐÚNG HÌNH MẪU CỦA BẠN:
+         BỐ CỤC 2 CỘT CHUẨN VUÔNG VỨC:
          - Cột trái: 3 Khối (1. Suất chiếu, 2. Chọn ghế, 3. Bắp nước mở rộng có chọn vị)
-         - Cột phải: Hóa đơn tích hợp sẵn Mã giảm giá & Phương thức thanh toán
+         - Cột phải: Hóa đơn tạm tính & Nút chuyển tiếp sang thanh toán
          ========================================================================= -->
     <form id="bookingForm" action="/thanh-toan" method="POST">
       
-      <!-- Hidden inputs -->
+      <!-- Hidden inputs gửi sang trang thanh toán -->
       <input type="hidden" name="movieId" value="<%= phim._id %>" />
       <input type="hidden" name="cinema" id="input_cinema" value="CGV Kim Cúc Plaza" />
       <input type="hidden" name="showDate" id="input_showDate" value="<%= initDateIso %>" />
@@ -279,33 +231,28 @@
       <input type="hidden" name="total" id="input_total" value="0" />
       <input type="hidden" name="comboDetails" id="input_comboDetails" value="" />
       <input type="hidden" name="comboTotal" id="input_comboTotal" value="0" />
-      <input type="hidden" name="preVoucher" id="input_preVoucher" value="" />
-      <input type="hidden" name="payment_method" id="input_payment_method" value="momo" />
-      <input type="hidden" name="voucherCode" id="input_voucherCode" value="" />
-      <input type="hidden" name="discountAmount" id="input_discountAmount" value="0" />
-      <input type="hidden" name="finalAmount" id="input_finalAmount" value="0" />
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
         <!-- =====================================================================
-             CỘT TRÁI (Khoảng 68% - span 8): 3 Khối chức năng
+             CỘT TRÁI (Khoảng 68% - span 8): 3 Khối chức năng VUÔNG VỨC
              ===================================================================== -->
         <div class="lg:col-span-8 space-y-4">
 
-          <!-- KHỐI 1: THÔNG TIN SUẤT CHIẾU (BỎ TOÀN BỘ ICON, BỎ GẠCH DƯỚI KHI RÊ CHUỘT, BỎ PHÒNG 1 VÀ GHỀNH RÁNG) -->
-          <div class="bg-white border border-[#E5E0D5] rounded-2xl p-4 shadow-xs">
+          <!-- KHỐI 1: THÔNG TIN SUẤT CHIẾU (KHUNG VUÔNG VỨC, KHÔNG BO GÓC) -->
+          <div class="bg-white border border-[#E5E0D5] p-4 shadow-xs">
             <div class="flex items-center justify-between pb-3 border-b border-[#E5E0D5]">
               <div class="flex items-center gap-2">
-                <span class="w-5 h-5 rounded-full bg-[#BA2D27] text-white text-[11px] font-bold flex items-center justify-center">1</span>
+                <span class="w-5 h-5 bg-[#BA2D27] text-white text-[11px] font-bold flex items-center justify-center">1</span>
                 <h2 class="font-bold text-sm text-[#111827]">Thông Tin Suất Chiếu</h2>
               </div>
             </div>
 
-            <!-- 3 Ô: Rạp (Nhấn vào là chọn được, không gạch chân) - Ngày - Giờ (Không icon) -->
+            <!-- 3 Ô: Rạp (Nhấn vào là chọn được) - Ngày - Giờ (Khung vuông vức) -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-3">
               
-              <!-- Ô 1: Rạp Chiếu (Nhấn vào cả ô là chọn rạp dễ dàng, không chữ phòng 1, không ghềnh ráng) -->
-              <div class="bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#E5E0D5] hover:border-[#BA2D27]/40 rounded-xl p-3 relative cursor-pointer transition-all select-none" onclick="toggleCinemaDropdown(event)">
+              <!-- Ô 1: Rạp Chiếu (Vuông vức, nhấn chọn rạp dễ dàng) -->
+              <div class="bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#E5E0D5] hover:border-[#BA2D27]/40 p-3 relative cursor-pointer transition-all select-none" onclick="toggleCinemaDropdown(event)">
                 <div class="flex items-center justify-between text-[10.5px] font-bold text-[#6B7280] uppercase mb-1">
                   <span>RẠP & PHÒNG CHIẾU</span>
                   <span class="text-[#BA2D27] font-bold text-[11px]">
@@ -314,8 +261,8 @@
                 </div>
                 <div class="font-black text-sm text-[#111827] truncate mt-1" id="labelSelectedCinema">CGV Kim Cúc Plaza</div>
 
-                <!-- Dropdown chọn rạp nổi bật, chỉ tên rạp thanh thoát -->
-                <div id="cinemaDropdownList" class="hidden absolute top-full left-0 right-0 mt-1.5 bg-white border border-[#E5E0D5] shadow-2xl rounded-xl z-30 py-1.5 overflow-hidden">
+                <!-- Dropdown chọn rạp nổi bật (vuông vức) -->
+                <div id="cinemaDropdownList" class="hidden absolute top-full left-0 right-0 mt-1 bg-white border border-[#E5E0D5] shadow-2xl z-30 py-1 overflow-hidden">
                   <div onclick="selectCinema('CGV Kim Cúc Plaza', event)" class="cinema-option-btn w-full px-3.5 py-2.5 text-xs text-left hover:bg-[#FAF8F5] flex items-center justify-between text-[#BA2D27] font-bold border-b border-[#F3EFE6]">
                     <span>CGV Kim Cúc Plaza</span>
                   </div>
@@ -328,8 +275,8 @@
                 </div>
               </div>
 
-              <!-- Ô 2: Chọn Ngày Chiếu (Không icon) -->
-              <div class="bg-[#FAF8F5] border border-[#E5E0D5] rounded-xl p-3">
+              <!-- Ô 2: Chọn Ngày Chiếu (Khung vuông vức) -->
+              <div class="bg-[#FAF8F5] border border-[#E5E0D5] p-3">
                 <div class="flex items-center justify-between text-[10.5px] font-bold text-[#6B7280] uppercase mb-1">
                   <span>CHỌN NGÀY CHIẾU</span>
                   <span class="text-[10px] text-[#6B7280]">Tháng <%= monthNow %></span>
@@ -347,7 +294,7 @@
                   %>
                     <button type="button" 
                             onclick="selectDate('<%= fullIso %>', '<%= dayName %> <%= dateStr %>', this)" 
-                            class="date-pill-btn px-2.5 py-1 rounded-lg text-center transition-all cursor-pointer shrink-0 select-none <%= isToday ? 'bg-[#BA2D27] text-white font-bold shadow-xs' : 'bg-white text-[#374151] border border-[#E5E0D5] hover:border-[#BA2D27]' %>" 
+                            class="date-pill-btn px-2.5 py-1 text-center transition-all cursor-pointer shrink-0 select-none <%= isToday ? 'bg-[#BA2D27] text-white font-bold shadow-xs' : 'bg-white text-[#374151] border border-[#E5E0D5] hover:border-[#BA2D27]' %>" 
                             data-iso="<%= fullIso %>">
                       <div class="text-[9px] uppercase <%= isToday ? 'text-white/90' : 'text-[#6B7280]' %> leading-none"><%= dayName %></div>
                       <div class="text-[11px] font-bold mt-0.5 leading-none"><%= dateStr %></div>
@@ -356,8 +303,8 @@
                 </div>
               </div>
 
-              <!-- Ô 3: Giờ Chiếu (Không icon) -->
-              <div class="bg-[#FAF8F5] border border-[#E5E0D5] rounded-xl p-3">
+              <!-- Ô 3: Giờ Chiếu (Khung vuông vức) -->
+              <div class="bg-[#FAF8F5] border border-[#E5E0D5] p-3">
                 <div class="flex items-center justify-between text-[10.5px] font-bold text-[#6B7280] uppercase mb-1">
                   <span>GIỜ CHIẾU</span>
                 </div>
@@ -369,13 +316,13 @@
             </div>
           </div>
 
-          <!-- KHỐI 2: SƠ ĐỒ CHỌN GHẾ (MÀN HÌNH CŨ + DÃY GHẾ CHUẨN MÀU WEB CỦA BẠN) -->
-          <div class="cinema-auditorium-box rounded-2xl p-4 sm:p-6 relative overflow-hidden shadow-md text-white">
+          <!-- KHỐI 2: SƠ ĐỒ CHỌN GHẾ (MÀN HÌNH CŨ + DÃY GHẾ CHUẨN MÀU RẠP) -->
+          <div class="cinema-auditorium-box p-4 sm:p-6 relative overflow-hidden shadow-md text-white">
             
             <!-- Header: Tên khối + Ghế đang chọn + Chú thích giá màu chuẩn rạp -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-white/10 gap-2">
               <div class="flex items-center gap-2">
-                <span class="w-5 h-5 rounded-full bg-[#BA2D27] text-white text-[11px] font-bold flex items-center justify-center">2</span>
+                <span class="w-5 h-5 bg-[#BA2D27] text-white text-[11px] font-bold flex items-center justify-center">2</span>
                 <h2 class="font-bold text-sm text-white">Sơ đồ chọn ghế</h2>
                 <span id="headerSelectedSeats" class="text-xs text-[#BA2D27] font-bold ml-1"></span>
               </div>
@@ -383,25 +330,25 @@
               <!-- Chú thích loại ghế (Legend trên góc phải đúng màu web gốc) -->
               <div class="flex items-center gap-3 sm:gap-4 text-[11px] text-white/80 flex-wrap font-medium">
                 <div class="flex items-center gap-1.5">
-                  <span class="w-3.5 h-3.5 rounded bg-white border border-[#CBD5E1]"></span>
+                  <span class="w-3.5 h-3.5 bg-white border border-[#CBD5E1]"></span>
                   <span>Ghế Trống</span>
                 </div>
                 <div class="flex items-center gap-1.5">
-                  <span class="w-3.5 h-3.5 rounded bg-white border-b-[3.5px] border-b-[#D97706] border-[#CBD5E1]"></span>
+                  <span class="w-3.5 h-3.5 bg-white border-b-[3.5px] border-b-[#D97706] border-[#CBD5E1]"></span>
                   <span class="text-[#D97706] font-bold">Ghế VIP</span>
                 </div>
                 <div class="flex items-center gap-1.5">
-                  <span class="w-3.5 h-3.5 rounded bg-[#BA2D27] text-white flex items-center justify-center text-[9px] font-bold">✓</span>
+                  <span class="w-3.5 h-3.5 bg-[#BA2D27] text-white flex items-center justify-center text-[9px] font-bold">✓</span>
                   <span class="text-white font-bold">Đang Chọn</span>
                 </div>
                 <div class="flex items-center gap-1.5">
-                  <span class="w-3.5 h-3.5 rounded bg-[#64748B] opacity-60 text-white flex items-center justify-center text-[9px]">✕</span>
+                  <span class="w-3.5 h-3.5 bg-[#64748B] opacity-60 text-white flex items-center justify-center text-[9px]">✕</span>
                   <span class="text-white/50">Đã Bán</span>
                 </div>
               </div>
             </div>
 
-            <!-- Màn hình chiếu cũ thanh lịch kinh điển -->
+            <!-- Màn hình chiếu cong thanh lịch kinh điển -->
             <div class="pt-5 pb-2 text-center">
               <div class="cinema-screen-arc-classic"></div>
               <div class="text-center text-[10.5px] font-bold tracking-[0.25em] text-white/60 uppercase mb-4">
@@ -410,11 +357,11 @@
             </div>
 
             <!-- Thông báo chưa có suất chiếu -->
-            <div id="noShowtimeNotice" class="hidden max-w-md mx-auto my-4 p-3 bg-amber-500/10 border border-amber-500/30 text-center text-xs text-amber-300 rounded-lg">
+            <div id="noShowtimeNotice" class="hidden max-w-md mx-auto my-4 p-3 bg-amber-500/10 border border-amber-500/30 text-center text-xs text-amber-300">
               ⚠️ Cụm rạp và ngày này hiện chưa có suất chiếu khả dụng. Vui lòng chọn ngày khác hoặc cụm rạp khác ở Khối 1.
             </div>
 
-            <!-- Ma trận ghế ngồi -->
+            <!-- Ma trận ghế ngồi (Chọn được nhiều ghế trên nhiều hàng) -->
             <div class="w-full overflow-x-auto py-2 text-center" id="auditoriumSeatMatrix">
               <div class="w-max min-w-full sm:min-w-[540px] max-w-2xl mx-auto space-y-2 sm:space-y-3 transition-opacity px-1">
                 <% for(let r = 0; r < nRows; r++) { %>
@@ -464,17 +411,17 @@
 
           </div>
 
-          <!-- KHỐI 3: BẮP & NƯỚC (MỞ RỘNG RÃI, CÓ CHỌN VỊ VÀ ĐẦY ĐỦ TOÀN BỘ COMBO) -->
-          <div class="bg-white border border-[#E5E0D5] rounded-2xl p-4 sm:p-5 shadow-xs">
+          <!-- KHỐI 3: BẮP & NƯỚC (VUÔNG VỨC, CÓ CHỌN VỊ VÀ ĐẦY ĐỦ TOÀN BỘ COMBO) -->
+          <div class="bg-white border border-[#E5E0D5] p-4 sm:p-5 shadow-xs">
             <div class="flex items-center justify-between pb-3 border-b border-[#E5E0D5]">
               <div class="flex items-center gap-2">
-                <span class="w-5 h-5 rounded-full bg-[#BA2D27] text-white text-[11px] font-bold flex items-center justify-center">3</span>
+                <span class="w-5 h-5 bg-[#BA2D27] text-white text-[11px] font-bold flex items-center justify-center">3</span>
                 <h2 class="font-bold text-sm text-[#111827]">Bắp & Nước (Combo Ưu Đãi)</h2>
               </div>
               <span id="comboBadgeSummary" class="text-xs font-bold text-[#BA2D27]">Chưa chọn món</span>
             </div>
 
-            <!-- Lưới combo mở rộng, hiển thị tất cả món cùng tùy chọn vị -->
+            <!-- Lưới combo vuông vức mở rộng -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-3.5">
               <% 
                 const sampleCombos = [
@@ -503,7 +450,6 @@
                     img: 'https://images.unsplash.com/photo-1505686994434-e3cc5abf1330?auto=format&fit=crop&w=400&q=80'
                   }
                 ];
-                // Lấy trọn vẹn TOÀN BỘ danh sách combo từ CSDL, không cắt bớt
                 const displayCombos = (typeof combos !== 'undefined' && Array.isArray(combos) && combos.length > 0)
                   ? combos.map((c, i) => {
                       const flvs = (c.flavors && c.flavors.length > 0) 
@@ -522,7 +468,7 @@
               %>
 
               <% displayCombos.forEach(function(item) { %>
-                <div class="bg-[#FAF8F5] border border-[#E5E0D5] rounded-xl p-3 flex flex-col justify-between combo-card hover:border-[#BA2D27]/40 transition-all select-none shadow-2xs"
+                <div class="bg-[#FAF8F5] border border-[#E5E0D5] p-3 flex flex-col justify-between combo-card hover:border-[#BA2D27]/40 transition-all select-none shadow-2xs"
                      data-id="<%= item.id %>"
                      data-name="<%= item.name %>"
                      data-price="<%= item.price %>">
@@ -530,7 +476,7 @@
                     <div class="flex items-center gap-3">
                       <img src="<%= item.img %>" 
                            alt="<%= item.name %>" 
-                           class="w-14 h-14 rounded-xl object-cover border border-[#E5E0D5] shrink-0" />
+                           class="w-14 h-14 object-cover border border-[#E5E0D5] shrink-0" />
                       <div class="overflow-hidden">
                         <h4 class="font-bold text-xs sm:text-sm text-[#111827] truncate"><%= item.name %></h4>
                         <p class="text-[10.5px] text-[#6B7280] line-clamp-1 mt-0.5"><%= item.desc %></p>
@@ -541,7 +487,7 @@
                     <!-- TÙY CHỌN VỊ BẮP NƯỚC (DỄ DÀNG CHỌN VỊ THEO Ý MUỐN) -->
                     <div class="mt-2.5 pt-2 border-t border-[#E5E0D5]/70 flex items-center justify-between text-xs">
                       <span class="text-[11px] font-semibold text-[#6B7280]">Chọn vị:</span>
-                      <select id="flavor_<%= item.id %>" onchange="changeComboFlavor('<%= item.id %>')" class="bg-white border border-[#E5E0D5] text-[11.5px] font-semibold text-[#111827] py-1 px-2 rounded-lg focus:outline-none focus:border-[#BA2D27] cursor-pointer">
+                      <select id="flavor_<%= item.id %>" onchange="changeComboFlavor('<%= item.id %>')" class="bg-white border border-[#E5E0D5] text-[11.5px] font-semibold text-[#111827] py-1 px-2 focus:outline-none focus:border-[#BA2D27] cursor-pointer">
                         <% item.flavors.forEach(function(flv) { %>
                           <option value="<%= flv %>"><%= flv %></option>
                         <% }); %>
@@ -552,13 +498,13 @@
                   <!-- Nút + Thêm hoặc Stepper [- 1 +] -->
                   <div class="mt-3 pt-2 border-t border-[#E5E0D5]/50 flex items-center justify-between">
                     <span class="text-[10px] text-[#9CA3AF]">Số lượng:</span>
-                    <button type="button" onclick="stepCombo(this, 1)" class="btn-add-combo px-3.5 py-1.5 bg-white hover:bg-[#BA2D27] hover:text-white border border-[#E5E0D5] text-[#111827] font-bold text-xs rounded-lg transition-colors cursor-pointer shadow-xs">
+                    <button type="button" onclick="stepCombo(this, 1)" class="btn-add-combo px-3.5 py-1.5 bg-white hover:bg-[#BA2D27] hover:text-white border border-[#E5E0D5] text-[#111827] font-bold text-xs transition-colors cursor-pointer shadow-xs">
                       + Thêm
                     </button>
                     <div class="stepper-combo hidden items-center gap-1.5">
-                      <button type="button" onclick="stepCombo(this, -1)" class="w-6 h-6 rounded-md bg-white hover:bg-[#F3EFE6] border border-[#E5E0D5] text-[#111827] font-bold text-xs flex items-center justify-center transition-colors select-none">-</button>
+                      <button type="button" onclick="stepCombo(this, -1)" class="w-6 h-6 bg-white hover:bg-[#F3EFE6] border border-[#E5E0D5] text-[#111827] font-bold text-xs flex items-center justify-center transition-colors select-none">-</button>
                       <span id="qty_<%= item.id %>" class="text-xs font-bold w-4 text-center text-[#111827]">0</span>
-                      <button type="button" onclick="stepCombo(this, 1)" class="w-6 h-6 rounded-md bg-[#BA2D27] hover:bg-[#8E1F1A] text-white font-bold text-xs flex items-center justify-center transition-colors shadow-xs select-none">+</button>
+                      <button type="button" onclick="stepCombo(this, 1)" class="w-6 h-6 bg-[#BA2D27] hover:bg-[#8E1F1A] text-white font-bold text-xs flex items-center justify-center transition-colors shadow-xs select-none">+</button>
                     </div>
                   </div>
                 </div>
@@ -569,19 +515,19 @@
         </div>
 
         <!-- =====================================================================
-             CỘT PHẢI (Khoảng 32% - span 4): HÓA ĐƠN & THANH TOÁN (STICKY SIDEBAR)
-             Tích hợp Mã Ưu Đãi + Phương Thức Thanh Toán đúng chuẩn Ảnh 3 của bạn
+             CỘT PHẢI (Khoảng 32% - span 4): HÓA ĐƠN VUÔNG VỨC & TIẾP TỤC THANH TOÁN
+             Đã bỏ Voucher và Phương thức thanh toán (sẽ có ở trang thanh toán tiếp theo)
              ===================================================================== -->
         <div class="lg:col-span-4 sticky top-20">
-          <div class="bg-white border border-[#E5E0D5] rounded-2xl p-5 text-[#111827] shadow-xs space-y-4">
+          <div class="bg-white border border-[#E5E0D5] p-5 text-[#111827] shadow-xs space-y-4">
             
-            <!-- Movie Header with Poster -->
+            <!-- Movie Header with Poster (Vuông vức) -->
             <div class="flex gap-3 pb-3 border-b border-[#E5E0D5]">
-              <img src="<%= phim.posterUrl %>" alt="<%= phim.title %>" class="w-16 h-22 object-cover rounded-xl border border-[#E5E0D5] shrink-0 shadow-xs" />
+              <img src="<%= phim.posterUrl %>" alt="<%= phim.title %>" class="w-16 h-22 object-cover border border-[#E5E0D5] shrink-0 shadow-xs" />
               <div class="overflow-hidden flex flex-col justify-center">
                 <div class="flex items-center gap-1.5 mb-1">
-                  <span class="px-1.5 py-0.2 bg-[#BA2D27] text-white text-[9.5px] font-bold rounded"><%= phim.ageRating || 'P' %></span>
-                  <span class="px-1.5 py-0.2 bg-[#E5E7EB] text-[#374151] text-[9.5px] font-semibold rounded"><%= (phim && phim.format && !phim.format.toLowerCase().includes('imax')) ? phim.format : '2D' %></span>
+                  <span class="px-1.5 py-0.2 bg-[#BA2D27] text-white text-[9.5px] font-bold"><%= phim.ageRating || 'P' %></span>
+                  <span class="px-1.5 py-0.2 bg-[#E5E7EB] text-[#374151] text-[9.5px] font-semibold"><%= (phim && phim.format && !phim.format.toLowerCase().includes('imax')) ? phim.format : '2D' %></span>
                 </div>
                 <h3 class="font-extrabold text-sm sm:text-base text-[#111827] line-clamp-2 leading-snug"><%= phim.title %></h3>
                 <span class="text-xs text-[#6B7280] mt-1 block">⏱ <%= phim.duration || 120 %> phút</span>
@@ -616,76 +562,17 @@
                 <span id="sideComboLabel">Combo Bắp Nước:</span>
                 <span class="font-bold text-[#111827]" id="sideComboTotal">0 đ</span>
               </div>
-              <div id="sideVoucherRow" class="hidden flex justify-between text-[#6B7280]">
-                <span id="sideVoucherLabel">Voucher CINEGO50K:</span>
-                <span class="font-bold text-[#BA2D27]" id="sideVoucherDiscount">-0 đ</span>
-              </div>
               <div class="flex justify-between text-[#6B7280]">
                 <span>Phí dịch vụ:</span>
-                <span class="font-bold text-[#059669]">0 đ</span>
+                <span class="font-bold text-[#059669]">0 đ (Miễn phí)</span>
               </div>
             </div>
 
-            <!-- MÃ ƯU ĐÃI / VOUCHER CINEGO (ĐẶT TRONG HÓA ĐƠN ĐÚNG NHƯ ẢNH 3) -->
-            <div>
-              <div class="flex items-center justify-between mb-1.5">
-                <label class="block text-[10.5px] font-bold uppercase tracking-wider text-[#6B7280]">
-                  MÃ ƯU ĐÃI / VOUCHER CINEGO
-                </label>
-                <% if (availableVouchers && availableVouchers.length > 0) { %>
-                  <span class="text-[10px] font-semibold text-[#BA2D27]"><%= availableVouchers.length %> mã khả dụng</span>
-                <% } %>
-              </div>
-              <div class="flex items-center gap-2">
-                <input type="text" id="voucherCodeInput" placeholder="Nhập mã voucher (VD: CINEGO50K)..." class="flex-1 px-3 py-2 bg-[#FAF8F5] border border-[#E5E0D5] rounded-xl text-xs font-bold text-[#111827] uppercase tracking-wider focus:outline-none focus:border-[#BA2D27]" />
-                <button type="button" id="btnApplyVoucher" onclick="applyVoucherCode()" class="px-4 py-2 bg-[#EAE6DC] hover:bg-[#DDD8CD] text-[#111827] font-bold text-xs rounded-xl transition-colors shrink-0 cursor-pointer shadow-xs">
-                  Áp dụng
-                </button>
-              </div>
-              <div id="voucherFeedback" class="text-xs font-bold text-[#059669] flex items-center gap-1 mt-1.5"></div>
-
-              <!-- DANH SÁCH CÁC MÃ VOUCHER ĐANG CÓ (CHẠM VÀO ĐỂ CHỌN NHANH) -->
-              <% if (availableVouchers && availableVouchers.length > 0) { %>
-                <div class="mt-2.5 pt-2 border-t border-[#E5E0D5]/70 space-y-1.5">
-                  <div class="flex items-center justify-between text-[10px] font-bold text-[#6B7280] uppercase">
-                    <span>MÃ KHẢ DỤNG HÔM NAY:</span>
-                    <span class="text-[9.5px] font-normal text-[#9CA3AF]">Chạm để dùng</span>
-                  </div>
-                  <div class="space-y-1.5 max-h-[148px] overflow-y-auto pr-1" id="availableVouchersContainer">
-                    <% availableVouchers.forEach(function(v) { 
-                        const isPercent = (v.discountType === 'percentage' || v.discountType === 'percent');
-                        const discText = isPercent ? ('-' + v.discountValue + '%') : ('-' + Number(v.discountValue).toLocaleString('vi-VN') + 'đ');
-                    %>
-                      <div class="voucher-card-item p-2 rounded-xl bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#E5E0D5] hover:border-[#BA2D27]/60 transition-all cursor-pointer flex items-center justify-between gap-2 select-none group"
-                           onclick="fillAndApplyVoucher('<%= v.code %>')"
-                           data-voucher-code="<%= v.code %>">
-                        <div class="min-w-0">
-                          <div class="flex items-center gap-1.5">
-                            <span class="font-extrabold text-xs text-[#111827] tracking-wider group-hover:text-[#BA2D27]"><%= v.code %></span>
-                            <span class="px-1.5 py-0.2 bg-[#BA2D27] text-white text-[9px] font-bold rounded">
-                              <%= discText %>
-                            </span>
-                          </div>
-                          <div class="text-[10px] text-[#6B7280] truncate mt-0.5"><%= v.title || 'Ưu đãi đặt vé xem phim' %></div>
-                          <% if (v.minOrderValue && v.minOrderValue > 0) { %>
-                            <div class="text-[9px] text-[#9CA3AF]">Đơn tối thiểu: <%= Number(v.minOrderValue).toLocaleString('vi-VN') %>đ</div>
-                          <% } %>
-                        </div>
-                        <button type="button" class="btn-voucher-action px-2.5 py-1 bg-white group-hover:bg-[#BA2D27] group-hover:text-white border border-[#E5E0D5] group-hover:border-[#BA2D27] text-[#111827] text-[10.5px] font-bold rounded-lg transition-colors shrink-0 shadow-2xs">
-                          Dùng mã
-                        </button>
-                      </div>
-                    <% }); %>
-                  </div>
-                </div>
-              <% } %>
-            </div>
-
-            <!-- Đường kẻ vé đứt đoạn với 2 vết khuyết tròn (Ticket Notch đúng như ảnh 3) -->
+            <!-- Đường kẻ vé đứt đoạn với 2 vết khuyết tròn -->
             <div class="relative py-2">
               <div class="border-t border-dashed border-[#E5E0D5]"></div>
-              <div class="absolute -left-5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-[#F5F3ED]"></div>
-              <div class="absolute -right-5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-[#F5F3ED]"></div>
+              <div class="absolute -left-5 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#F5F3ED]"></div>
+              <div class="absolute -right-5 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#F5F3ED]"></div>
             </div>
 
             <!-- Total Price Row (Đỏ chuẩn CineGo) -->
@@ -701,64 +588,14 @@
               </div>
             </div>
 
-            <!-- PHƯƠNG THỨC THANH TOÁN (LƯỚI 2x2 ĐÚNG NHƯ ẢNH 3) -->
-            <div class="pt-1">
-              <label class="block text-[10.5px] font-bold uppercase tracking-wider text-[#6B7280] mb-2">
-                PHƯƠNG THỨC THANH TOÁN
-              </label>
-              <div class="grid grid-cols-2 gap-2">
-                
-                <!-- MoMo (Mặc định chọn) -->
-                <div class="payment-method-card cursor-pointer border rounded-xl p-2.5 flex items-center gap-2 transition-all select-none border-[#BA2D27] bg-[#F9EBEA]" 
-                     data-method="momo" 
-                     onclick="selectPaymentMethod('momo', this)">
-                  <span class="radio-indicator w-3.5 h-3.5 rounded-full border-2 border-[#BA2D27] flex items-center justify-center shrink-0">
-                    <span class="w-1.5 h-1.5 rounded-full bg-[#BA2D27]"></span>
-                  </span>
-                  <span class="w-5 h-5 rounded bg-[#A50064] text-white text-[9.5px] font-bold flex items-center justify-center shrink-0">Mo</span>
-                  <span class="text-xs font-bold text-[#111827] truncate">MoMo</span>
-                </div>
-
-                <!-- ZaloPay -->
-                <div class="payment-method-card cursor-pointer border rounded-xl p-2.5 flex items-center gap-2 transition-all select-none border-[#E5E0D5] bg-[#FAF8F5] hover:border-[#BA2D27]/40" 
-                     data-method="zalopay" 
-                     onclick="selectPaymentMethod('zalopay', this)">
-                  <span class="radio-indicator w-3.5 h-3.5 rounded-full border-2 border-[#CBD5E1] flex items-center justify-center shrink-0">
-                    <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
-                  </span>
-                  <span class="w-5 h-5 rounded bg-[#0068FF] text-white text-[9.5px] font-bold flex items-center justify-center shrink-0">Za</span>
-                  <span class="text-xs font-bold text-[#111827] truncate">ZaloPay</span>
-                </div>
-
-                <!-- VNPAY-QR -->
-                <div class="payment-method-card cursor-pointer border rounded-xl p-2.5 flex items-center gap-2 transition-all select-none border-[#E5E0D5] bg-[#FAF8F5] hover:border-[#BA2D27]/40" 
-                     data-method="vnpay" 
-                     onclick="selectPaymentMethod('vnpay', this)">
-                  <span class="radio-indicator w-3.5 h-3.5 rounded-full border-2 border-[#CBD5E1] flex items-center justify-center shrink-0">
-                    <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
-                  </span>
-                  <span class="w-5 h-5 rounded bg-gradient-to-br from-[#ED1C24] to-[#005BAA] text-white text-[9px] font-bold flex items-center justify-center shrink-0">VN</span>
-                  <span class="text-xs font-bold text-[#111827] truncate">VNPAY-QR</span>
-                </div>
-
-                <!-- Visa/Master (Không có icon hỏng) -->
-                <div class="payment-method-card cursor-pointer border rounded-xl p-2.5 flex items-center gap-2 transition-all select-none border-[#E5E0D5] bg-[#FAF8F5] hover:border-[#BA2D27]/40" 
-                     data-method="card" 
-                     onclick="selectPaymentMethod('card', this)">
-                  <span class="radio-indicator w-3.5 h-3.5 rounded-full border-2 border-[#CBD5E1] flex items-center justify-center shrink-0">
-                    <span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
-                  </span>
-                  <span class="px-1.5 py-0.5 rounded bg-[#111827] text-white text-[9px] font-bold tracking-tight">CARD</span>
-                  <span class="text-xs font-bold text-[#111827] truncate">Visa/Master</span>
-                </div>
-
-              </div>
-            </div>
-
-            <!-- Big Submit CTA Button: XÁC NHẬN & THANH TOÁN đỏ chuẩn CineGo -->
-            <button type="submit" id="btnContinueCheckout" disabled class="w-full mt-4 py-3.5 px-4 bg-[#BA2D27] hover:bg-[#8E1F1A] text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer select-none">
+            <!-- Big Submit CTA Button: XÁC NHẬN & TIẾP TỤC THANH TOÁN -->
+            <button type="submit" id="btnContinueCheckout" disabled class="w-full mt-2 py-3.5 px-4 bg-[#BA2D27] hover:bg-[#8E1F1A] text-white font-bold text-xs uppercase tracking-wider shadow-md disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer select-none">
               <span>VUI LÒNG CHỌN GHẾ NGỒI</span>
             </button>
+
+            <p class="text-[10px] text-center text-[#7A7E8B] leading-relaxed">
+              Bước tiếp theo: Áp dụng mã voucher ưu đãi & Chọn phương thức thanh toán.
+            </p>
 
           </div>
         </div>
@@ -786,8 +623,6 @@
   let seatTotal = 0;
   let comboItems = {};
   let comboTotal = 0;
-  let appliedVoucher = null;
-  let selectedPaymentMethod = 'momo';
 
   const normCin = (s) => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
 
@@ -833,13 +668,13 @@
     document.getElementById('input_showDate').value = dateIso;
 
     document.querySelectorAll('.date-pill-btn').forEach(b => {
-      b.className = 'date-pill-btn px-2.5 py-1 rounded-lg text-center transition-all cursor-pointer shrink-0 select-none bg-white text-[#374151] border border-[#E5E0D5] hover:border-[#BA2D27]';
+      b.className = 'date-pill-btn px-2.5 py-1 text-center transition-all cursor-pointer shrink-0 select-none bg-white text-[#374151] border border-[#E5E0D5] hover:border-[#BA2D27]';
       const dName = b.querySelector('div:first-child');
       if (dName) dName.className = 'text-[9px] uppercase text-[#6B7280] leading-none';
     });
 
     if (btnEl) {
-      btnEl.className = 'date-pill-btn px-2.5 py-1 rounded-lg text-center transition-all cursor-pointer shrink-0 select-none bg-[#BA2D27] text-white font-bold shadow-xs';
+      btnEl.className = 'date-pill-btn px-2.5 py-1 text-center transition-all cursor-pointer shrink-0 select-none bg-[#BA2D27] text-white font-bold shadow-xs';
       const dName = btnEl.querySelector('div:first-child');
       if (dName) dName.className = 'text-[9px] uppercase text-white/90 leading-none';
     }
@@ -904,7 +739,7 @@
 
       if (isPast) {
         btn.disabled = true;
-        btn.className = 'px-2.5 py-1 text-xs font-semibold rounded bg-[#F3EFE6] border border-[#E5E0D5] text-[#9CA3AF] cursor-not-allowed select-none';
+        btn.className = 'px-2.5 py-1 text-xs font-semibold bg-[#F3EFE6] border border-[#E5E0D5] text-[#9CA3AF] cursor-not-allowed select-none';
         btn.innerText = tStr;
         btn.title = 'Suất chiếu này đã qua giờ chiếu';
       } else {
@@ -914,8 +749,8 @@
           selectedTime = tStr;
         }
         btn.className = isCurrent
-          ? 'time-pill-btn px-2.5 py-1 text-xs font-bold rounded-lg bg-[#BA2D27] text-white border border-[#BA2D27] shadow-xs cursor-pointer select-none transition-all'
-          : 'time-pill-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-[#374151] border border-[#E5E0D5] hover:border-[#BA2D27] cursor-pointer select-none transition-all';
+          ? 'time-pill-btn px-2.5 py-1 text-xs font-bold bg-[#BA2D27] text-white border border-[#BA2D27] shadow-xs cursor-pointer select-none transition-all'
+          : 'time-pill-btn px-2.5 py-1 text-xs font-semibold bg-white text-[#374151] border border-[#E5E0D5] hover:border-[#BA2D27] cursor-pointer select-none transition-all';
         btn.innerText = tStr;
         btn.onclick = () => selectTime(tStr, btn);
       }
@@ -928,7 +763,7 @@
         selectedTime = firstValid;
         const targetBtn = listEl.querySelector(`button[data-time="${firstValid}"]`);
         if (targetBtn) {
-          targetBtn.className = 'time-pill-btn px-2.5 py-1 text-xs font-bold rounded-lg bg-[#BA2D27] text-white border border-[#BA2D27] shadow-xs cursor-pointer select-none transition-all';
+          targetBtn.className = 'time-pill-btn px-2.5 py-1 text-xs font-bold bg-[#BA2D27] text-white border border-[#BA2D27] shadow-xs cursor-pointer select-none transition-all';
         }
       } else {
         selectedTime = '';
@@ -946,10 +781,10 @@
     document.getElementById('sideShowtime').innerText = `${selectedTime} | ${selectedDate}`;
 
     document.querySelectorAll('.time-pill-btn').forEach(b => {
-      b.className = 'time-pill-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white text-[#374151] border border-[#E5E0D5] hover:border-[#BA2D27] cursor-pointer select-none transition-all';
+      b.className = 'time-pill-btn px-2.5 py-1 text-xs font-semibold bg-white text-[#374151] border border-[#E5E0D5] hover:border-[#BA2D27] cursor-pointer select-none transition-all';
     });
     if (btnEl) {
-      btnEl.className = 'time-pill-btn px-2.5 py-1 text-xs font-bold rounded-lg bg-[#BA2D27] text-white border border-[#BA2D27] shadow-xs cursor-pointer select-none transition-all';
+      btnEl.className = 'time-pill-btn px-2.5 py-1 text-xs font-bold bg-[#BA2D27] text-white border border-[#BA2D27] shadow-xs cursor-pointer select-none transition-all';
     }
 
     selectedSeats = [];
@@ -958,156 +793,7 @@
     refreshSeatsView();
   }
 
-  // Chọn phương thức thanh toán
-  function selectPaymentMethod(method, el) {
-    selectedPaymentMethod = method;
-    const inpMethod = document.getElementById('input_payment_method');
-    if (inpMethod) inpMethod.value = method;
-
-    document.querySelectorAll('.payment-method-card').forEach(card => {
-      card.classList.remove('border-[#BA2D27]', 'bg-[#F9EBEA]');
-      card.classList.add('border-[#E5E0D5]', 'bg-[#FAF8F5]');
-      const radioDot = card.querySelector('.radio-indicator span');
-      if (radioDot) {
-        radioDot.classList.remove('bg-[#BA2D27]');
-        radioDot.classList.add('bg-transparent');
-      }
-      const radioBox = card.querySelector('.radio-indicator');
-      if (radioBox) {
-        radioBox.classList.remove('border-[#BA2D27]');
-        radioBox.classList.add('border-[#CBD5E1]');
-      }
-    });
-
-    if (el) {
-      el.classList.remove('border-[#E5E0D5]', 'bg-[#FAF8F5]');
-      el.classList.add('border-[#BA2D27]', 'bg-[#F9EBEA]');
-      const radioDot = el.querySelector('.radio-indicator span');
-      if (radioDot) {
-        radioDot.classList.remove('bg-transparent');
-        radioDot.classList.add('bg-[#BA2D27]');
-      }
-      const radioBox = el.querySelector('.radio-indicator');
-      if (radioBox) {
-        radioBox.classList.remove('border-[#CBD5E1]');
-        radioBox.classList.add('border-[#BA2D27]');
-      }
-    }
-  }
-
-  // Đồng bộ giao diện danh sách voucher
-  function syncVoucherListUI() {
-    const activeCode = appliedVoucher ? (appliedVoucher.code || '').toUpperCase() : '';
-    document.querySelectorAll('.voucher-card-item').forEach(card => {
-      const cardCode = (card.getAttribute('data-voucher-code') || '').toUpperCase();
-      const actionBtn = card.querySelector('.btn-voucher-action');
-      if (activeCode && cardCode === activeCode) {
-        card.classList.add('border-[#BA2D27]', 'bg-[#F9EBEA]');
-        card.classList.remove('border-[#E5E0D5]', 'bg-[#FAF8F5]');
-        if (actionBtn) {
-          actionBtn.innerText = '✓ Đang dùng';
-          actionBtn.className = 'btn-voucher-action px-2.5 py-1 bg-[#BA2D27] text-white border border-[#BA2D27] text-[10.5px] font-bold rounded-lg shrink-0 shadow-2xs';
-        }
-      } else {
-        card.classList.remove('border-[#BA2D27]', 'bg-[#F9EBEA]');
-        card.classList.add('border-[#E5E0D5]', 'bg-[#FAF8F5]');
-        if (actionBtn) {
-          actionBtn.innerText = 'Dùng mã';
-          actionBtn.className = 'btn-voucher-action px-2.5 py-1 bg-white group-hover:bg-[#BA2D27] group-hover:text-white border border-[#E5E0D5] group-hover:border-[#BA2D27] text-[#111827] text-[10.5px] font-bold rounded-lg transition-colors shrink-0 shadow-2xs';
-        }
-      }
-    });
-  }
-
-  // Bấm vào thẻ voucher để chọn & áp dụng ngay
-  function fillAndApplyVoucher(code) {
-    const input = document.getElementById('voucherCodeInput');
-    if (!input) return;
-
-    // Nếu bấm lại vào chính voucher đang áp dụng thì hủy áp dụng
-    if (appliedVoucher && appliedVoucher.code.toUpperCase() === code.toUpperCase()) {
-      input.value = '';
-      appliedVoucher = null;
-      document.getElementById('input_voucherCode').value = '';
-      document.getElementById('input_discountAmount').value = 0;
-      document.getElementById('input_preVoucher').value = '';
-      const feedback = document.getElementById('voucherFeedback');
-      if (feedback) feedback.innerHTML = '';
-      updateBottomSummary();
-      syncVoucherListUI();
-      return;
-    }
-
-    input.value = code;
-    applyVoucherCode();
-  }
-
-  // Áp dụng voucher
-  async function applyVoucherCode() {
-    const input = document.getElementById('voucherCodeInput');
-    const feedback = document.getElementById('voucherFeedback');
-    const code = (input ? input.value : '').trim().toUpperCase();
-    if (!code) {
-      if (feedback) feedback.innerHTML = '<span class="text-[#BA2D27] font-semibold">Vui lòng nhập mã voucher!</span>';
-      return;
-    }
-
-    const currentTotal = seatTotal + comboTotal;
-    try {
-      const res = await fetch('/api/kiem-tra-voucher', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, currentTotal, orderType: 'movie' })
-      });
-      const data = await res.json();
-      if (data.success) {
-        let discount = 0;
-        if (data.discountType === 'percent' || data.discountType === 'percentage') {
-          discount = Math.round((currentTotal * data.discountValue) / 100);
-          if (data.maxDiscountValue && discount > data.maxDiscountValue) {
-            discount = data.maxDiscountValue;
-          }
-        } else {
-          discount = Number(data.discountValue) || 0;
-        }
-        if (discount > currentTotal) discount = currentTotal;
-
-        appliedVoucher = {
-          code: data.code,
-          discount: discount
-        };
-
-        document.getElementById('input_voucherCode').value = data.code;
-        document.getElementById('input_discountAmount').value = discount;
-        document.getElementById('input_preVoucher').value = data.code;
-
-        if (feedback) {
-          feedback.innerHTML = `<span>✔ Đã áp dụng giảm ${discount.toLocaleString('vi-VN')}đ</span>`;
-        }
-        updateBottomSummary();
-        syncVoucherListUI();
-      } else {
-        appliedVoucher = null;
-        document.getElementById('input_voucherCode').value = '';
-        document.getElementById('input_discountAmount').value = 0;
-        document.getElementById('input_preVoucher').value = '';
-        if (feedback) {
-          feedback.innerHTML = `<span class="text-[#BA2D27] font-semibold">✕ ${data.message || 'Mã không hợp lệ'}</span>`;
-        }
-        if (data.requireLogin && window.cinegoToast) {
-          window.cinegoToast.warning(data.message || 'Vui lòng đăng nhập để áp dụng mã ưu đãi!');
-        }
-        updateBottomSummary();
-        syncVoucherListUI();
-      }
-    } catch (err) {
-      console.error('Lỗi kiểm tra voucher:', err);
-      if (feedback) feedback.innerHTML = '<span class="text-[#BA2D27] font-semibold">✕ Lỗi kết nối</span>';
-      syncVoucherListUI();
-    }
-  }
-
-  // Tương tác ghế
+  // Tương tác ghế (Cho phép chọn nhiều ghế trên nhiều hàng)
   function setupSeatInteractions() {
     document.querySelectorAll('.seat-unit').forEach(el => {
       el.addEventListener('click', () => {
@@ -1123,7 +809,6 @@
         const price = Number(el.getAttribute('data-price')) || 0;
         const type = el.getAttribute('data-type') || 'standard';
 
-        const rowChar = seatCode.match(/^([A-Za-z]+)/)?.[1]?.toUpperCase();
         const isSelected = el.classList.contains('seat-selected');
 
         if (isSelected) {
@@ -1210,16 +895,13 @@
     updateBottomSummary();
   }
 
-  // Cập nhật hóa đơn
+  // Cập nhật hóa đơn tạm tính
   function updateBottomSummary() {
     const sideSeats = document.getElementById('sideSeatsContainer');
     const sideCount = document.getElementById('sideSeatCount');
     const sideSeatTot = document.getElementById('sideSeatTotal');
     const sideComboTot = document.getElementById('sideComboTotal');
     const sideComboLabel = document.getElementById('sideComboLabel');
-    const sideVoucherRow = document.getElementById('sideVoucherRow');
-    const sideVoucherLabel = document.getElementById('sideVoucherLabel');
-    const sideVoucherDiscount = document.getElementById('sideVoucherDiscount');
     const sideGrand = document.getElementById('sideGrandTotal');
     const btnSubmit = document.getElementById('btnContinueCheckout');
     const headSeatsBadge = document.getElementById('headerSelectedSeats');
@@ -1262,28 +944,14 @@
       }
     }
 
-    let discountVal = 0;
-    if (appliedVoucher) {
-      discountVal = appliedVoucher.discount;
-      if (sideVoucherRow) sideVoucherRow.classList.remove('hidden');
-      if (sideVoucherLabel) sideVoucherLabel.innerText = `Voucher ${appliedVoucher.code}:`;
-      if (sideVoucherDiscount) sideVoucherDiscount.innerText = `-${discountVal.toLocaleString('vi-VN')} đ`;
-    } else {
-      if (sideVoucherRow) sideVoucherRow.classList.add('hidden');
-      if (sideVoucherDiscount) sideVoucherDiscount.innerText = '-0 đ';
-    }
-
     const subTotal = seatTotal + comboTotal;
-    const grandTotal = Math.max(0, subTotal - discountVal);
-
     document.getElementById('input_total').value = subTotal;
-    document.getElementById('input_finalAmount').value = grandTotal;
 
     if (selectedSeats.length === 0) {
       if (sideSeats) sideSeats.innerHTML = '<span class="text-[#9CA3AF] italic font-normal">Chưa chọn ghế</span>';
       if (sideCount) sideCount.innerText = '(0x)';
       if (sideSeatTot) sideSeatTot.innerText = '0 đ';
-      if (sideGrand) sideGrand.innerText = comboTotal > 0 ? (grandTotal.toLocaleString('vi-VN') + ' đ') : '0 đ';
+      if (sideGrand) sideGrand.innerText = comboTotal > 0 ? (subTotal.toLocaleString('vi-VN') + ' đ') : '0 đ';
       if (headSeatsBadge) headSeatsBadge.innerText = '';
       if (btnSubmit) {
         btnSubmit.disabled = true;
@@ -1294,7 +962,7 @@
       const seatCodes = selectedSeats.map(s => s.code);
       if (sideSeats) {
         sideSeats.innerHTML = selectedSeats.map(s => 
-          `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-[#BA2D27] text-white rounded text-[11px] font-bold shadow-xs">
+          `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-[#BA2D27] text-white text-[11px] font-bold shadow-xs">
             ${s.code}
             <span class="cursor-pointer text-white/80 hover:text-white font-normal ml-0.5" onclick="removeSelectedSeat('${s.code}')" title="Bỏ chọn">✕</span>
           </span>`
@@ -1302,11 +970,11 @@
       }
       if (sideCount) sideCount.innerText = `(${selectedSeats.length}x)`;
       if (sideSeatTot) sideSeatTot.innerText = seatTotal.toLocaleString('vi-VN') + ' đ';
-      if (sideGrand) sideGrand.innerText = grandTotal.toLocaleString('vi-VN') + ' đ';
+      if (sideGrand) sideGrand.innerText = subTotal.toLocaleString('vi-VN') + ' đ';
       if (headSeatsBadge) headSeatsBadge.innerText = `(${seatCodes.join(', ')} đang chọn)`;
       if (btnSubmit) {
         btnSubmit.disabled = false;
-        btnSubmit.innerHTML = `<span>XÁC NHẬN & THANH TOÁN (${grandTotal.toLocaleString('vi-VN')}đ) →</span>`;
+        btnSubmit.innerHTML = `<span>XÁC NHẬN & TIẾP TỤC THANH TOÁN (${subTotal.toLocaleString('vi-VN')}đ) →</span>`;
       }
       document.getElementById('input_seats').value = seatCodes.join(',');
     }
@@ -1357,7 +1025,6 @@
     setupSeatInteractions();
     renderTimeOptions();
     updateBottomSummary();
-    syncVoucherListUI();
 
     // Ràng buộc bảo vệ: Bắt buộc đăng nhập khi bấm xác nhận thanh toán vé & bắp nước
     const isUserLoggedIn = <%= (typeof user !== 'undefined' && user && user._id) ? 'true' : 'false' %>;
@@ -1374,23 +1041,6 @@
           }, 700);
         }
       });
-    }
-
-    const vInput = document.getElementById('voucherCodeInput');
-    if (vInput) {
-      vInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          applyVoucherCode();
-        }
-      });
-    }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const preVoucher = urlParams.get('voucher') || urlParams.get('flashVoucher');
-    if (preVoucher && vInput) {
-      vInput.value = preVoucher;
-      applyVoucherCode();
     }
   });
 </script>
