@@ -231,23 +231,39 @@ router.get('/dat-ve/:id', checkLogin, async (req, res, next) => {
         const seatConfig = await SeatConfig.findOne().lean();
         const combos = await FoodCombo.find({ isActive: true }).sort({ category: 1, price: 1 }).lean();
         
-        // Lấy danh sách voucher trong ví người dùng và voucher công khai khả dụng cho đặt vé
+        // Lấy danh sách voucher trong ví người dùng và voucher công khai khả dụng cho đặt vé (Lọc sạch các voucher đã từng dùng)
         let savedVouchers = [];
+        let usedVoucherCodes = [];
         if (req.session.user && req.session.user._id) {
             const currentUserWithVouchers = await User.findById(req.session.user._id).populate('vouchers');
-            if (currentUserWithVouchers && currentUserWithVouchers.vouchers) {
-                const usedList = Array.isArray(currentUserWithVouchers.usedVouchers) ? currentUserWithVouchers.usedVouchers : [];
-                savedVouchers = currentUserWithVouchers.vouchers.filter(v => v && v.code && !usedList.includes(v.code.toUpperCase()));
+            if (currentUserWithVouchers) {
+                const uList = Array.isArray(currentUserWithVouchers.usedVouchers) ? currentUserWithVouchers.usedVouchers.map(c => String(c).trim().toUpperCase()) : [];
+                const userTickets = await Ticket.find({
+                    $or: [
+                        { userId: currentUserWithVouchers._id },
+                        { userEmail: currentUserWithVouchers.email }
+                    ],
+                    voucherCode: { $exists: true, $ne: '' }
+                }).lean();
+                const ticketCodes = userTickets.map(t => (t.voucherCode || '').trim().toUpperCase()).filter(Boolean);
+                usedVoucherCodes = Array.from(new Set([...uList, ...ticketCodes]));
+
+                if (currentUserWithVouchers.vouchers) {
+                    savedVouchers = currentUserWithVouchers.vouchers.filter(v => v && v.code && !usedVoucherCodes.includes(v.code.trim().toUpperCase()));
+                }
             }
         }
         const now = new Date();
-        const vouchers = await Voucher.find({ 
+        let vouchers = await Voucher.find({ 
             isReward: { $ne: true },
             applicableTo: { $in: ['all', 'movie'] },
             $or: [{ expiryDate: { $gte: now } }, { expiryDate: null }] 
         }).sort({ discountValue: -1 }).lean();
+        if (usedVoucherCodes.length > 0) {
+            vouchers = vouchers.filter(v => v && v.code && !usedVoucherCodes.includes(v.code.trim().toUpperCase()));
+        }
 
-        res.render('trangdatvephim', { phim, seatConfig, combos, vouchers: vouchers || [], savedVouchers: savedVouchers || [], error: req.query.error || null }); 
+        res.render('trangdatvephim', { phim, seatConfig, combos, vouchers: vouchers || [], savedVouchers: savedVouchers || [], usedVoucherCodes, error: req.query.error || null }); 
     } catch (error) { next(error); }
 });
 
@@ -389,19 +405,35 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
         }
 
         let savedVouchers = [];
+        let usedVoucherCodes = [];
         if (req.session.user && req.session.user._id) {
             const currentUserWithVouchers = await User.findById(req.session.user._id).populate('vouchers');
-            if (currentUserWithVouchers && currentUserWithVouchers.vouchers) {
-                const usedList = Array.isArray(currentUserWithVouchers.usedVouchers) ? currentUserWithVouchers.usedVouchers : [];
-                savedVouchers = currentUserWithVouchers.vouchers.filter(v => v && v.code && !usedList.includes(v.code.toUpperCase()));
+            if (currentUserWithVouchers) {
+                const uList = Array.isArray(currentUserWithVouchers.usedVouchers) ? currentUserWithVouchers.usedVouchers.map(c => String(c).trim().toUpperCase()) : [];
+                const userTickets = await Ticket.find({
+                    $or: [
+                        { userId: currentUserWithVouchers._id },
+                        { userEmail: currentUserWithVouchers.email }
+                    ],
+                    voucherCode: { $exists: true, $ne: '' }
+                }).lean();
+                const ticketCodes = userTickets.map(t => (t.voucherCode || '').trim().toUpperCase()).filter(Boolean);
+                usedVoucherCodes = Array.from(new Set([...uList, ...ticketCodes]));
+
+                if (currentUserWithVouchers.vouchers) {
+                    savedVouchers = currentUserWithVouchers.vouchers.filter(v => v && v.code && !usedVoucherCodes.includes(v.code.trim().toUpperCase()));
+                }
             }
         }
-        // Chỉ hiển thị voucher công khai do rạp phát hành cho phim, TUYỆT ĐỐI KHÔNG hiển thị voucher đổi điểm thưởng cá nhân
-        const vouchers = await Voucher.find({ 
+        // Chỉ hiển thị voucher công khai do rạp phát hành cho phim và CHƯA TỪNG ĐƯỢC NGƯỜI DÙNG SỬ DỤNG
+        let vouchers = await Voucher.find({ 
             isReward: { $ne: true },
             applicableTo: { $in: ['all', 'movie'] },
             $or: [{ expiryDate: { $gte: new Date() } }, { expiryDate: null }] 
         }).lean();
+        if (usedVoucherCodes.length > 0) {
+            vouchers = vouchers.filter(v => v && v.code && !usedVoucherCodes.includes(v.code.trim().toUpperCase()));
+        }
         const availableCombos = await FoodCombo.find({ isActive: true }).sort({ category: 1, price: 1 }).lean();
         const seatConfig = await SeatConfig.findOne().lean();
         const safeDiscount = Number(discountAmount) || 0;
@@ -419,6 +451,7 @@ router.post('/thanh-toan', checkLogin, async (req, res) => {
             comboTotal: Number(comboTotal) || 0, 
             vouchers, 
             savedVouchers, 
+            usedVoucherCodes,
             availableCombos, 
             preVoucher: preVoucher || voucherCode || '',
             selectedPaymentMethod: payment_method || 'momo',
@@ -907,7 +940,12 @@ router.post('/api/kiem-tra-voucher', async (req, res) => {
         // Kiểm tra xem người dùng hiện tại đã dùng mã voucher này chưa
         if (req.session.user && req.session.user._id) {
             const userInDb = await User.findById(req.session.user._id);
-            if (userInDb && Array.isArray(userInDb.usedVouchers) && userInDb.usedVouchers.includes(upperCode)) {
+            const hasUsed = userInDb && Array.isArray(userInDb.usedVouchers) && userInDb.usedVouchers.includes(upperCode);
+            const hasTicket = await Ticket.exists({
+                $or: [{ userId: req.session.user._id }, { userEmail: req.session.user.email }],
+                voucherCode: upperCode
+            });
+            if (hasUsed || hasTicket) {
                 return res.json({ success: false, message: "Bạn đã sử dụng mã voucher này rồi! Mỗi voucher chỉ dùng được 1 lần." });
             }
         }
