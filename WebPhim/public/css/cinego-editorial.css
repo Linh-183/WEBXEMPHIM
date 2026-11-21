@@ -119,6 +119,26 @@ img {
   font-family: var(--font-body) !important;
 }
 
+.material-symbols-outlined,
+.material-symbols,
+.material-icons,
+[class*="material-symbols"],
+[class*="material-icons"] {
+  font-family: 'Material Symbols Outlined', 'Material Icons' !important;
+  font-weight: normal !important;
+  font-style: normal !important;
+  line-height: 1 !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  display: inline-block !important;
+  white-space: nowrap !important;
+  word-wrap: normal !important;
+  direction: ltr !important;
+  -webkit-font-feature-settings: 'liga' 1 !important;
+  font-feature-settings: 'liga' 1 !important;
+  -webkit-font-smoothing: antialiased !important;
+}
+
 /* Nâng cao độ tương phản các chữ xám mờ trên nền sáng để đạt chuẩn WCAG AA */
 .text-\[\#7A7E8B\],
 [class*="text-[#7A7E8B]"] {

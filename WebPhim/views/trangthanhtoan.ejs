@@ -65,10 +65,26 @@
 %>
 
 <style>
-  /* Đồng bộ duy nhất 1 font Be Vietnam Pro toàn diện */
+  /* Đồng bộ duy nhất 1 font Be Vietnam Pro toàn diện nhưng bảo vệ tuyệt đối icon */
   .checkout-container,
-  .checkout-container * {
+  .checkout-container h1,
+  .checkout-container h2,
+  .checkout-container h3,
+  .checkout-container h4,
+  .checkout-container p,
+  .checkout-container label,
+  .checkout-container input,
+  .checkout-container button:not(.material-symbols-outlined) {
     font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif !important;
+  }
+  .checkout-container span:not(.material-symbols-outlined):not(.material-icons):not([class*="material-symbols"]) {
+    font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif !important;
+  }
+  .material-symbols-outlined,
+  .material-symbols,
+  .material-icons,
+  [class*="material-symbols"] {
+    font-family: 'Material Symbols Outlined', 'Material Icons' !important;
   }
   /* Card thanh toán luôn giữ cố định border-2 để khi click không bao giờ bị giật / nhảy kích thước */
   .payment-method-card {
